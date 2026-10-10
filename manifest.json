@@ -1,0 +1,12 @@
+{
+  "name": "Routines",
+  "short_name": "Routines",
+  "description": "Things you do on repeat, and when they're next due.",
+  "start_url": "./",
+  "scope": "./",
+  "id": "/",
+  "display": "standalone",
+  "orientation": "any",
+  "background_color": "#F4F1EA",
+  "theme_color": "#F4F1EA"
+}
