@@ -1,12 +1,12 @@
 {
   "name": "Routines",
   "short_name": "Routines",
-  "description": "Things you do on repeat, and when they're next due.",
+  "description": "Your day, hour by hour. Check every task.",
   "start_url": "./",
   "scope": "./",
   "id": "/",
   "display": "standalone",
-  "orientation": "any",
-  "background_color": "#ffcc00",
-  "theme_color": "#ffcc00"
+  "orientation": "portrait",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff"
 }
