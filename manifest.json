@@ -7,6 +7,6 @@
   "id": "/",
   "display": "standalone",
   "orientation": "any",
-  "background_color": "#F4F1EA",
-  "theme_color": "#F4F1EA"
+  "background_color": "#ffcc00",
+  "theme_color": "#ffcc00"
 }
