@@ -257,6 +257,38 @@ html[data-theme="dark"] .toast{background:#333}
 .sum svg{margin-top:1px}
 .sum small{display:block;color:var(--ink2);font-size:13px;margin-top:2px}
 .empty .btn{margin-top:4px}
+.kind.off{opacity:.45}
+.kind.off .ki{background:var(--bg3)}
+.shake{animation:shake .35s}
+@keyframes shake{20%,60%{transform:translateX(-5px)}40%,80%{transform:translateX(5px)}}
+.step button.dim{opacity:.35}
+.row.missed .nm{color:var(--ink3);text-decoration:line-through;text-decoration-color:var(--red)}
+.row.missed .ck{border-color:var(--red);border-style:dashed}
+.row.sw-do{background:var(--ysoft)} .row.sw-later{background:var(--bg3)}
+.cchip{margin-top:10px;height:32px;padding:0 11px;border-radius:9px;background:#000;color:var(--y);display:inline-flex;align-items:center;gap:6px;font-size:13px;font-weight:700}
+.now.calm .cchip{background:var(--ink);color:var(--bg)}
+.catch .shd h3{margin-inline-end:0}
+.ccount{margin-inline-start:auto;margin-inline-end:6px;color:var(--ink2);font-size:14px}
+.cdots{display:flex;gap:4px;padding:0 16px 4px}.cdots i{flex:1;height:4px;border-radius:2px;background:var(--bg3)}.cdots i.on{background:var(--y)}.cdots i.cur{background:var(--ink)}
+.cstage{padding:14px 16px 6px;overflow:hidden;min-height:250px;display:flex}
+.ccard{flex:1;background:var(--bg2);border-radius:24px;padding:26px 20px 18px;text-align:center;transition:transform .22s,opacity .22s,background .2s;touch-action:pan-y}
+.ccard.in{animation:cin .28s ease}
+@keyframes cin{from{opacity:0;transform:translateY(14px) scale(.97)}}
+.ccard.out-r{transform:translateX(120%) rotate(8deg);opacity:0}.ccard.out-l{transform:translateX(-120%) rotate(-8deg);opacity:0}
+.ccard.lean-r{background:var(--ysoft)}.ccard.lean-l{background:var(--redsoft)}
+.ctime{font-size:46px;font-weight:700;letter-spacing:-.02em;line-height:1;display:flex;justify-content:center;color:var(--ink)}
+.cname{font-size:24px;font-weight:700;margin-top:12px;overflow-wrap:anywhere}
+.clate{display:inline-block;margin-top:10px;padding:4px 10px;border-radius:8px;background:var(--redsoft);color:var(--red);font-size:13px;font-weight:700}
+.csub{color:var(--ink2);font-size:14px;margin-top:10px}
+.chint{color:var(--ink3);font-size:12px;margin-top:18px}
+.cbtns{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;padding:10px 16px calc(14px + var(--sb))}
+.cbtns .btn{font-size:14px;padding:0 8px;gap:6px;height:48px}
+.cbtns .cwide{grid-column:1/-1;height:56px;font-size:17px;font-weight:700}
+.cbtns .cmiss{color:var(--red)}
+.cdone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;text-align:center;animation:cin .3s ease}
+.cdone b{font-size:22px}.cdone small{color:var(--ink2);font-size:14px}
+.cbig{width:72px;height:72px;border-radius:50%;background:var(--y);color:#000;display:grid;place-items:center;margin-bottom:6px}
+.toast #extraBtn{color:#fff;background:rgba(255,255,255,.12)}
 </style>
 </head>
 <body>
@@ -324,7 +356,20 @@ html[data-theme="dark"] .toast{background:#333}
   </div>
 </section>
 
-<div class="toast" id="toast" role="status"><span id="toastTx"></span><button type="button" id="undoBtn"><span data-i="undo"></span><span data-t="undo"></span></button></div>
+<div class="scrim" id="cScrim"></div>
+<section class="sheet catch" id="catch" role="dialog" aria-modal="true" aria-labelledby="cTitle">
+  <div class="sgrab"><i></i></div>
+  <div class="shd"><h3 id="cTitle" data-t="catchT"></h3><span class="ccount tab" id="cCount"></span><button class="ib" type="button" id="cClose" aria-label="Close"><span data-i="x"></span></button></div>
+  <div class="cdots" id="cDots"></div>
+  <div class="cstage" id="cCard"></div>
+  <div class="cbtns" id="cBtns">
+    <button class="btn y cwide" type="button" data-c="ontime" id="cOnTime"></button>
+    <button class="btn" type="button" data-c="now" id="cNow"><span data-i="check"></span><span data-t="justNow"></span></button>
+    <button class="btn" type="button" data-c="later" id="cLater"></button>
+    <button class="btn cmiss" type="button" data-c="missed"><span data-i="x"></span><span data-t="missedB"></span></button>
+  </div>
+</section>
+<div class="toast" id="toast" role="status"><span id="toastTx"></span><button type="button" id="extraBtn" style="display:none"><span data-i="clock"></span><span id="extraTx"></span></button><button type="button" id="undoBtn"><span data-i="undo"></span><span data-t="undo"></span></button></div>
 <script>
 (function(){
 "use strict";
@@ -363,7 +408,7 @@ var T = {
   overdue:["Overdue","En retard","متأخرة"], schedule:["Today","Aujourd’hui","اليوم"], anytime:["Anytime today","Dans la journée","خلال اليوم"],
   week:["This week","Cette semaine","هذا الأسبوع"], month:["This month","Ce mois-ci","هذا الشهر"], coming:["Coming up","À venir","قادم"],
   daysLeft:["{n} days left","{n} jours restants","باقي {n} أيام"], lastDay:["last day","dernier jour","آخر يوم"], oneLeft:["2 days left","2 jours restants","باقي يومان"],
-  goalDone:["done for this {p}","fait pour ce {p}","منجز لهذا {p}"], pw:["week","semaine","الأسبوع"], pm:["month","mois","الشهر"],
+  goalDone:["done for this {p}","fait pour ce {p}","منجز لهذا {p}"], pd:["day","jour","اليوم"], pw:["week","semaine","الأسبوع"], pm:["month","mois","الشهر"],
   lateD:["{n}d late","{n} j de retard","متأخر {n} ي"], tomorrow:["Tomorrow","Demain","غدًا"],
   showMore:["Show {n} more","Afficher {n} de plus","عرض {n} أخرى"], showLess:["Show less","Moins","أقل"],
   emptyT:["No tasks yet","Aucune tâche","لا توجد مهام بعد"], emptyP:["Add something you do regularly — with a time, a repeat, or a weekly goal — then check it off through the day.","Ajoutez une chose que vous faites régulièrement — avec une heure, une répétition ou un objectif — puis cochez-la dans la journée.","أضف شيئًا تفعله بانتظام — بوقت أو تكرار أو هدف — ثم أنجزه خلال اليوم."], addFirst:["Add your first task","Ajouter une tâche","أضف أول مهمة"],
@@ -377,6 +422,15 @@ var T = {
   shiftSD:["Checked 2 days late? The next date counts from that day.","Cochée 2 jours en retard ? La suite compte depuis ce jour.","تأخرت يومين؟ التاريخ التالي يُحسب من ذلك اليوم."],
   goalT:["Any day this {p}","N’importe quel jour de la {p}","أي يوم في {p}"], goalS:["Shows under “{s}” until you've done it","Reste dans « {s} » jusqu’à ce que ce soit fait","يظهر في «{s}» حتى تنجزه"], howMany:["How many times","Combien de fois","كم مرة"],
   fStartAt:["Starts at","Commence à","يبدأ في"], change:["Change","Changer","تغيير"],
+  noFixS:["Any time during the {p} — no set date","N’importe quand dans la {p} — sans date","في أي وقت خلال {p} — بدون تاريخ"], noFixDis:["Only when repeating every 1 day, week or month","Seulement tous les 1 jour, semaine ou mois","فقط عند التكرار كل يوم أو أسبوع أو شهر واحد"],
+  sumAny:["{q} a {p}, any time","{q} par {p}, n’importe quand","{q} في {p}، في أي وقت"],
+  catchT:["While you were away","Pendant votre absence","أثناء غيابك"], catchN:["{a} of {b}","{a} sur {b}","{a} من {b}"],
+  onTimeAt:["Did it at {t}","Fait à {t}","أنجزته في {t}"], didIt:["Did it","Fait","أنجزته"], justNow:["Just now","À l’instant","الآن"], missedB:["Missed it","Raté","فاتني"],
+  plus30:["Remind in 30 min","Dans 30 min","بعد 30 د"], tomorrowB:["Move to tomorrow","Reporter à demain","انقل للغد"],
+  caught:["All caught up","Tout est à jour","كل شيء محدّث"], caughtS:["Nice — your day is honest again.","Parfait — votre journée est à jour.","رائع — يومك محدّث."],
+  catchBtn:["Catch up","Rattraper","استدراك"], swipeHint:["Swipe right: did it · left: missed","Glissez à droite : fait · à gauche : raté","اسحب يمينًا: أنجزت · يسارًا: فاتني"],
+  onTimeBtn:["On time","À l’heure","في وقته"], markedOT:["Saved as done at {t}","Enregistré à {t}","حُفظ كمنجز في {t}"],
+  ontimeN:["{n} on time","{n} à l’heure","{n} في وقتها"], missedTag:["missed","raté","فاتت"], movedTo:["moved to {t}","décalé à {t}","نُقل إلى {t}"], moved:["Moved to {t}","Décalé à {t}","نُقل إلى {t}"], toTomorrow:["Moved to tomorrow","Reporté à demain","نُقل للغد"],
   sumGoal:["{q} a {p}, any day","{q} par {p}, n’importe quel jour","{q} في {p}، أي يوم"], sumAt:[" at {t}"," à {t}"," في {t}"], sumFrom:["Starts {d}","Commence {d}","يبدأ {d}"], sumNext:["Next: {d}","Prochaine : {d}","التالي: {d}"], and:[" and "," et "," و"],
   sumShift:["moves to when you check it","se décale quand vous cochez","يتحرك عند الإنجاز"], eHour:["Every hour","Toutes les heures","كل ساعة"], fromT:["from {t}","à partir de {t}","من {t}"],
   fEvery:["Every","Tous les","كل"], fQuota:["Times per","Fois par","مرات في"], h:["Hour","Heure","ساعة"], hh:["Hours","Heures","ساعات"], d:["Day","Jour","يوم"], w:["Week","Semaine","أسبوع"], m:["Month","Mois","شهر"],
@@ -431,7 +485,7 @@ function mins(s){ var p = /^(\d{1,2}):(\d{2})$/.exec(s || ""); return p ? (+p[1]
 function nowMin(){ var d = new Date(); return d.getHours()*60 + d.getMinutes(); }
 function dur(m){ m = Math.abs(m); var h = Math.floor(m/60), r = m % 60; return h ? h+" "+t("hAbbr")+(r ? " "+r+" "+t("min") : "") : r+" "+t("min"); }
 function weekStart(d){ return addDays(d, -((d.getDay()+6) % 7)); }
-function period(p, d){ if(p === "m") return [new Date(d.getFullYear(), d.getMonth(), 1, 12), new Date(d.getFullYear(), d.getMonth()+1, 0, 12)]; var w = weekStart(d); return [w, addDays(w, 6)]; }
+function period(p, d){ if(p === "d") return [d, d]; if(p === "m") return [new Date(d.getFullYear(), d.getMonth(), 1, 12), new Date(d.getFullYear(), d.getMonth()+1, 0, 12)]; var w = weekStart(d); return [w, addDays(w, 6)]; }
 function dt(d, h){ var x = parse(d) || today(), m = mins(h) || 0; return new Date(x.getFullYear(), x.getMonth(), x.getDate(), Math.floor(m/60), m % 60, 0, 0); }
 function setOcc(it, D){ it.next = iso(D); it.times = [hm(D.getHours()*60 + D.getMinutes())]; }
 function gridA(it){ return dt(it.anchor, it.at0); }
@@ -445,12 +499,12 @@ function norm(i){
   var it = {id:String(i.id || uid()), name:String(i.name).slice(0,60)};
   it.kind = i.kind === "window" || i.kind === "fixed" || i.kind === "flex" ? i.kind : (i.mode === "fixed" ? "fixed" : "flex");
   it.n = Math.min(365, Math.max(1, +i.n || 1)); it.unit = /^[hdwm]$/.test(i.unit) ? i.unit : "w"; it.shift = !!i.shift;
-  it.quota = Math.min(31, Math.max(1, +i.quota || 1)); it.period = i.period === "m" ? "m" : "w";
+  it.quota = Math.min(31, Math.max(1, +i.quota || 1)); it.period = i.period === "m" || i.period === "d" ? i.period : "w";
   var tm = (Array.isArray(i.times) ? i.times : []).filter(function(x){ return mins(x) !== null; }).map(function(x){ return hm(mins(x)); });
   it.times = tm.filter(function(x, k){ return tm.indexOf(x) === k; }).sort();
   it.next = parse(i.next) ? i.next : iso(today()); it.anchor = parse(i.anchor) ? i.anchor : it.next;
   it.last = parse(i.last) ? i.last : null;
-  it.slots = i.slots && i.slots.date ? {date:i.slots.date, done:i.slots.done || {}} : null;
+  it.slots = i.slots && i.slots.date ? {date:i.slots.date, done:i.slots.done || {}, snz:i.slots.snz || {}} : null;
   it.log = Array.isArray(i.log) ? i.log.filter(parse) : [];
   it.prev = i.prev || null;
   if(it.kind === "window") it.times = [];
@@ -479,35 +533,37 @@ function roll(){
 /* ---------- model ---------- */
 function model(){
   var td = today(), T0 = iso(td), nm = nowMin();
-  var m = {overdue:[], slots:[], any:[], week:[], month:[], coming:[], done:0, total:0, pending:0};
+  var m = {overdue:[], slots:[], any:[], dayWin:[], week:[], month:[], coming:[], done:0, total:0, pending:0, ontime:0};
+  function slot(it, tm, sd, snz, forceDone){
+    var v = sd[tm], eff = (snz && snz[tm]) || tm, mm = mins(eff);
+    var s = {it:it, time:tm, eff:eff, snoozed:eff !== tm, min:mm, delta:mm - nm, at:null, done:false, missed:false};
+    if(v === "×"){ s.missed = true; s.state = "missed"; }
+    else if(v || forceDone){ s.done = true; s.at = v || null; s.state = "done"; if(!v || mins(v) <= mins(tm) + 30) m.ontime++; }
+    else s.state = s.delta < -30 ? "late" : s.delta <= 0 ? "now" : "soon";
+    m.slots.push(s); m.total++;
+    if(s.done) m.done++; else if(s.state === "late" || s.state === "now") m.pending++;
+  }
   items.forEach(function(it){
     if(it.kind === "window"){
       var pr = period(it.period, td), a = iso(pr[0]), b = iso(pr[1]);
       var c = it.log.filter(function(d){ return d >= a && d <= b; }).length;
       var o = {it:it, count:c, today:it.log.indexOf(T0) > -1, left:diff(td, pr[1])};
-      o.met = c >= it.quota && !o.today ? true : c >= it.quota;
-      (it.period === "m" ? m.month : m.week).push(o);
+      o.met = c >= it.quota;
+      if(it.period === "d"){ m.dayWin.push(o); m.total += it.quota; m.done += Math.min(c, it.quota); if(!o.met) m.pending++; }
+      else (it.period === "m" ? m.month : m.week).push(o);
       return;
     }
+    var on = it.slots && it.slots.date === T0, sd = on ? it.slots.done : {}, snz = on ? it.slots.snz : null;
     if(it.unit === "h"){
-      var hd = it.slots && it.slots.date === T0 ? it.slots.done : {}, dh = diff(td, parse(it.next));
-      Object.keys(hd).forEach(function(tm){ var mm = mins(tm); m.slots.push({it:it, time:tm, min:mm, done:true, at:hd[tm], delta:mm - nm, state:"done"}); m.total++; m.done++; });
-      if(dh === 0 && !hd[it.times[0]]){
-        var mm = mins(it.times[0]), s = {it:it, time:it.times[0], min:mm, done:false, at:null, delta:mm - nm};
-        s.state = s.delta < -30 ? "late" : s.delta <= 0 ? "now" : "soon";
-        m.slots.push(s); m.total++; if(s.state !== "soon") m.pending++;
-      } else if(dh > 0) m.coming.push({it:it, d:dh});
+      var dh = diff(td, parse(it.next));
+      Object.keys(sd).forEach(function(tm){ if(!(dh === 0 && tm === it.times[0])) slot(it, tm, sd, null, false); });
+      if(dh === 0) slot(it, it.times[0], sd, null, false);
+      else if(dh > 0) m.coming.push({it:it, d:dh});
       return;
     }
     var d = diff(td, parse(it.next)), doneToday = it.last === T0;
     if(it.times.length && (d === 0 || doneToday)){
-      var sd = it.slots && it.slots.date === T0 ? it.slots.done : {};
-      it.times.forEach(function(tm){
-        var mm = mins(tm), done = !!sd[tm] || (doneToday && d !== 0);
-        var s = {it:it, time:tm, min:mm, done:done, at:sd[tm] || null, delta:mm - nm};
-        s.state = done ? "done" : s.delta < -30 ? "late" : s.delta <= 0 ? "now" : "soon";
-        m.slots.push(s); m.total++; if(done) m.done++; else if(s.state !== "soon") m.pending++;
-      });
+      it.times.forEach(function(tm){ slot(it, tm, sd, snz, doneToday && d !== 0); });
       if(d > 0) m.coming.push({it:it, d:d});
       return;
     }
@@ -521,7 +577,7 @@ function model(){
   m.overdue.sort(function(a, b){ return a.d - b.d; });
   m.any.sort(function(a, b){ return a.done - b.done; });
   function ws(a, b){ return a.met - b.met || (b.it.quota - b.count) - (a.it.quota - a.count); }
-  m.week.sort(ws); m.month.sort(ws);
+  m.week.sort(ws); m.month.sort(ws); m.dayWin.sort(ws);
   return m;
 }
 
@@ -542,7 +598,7 @@ function describe(it){
   if(it.last && !it.times.length){ var g = diff(parse(it.last), today()); s += " · " + t("lastDone", {x: g <= 0 ? t("agoToday") : t("ago", {n:g})}); }
   return s;
 }
-function rel(s){ return s.state === "done" ? (s.at ? t("doneAt", {t:s.at}) : "") : s.state === "now" ? t("nowTag") : s.state === "late" ? t("lateX", {x:dur(s.delta)}) : t("inX", {x:dur(s.delta)}); }
+function rel(s){ if(s.state === "missed") return t("missedTag"); if(s.snoozed && s.state !== "done") return t("movedTo", {t:s.eff}) + (s.state === "late" ? " · " + t("lateX", {x:dur(s.delta)}) : ""); return s.state === "done" ? (s.at ? t("doneAt", {t:s.at}) : "") : s.state === "now" ? t("nowTag") : s.state === "late" ? t("lateX", {x:dur(s.delta)}) : t("inX", {x:dur(s.delta)}); }
 
 /* ---------- render ---------- */
 var expanded = false, lastHTML = "";
@@ -553,6 +609,13 @@ function row(cls, act, id, extra, left, name, sub, right, ckOn){
 }
 function sec(title, count, right, body){
   return '<section class="sec"><div class="sh2"><h2>'+esc(title)+'</h2>'+(count ? '<span>'+count+'</span>' : '')+(right || "")+'</div><div class="box">'+body+'</div></section>';
+}
+function winRow(o){
+  var dots = "";
+  if(o.it.quota <= 7){ for(var i = 0; i < o.it.quota; i++) dots += '<i class="'+(i < o.count ? "on" : "")+'"></i>'; dots = '<div class="dots">'+dots+'</div>'; }
+  else dots = '<span class="tag tab">'+o.count+'/'+o.it.quota+'</span>';
+  var sub = o.met ? t("goalDone", {p:t("p"+o.it.period)}) : describe(o.it) + (o.count ? " · " + o.count + "/" + o.it.quota : "");
+  return row(o.met ? "done" : "", "win", o.it.id, "", "", o.it.name, sub, dots, o.today);
 }
 function render(){
   roll();
@@ -565,10 +628,11 @@ function render(){
   if(m.total && m.done >= m.total) streak++;
   var hk = Object.keys(hist).sort(); while(hk.length > 120) delete hist[hk.shift()];
   set("r.hist", JSON.stringify(hist));
-  $("dayMeta").textContent = m.total ? t("ofDone", {a:m.done, b:m.total}) + (streak > 1 ? " · " + t("streak", {n:streak}) : "") : (items.length ? t("noTasks") : "");
+  $("dayMeta").textContent = m.total ? t("ofDone", {a:m.done, b:m.total}) + (m.done ? " · " + t("ontimeN", {n:m.ontime}) : "") + (streak > 1 ? " · " + t("streak", {n:streak}) : "") : (items.length ? t("noTasks") : "");
   var seg = [];
   m.overdue.forEach(function(){ seg.push("late"); });
-  m.slots.forEach(function(s){ seg.push(s.done ? "on" : s.state === "late" ? "late" : ""); });
+  m.slots.forEach(function(s){ seg.push(s.done ? "on" : s.state === "late" || s.state === "missed" ? "late" : ""); });
+  m.dayWin.forEach(function(o){ for(var q = 0; q < o.it.quota; q++) seg.push(q < o.count ? "on" : ""); });
   m.any.forEach(function(a){ seg.push(a.done ? "on" : ""); });
   $("meter").innerHTML = seg.slice(0, 40).map(function(c){ return '<i class="'+c+'"></i>'; }).join("");
   $("meter").style.display = seg.length ? "" : "none";
@@ -584,26 +648,20 @@ function render(){
       var body = "", placed = false;
       m.slots.forEach(function(s){
         if(!placed && s.min > nm){ placed = true; body += '<div class="nowline">'+hm(nm)+'</div>'; }
-        var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" || s.state === "late" ? s.state : "")+'">'+esc(r)+'</span>' : '';
-        body += row("timed " + s.state, "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+s.time+'</div>', s.it.name, describe(s.it), tag);
+        var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" ? "now" : s.state === "late" || s.state === "missed" ? "late" : "")+'">'+esc(r)+'</span>' : '';
+        body += row("timed " + s.state, "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+s.eff+(s.snoozed ? '<small>'+s.time+'</small>' : '')+'</div>', s.it.name, describe(s.it), tag);
       });
       if(!placed) body += '<div class="nowline">'+hm(nm)+'</div>';
       out += sec(t("schedule"), m.slots.filter(function(s){ return !s.done; }).length, "", body);
     }
-    if(m.any.length) out += sec(t("anytime"), m.any.filter(function(a){ return !a.done; }).length, "", m.any.map(function(a){
+    if(m.any.length || m.dayWin.length) out += sec(t("anytime"), m.any.filter(function(a){ return !a.done; }).length + m.dayWin.filter(function(o){ return !o.met; }).length, "", m.dayWin.map(winRow).join("") + m.any.map(function(a){
       return row(a.done ? "done" : "", "item", a.it.id, "", "", a.it.name, describe(a.it), "");
     }).join(""));
     [["week", m.week], ["month", m.month]].forEach(function(g){
       if(!g[1].length) return;
       var l = g[1][0].left, open = g[1].filter(function(o){ return !o.met; }).length;
       var lt = l === 0 ? t("lastDay") : t("daysLeft", {n:l + 1});
-      out += sec(t(g[0]), open, '<em class="'+(l <= 1 && open ? "red" : "")+'">'+esc(lt)+'</em>', g[1].map(function(o){
-        var dots = "";
-        if(o.it.quota <= 7){ for(var i = 0; i < o.it.quota; i++) dots += '<i class="'+(i < o.count ? "on" : "")+'"></i>'; dots = '<div class="dots">'+dots+'</div>'; }
-        else dots = '<span class="tag tab">'+o.count+'/'+o.it.quota+'</span>';
-        var sub = o.met ? t("goalDone", {p:t("p"+o.it.period)}) : describe(o.it) + (o.count ? " · " + o.count + "/" + o.it.quota : "");
-        return row(o.met ? "done" : "", "win", o.it.id, "", "", o.it.name, sub, dots, o.today);
-      }).join(""));
+      out += sec(t(g[0]), open, '<em class="'+(l <= 1 && open ? "red" : "")+'">'+esc(lt)+'</em>', g[1].map(winRow).join(""));
     });
     if(m.coming.length){
       var list = m.coming.slice(0, expanded ? 200 : 6);
@@ -638,9 +696,9 @@ function nowCard(m){
   if(s.time){ act = "slot"; attr = ' data-time="'+s.time+'"'; r = rel(s); }
   else if(s.win){ act = "win"; r = describe(s.it) + " · " + s.win.count + "/" + s.it.quota; }
   else { act = "item"; r = s.over ? t("lateD", {n:-s.over}) : describe(s.it); }
-  var extra = late.length + m.overdue.length - (kind === "kLate" ? 1 : 0);
-  return '<div class="now" data-id="'+s.it.id+'"'+attr+'><div class="now-tx"><div class="now-k">'+(s.time ? '<span class="tab">'+s.time+'</span> · ' : '')+esc(t(kind))+(extra > 0 ? ' <b>+'+extra+'</b>' : '')+'</div>'+
-    '<div class="now-n">'+esc(s.it.name)+'</div><div class="now-r">'+esc(r)+'</div></div>'+
+  var owed = late.length + m.overdue.length;
+  return '<div class="now" data-id="'+s.it.id+'"'+attr+'><div class="now-tx"><div class="now-k">'+(s.time ? '<span class="tab">'+(s.eff || s.time)+'</span> · ' : '')+esc(t(kind))+'</div>'+
+    '<div class="now-n">'+esc(s.it.name)+'</div><div class="now-r">'+esc(r)+'</div>'+(owed > 1 || (owed && kind !== "kLate") ? '<button class="cchip" type="button" data-act="catch">'+ico("undo", 16)+esc(t("catchBtn"))+' · '+owed+'</button>' : '')+'</div>'+
     '<button class="bigck" type="button" data-act="'+act+'" aria-label="'+esc(s.it.name)+'">'+ico("check", 28, 3)+'</button></div>';
 }
 
@@ -649,14 +707,16 @@ function find(id){ for(var i = 0; i < items.length; i++) if(items[i].id === id) 
 function snap(){ return JSON.stringify(items); }
 function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p || 12); }catch(e){} }
 function stamp(){ return hm(nowMin()); }
-function advance(it){
+function advance(it, o){
+  o = o || {};
   var td = today(), T0 = iso(td);
   it.prev = {next:it.next, last:it.last, anchor:it.anchor, times:it.times.slice(), at0:it.at0, date:T0};
-  it.last = T0;
+  if(!o.missed) it.last = T0;
   if(it.unit === "h"){
-    var occ = dt(it.next, it.times[0]), now = new Date(), N; now.setSeconds(0, 0);
+    var occ = dt(it.next, it.times[0]), now = new Date(), base, N; now.setSeconds(0, 0);
+    base = o.at ? dt(T0, o.at) : now;
     if(it.kind === "fixed" && !it.shift) N = gridAfter(it, now > occ ? now : occ);
-    else { N = new Date(now.getTime() + it.n*36e5); if(it.shift){ it.anchor = iso(now); it.at0 = hm(now.getHours()*60 + now.getMinutes()); } }
+    else { N = new Date(base.getTime() + it.n*36e5); if(it.shift && !o.missed){ it.anchor = iso(base); it.at0 = hm(base.getHours()*60 + base.getMinutes()); } }
     setOcc(it, N); return;
   }
   if(it.kind === "fixed" && !it.shift) it.next = iso(nextFixed(it, parse(it.next) > td ? parse(it.next) : td));
@@ -666,62 +726,188 @@ function restore(it){
   var p = it.prev; if(!p || p.date !== iso(today()) || !p.next) return;
   it.next = p.next; it.last = p.last; if(p.anchor) it.anchor = p.anchor; if(p.times) it.times = p.times; if(p.at0) it.at0 = p.at0; it.prev = null;
 }
-function act(kind, id, time, el){
-  var it = find(id); if(!it) return;
-  var before = snap(), T0 = iso(today()), on = true;
+function skipItem(it){
+  if(it.unit === "h"){ var occ = dt(it.next, it.times[0]); setOcc(it, it.kind === "fixed" && !it.shift ? gridAfter(it, occ) : new Date(occ.getTime() + it.n*36e5)); }
+  else it.next = iso(it.kind === "fixed" && !it.shift ? nextFixed(it, parse(it.next)) : step(it, parse(it.next), 1));
+  it.slots = null;
+}
+/* the one place that changes a task. o: {at:"HH:MM"} done at that time · {missed:true} · {later:true} */
+function apply(kind, id, time, o){
+  o = o || {};
+  var it = find(id); if(!it) return null;
+  var T0 = iso(today()), res = {on:true, it:it, time:time};
   if(kind === "slot"){
-    if(!it.slots || it.slots.date !== T0) it.slots = {date:T0, done:{}};
+    if(!it.slots || it.slots.date !== T0) it.slots = {date:T0, done:{}, snz:{}};
+    if(!it.slots.snz) it.slots.snz = {};
+    var cur = it.slots.done[time], has = cur && cur !== "×";
+    if(o.later){
+      var nv = Math.min(1439, nowMin() + 30);
+      if(it.unit === "h") setOcc(it, dt(T0, hm(nv))); else it.slots.snz[time] = hm(nv);
+      res.later = hm(nv); return res;
+    }
     if(it.unit === "h"){
-      if(it.slots.done[time]){ delete it.slots.done[time]; on = false; restore(it); }
-      else { it.slots.done[time] = stamp(); advance(it); }
+      if(has && !o.at){ delete it.slots.done[time]; res.on = false; restore(it); }
+      else if(o.missed){ it.slots.done[time] = "×"; advance(it, {missed:true}); }
+      else { var st = o.at || stamp(); it.slots.done[time] = st; advance(it, {at:st}); }
     } else {
-      var wasDone = !!it.slots.done[time] || (it.last === T0 && it.next !== T0);
-      if(wasDone){ delete it.slots.done[time]; on = false; if(it.next !== T0) restore(it); }
+      var allDone = it.last === T0 && it.next !== T0;
+      if((has || (allDone && !cur)) && !o.at){ delete it.slots.done[time]; res.on = false; if(it.next !== T0) restore(it); }
       else {
-        var st = stamp(), key = time;
-        if(it.kind === "fixed" && it.shift && st !== time){
-          var tt2 = it.times.filter(function(x){ return x !== time; }); if(tt2.indexOf(st) < 0) tt2.push(st);
-          it.times = tt2.sort(); key = st; time = st;
+        var st2 = o.missed ? "×" : (o.at || stamp()), key = time;
+        if(!o.missed && it.kind === "fixed" && it.shift && st2 !== time){
+          var tt2 = it.times.filter(function(x){ return x !== time; }); if(tt2.indexOf(st2) < 0) tt2.push(st2);
+          it.times = tt2.sort(); key = st2; res.time = st2;
         }
-        it.slots.done[key] = st;
-        if(it.next === T0 && it.times.every(function(x){ return it.slots.done[x]; })) advance(it);
+        it.slots.done[key] = st2; delete it.slots.snz[time];
+        if(it.next === T0 && it.times.every(function(x){ return it.slots.done[x]; })) advance(it, {missed:o.missed});
       }
     }
+    if(o.missed) res.on = false;
   } else if(kind === "win"){
     var k = it.log.indexOf(T0);
-    if(k > -1){ it.log.splice(k, 1); on = false; if(it.prev && it.prev.date === T0) it.last = it.prev.last; }
+    if(k > -1){ it.log.splice(k, 1); res.on = false; if(it.prev && it.prev.date === T0) it.last = it.prev.last; }
     else { it.prev = {last:it.last, date:T0}; it.log.push(T0); it.last = T0; }
   } else {
-    if(it.last === T0 && it.prev && it.prev.date === T0 && parse(it.next) > today()){ restore(it); on = false; }
+    if(o.later){ it.next = iso(addDays(today(), 1)); res.later = "tomorrow"; return res; }
+    if(o.missed){ skipItem(it); res.on = false; return res; }
+    if(it.last === T0 && it.prev && it.prev.date === T0 && parse(it.next) > today()){ restore(it); res.on = false; }
     else advance(it);
   }
-  save(); buzz(on ? 14 : [8, 40, 8]);
+  return res;
+}
+function slotInfo(id, time){ var m = model(); for(var i = 0; i < m.slots.length; i++){ var s = m.slots[i]; if(s.it.id === id && s.time === time) return s; } return null; }
+function act(kind, id, time, el, o){
+  var before = snap(), info = kind === "slot" ? slotInfo(id, time) : null;
+  var res = apply(kind, id, time, o); if(!res) return;
+  save(); buzz(res.on ? 14 : [8, 40, 8]);
   var r = el && el.closest(".row, .now"), ck = r && r.querySelector(".ck");
-  if(ck && on) ck.classList.add("on");
+  if(ck && res.on) ck.classList.add("on");
   setTimeout(function(){
     lastHTML = ""; render();
-    var n = document.querySelector('.row[data-id="'+id+'"]'+(time ? '[data-time="'+time+'"]' : ''));
+    var n = document.querySelector('.row[data-id="'+id+'"]'+(res.time ? '[data-time="'+res.time+'"]' : ''));
     if(n) n.classList.add("pop");
-  }, on ? 260 : 0);
-  toast(on ? t("checked", {n:it.name}) : t("unchecked"), before);
+  }, res.on ? 260 : 0);
+  if(res.later) return toast(res.later === "tomorrow" ? t("toTomorrow") : t("moved", {t:res.later}), before);
+  var extra = null;
+  if(res.on && info && info.state === "late" && !(o && o.at)){
+    extra = {label:t("onTimeBtn"), fn:function(){
+      items = JSON.parse(before).map(norm).filter(Boolean);
+      apply(kind, id, time, {at:time}); save(); lastHTML = ""; render(); buzz(10);
+      toast(t("markedOT", {t:time}), before);
+    }};
+  }
+  toast(res.on ? t("checked", {n:res.it.name}) : (o && o.missed ? t("missedTag") : t("unchecked")), before, extra);
 }
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || !b.closest("#app")) return;
   var a = b.getAttribute("data-act");
-  if(a === "more"){ expanded = !expanded; render(); return; }
   if(a === "add"){ openSheet(null); return; }
+  if(a === "catch"){ openCatch(); return; }
+  if(a === "more"){ expanded = !expanded; render(); return; }
   var host = b.closest("[data-id]"); if(!host) return;
   var id = host.getAttribute("data-id");
   if(a === "edit") openSheet(find(id)); else act(a, id, host.getAttribute("data-time"), b);
 });
 
 /* ---------- toast ---------- */
-var undoState = null, tt = null;
-function toast(msg, undo){
-  undoState = undo || null; $("toastTx").textContent = msg; $("undoBtn").style.display = undo ? "" : "none";
-  $("toast").classList.add("on"); clearTimeout(tt); tt = setTimeout(function(){ $("toast").classList.remove("on"); undoState = null; }, 4500);
+var undoState = null, tt = null, toastExtra = null;
+function toast(msg, undo, extra){
+  undoState = undo || null; toastExtra = extra || null;
+  $("toastTx").textContent = msg; $("undoBtn").style.display = undo ? "" : "none";
+  $("extraBtn").style.display = extra ? "" : "none"; if(extra) $("extraTx").textContent = extra.label;
+  $("toast").classList.add("on"); clearTimeout(tt); tt = setTimeout(function(){ $("toast").classList.remove("on"); undoState = null; toastExtra = null; }, extra ? 7000 : 4500);
 }
 $("undoBtn").addEventListener("click", function(){ if(!undoState) return; items = JSON.parse(undoState).map(norm).filter(Boolean); save(); lastHTML = ""; render(); $("toast").classList.remove("on"); undoState = null; buzz(8); });
+$("extraBtn").addEventListener("click", function(){ var x = toastExtra; toastExtra = null; if(x) x.fn(); });
+
+/* ---------- swipe a row: right = did it, left = later ---------- */
+(function(){
+  var row = null, x0 = 0, y0 = 0, dx = 0, mode = 0;
+  var app = $("app");
+  app.addEventListener("touchstart", function(e){
+    var r = e.target.closest(".row"); if(!r || !r.querySelector("[data-act]:not([data-act=edit])")) return;
+    row = r; x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; dx = 0; mode = 0;
+  }, {passive:true});
+  app.addEventListener("touchmove", function(e){
+    if(!row) return;
+    var mx = e.touches[0].clientX - x0, my = e.touches[0].clientY - y0;
+    if(!mode){ if(Math.abs(mx) > 10 && Math.abs(mx) > Math.abs(my)) mode = 1; else if(Math.abs(my) > 10){ row = null; return; } }
+    if(mode !== 1) return;
+    if(e.cancelable) e.preventDefault();
+    dx = mx; var rtl = document.documentElement.dir === "rtl";
+    row.style.transform = "translateX(" + (dx*0.7) + "px)"; row.style.transition = "none";
+    var right = rtl ? dx < 0 : dx > 0;
+    row.classList.toggle("sw-do", Math.abs(dx) > 70 && right); row.classList.toggle("sw-later", Math.abs(dx) > 70 && !right);
+  }, {passive:false});
+  function end(){
+    if(!row) return; var r = row; row = null;
+    r.style.transition = ""; r.style.transform = "";
+    var go = r.classList.contains("sw-do") ? "do" : r.classList.contains("sw-later") ? "later" : null;
+    r.classList.remove("sw-do", "sw-later");
+    if(!go) return;
+    var b = r.querySelector(".ck"), a = b && b.getAttribute("data-act"); if(!a) return;
+    if(go === "do"){ if(!r.classList.contains("done")) act(a, r.getAttribute("data-id"), r.getAttribute("data-time"), b); }
+    else if(a !== "win" && !r.classList.contains("done")) act(a, r.getAttribute("data-id"), r.getAttribute("data-time"), null, {later:true});
+  }
+  app.addEventListener("touchend", end); app.addEventListener("touchcancel", end);
+})();
+
+/* ---------- catch-up: answer everything you missed in one go ---------- */
+var cq = [], ci = 0;
+function lateQueue(){
+  var m = model(), q = [];
+  m.slots.forEach(function(s){ if(s.state === "late") q.push({kind:"slot", id:s.it.id, time:s.time, eff:s.eff, name:s.it.name, lab:t("lateX", {x:dur(s.delta)}), sub:describe(s.it)}); });
+  m.overdue.forEach(function(o){ q.push({kind:"item", id:o.it.id, name:o.it.name, lab:t("lateD", {n:-o.d}), sub:describe(o.it)}); });
+  return q;
+}
+function openCatch(){
+  cq = lateQueue(); ci = 0; if(!cq.length) return;
+  set("r.catchAt", String(Date.now()));
+  paintCatch(); $("cScrim").classList.add("on"); $("catch").classList.add("on"); document.documentElement.classList.add("lock");
+}
+function closeCatch(){ $("cScrim").classList.remove("on"); $("catch").classList.remove("on"); document.documentElement.classList.remove("lock"); lastHTML = ""; render(); }
+function paintCatch(dir){
+  var c = $("cCard");
+  if(ci >= cq.length){
+    c.innerHTML = '<div class="cdone">'+'<span class="cbig">'+ico("check", 34, 3)+'</span><b>'+esc(t("caught"))+'</b><small>'+esc(t("caughtS"))+'</small></div>';
+    $("cBtns").style.display = "none"; $("cDots").innerHTML = ""; $("cCount").textContent = "";
+    buzz([10, 60, 20]); setTimeout(closeCatch, 1300); return;
+  }
+  var q = cq[ci];
+  $("cBtns").style.display = "";
+  $("cCount").textContent = t("catchN", {a:ci + 1, b:cq.length});
+  $("cDots").innerHTML = cq.map(function(_, i){ return '<i class="'+(i < ci ? "on" : i === ci ? "cur" : "")+'"></i>'; }).join("");
+  c.innerHTML = '<div class="ccard'+(dir ? " in" : "")+'">'+(q.time ? '<div class="ctime tab">'+q.eff+'</div>' : '<div class="ctime">'+ico("cal", 30)+'</div>')+'<div class="cname">'+esc(q.name)+'</div><div class="clate">'+esc(q.lab)+'</div><div class="csub">'+esc(q.sub)+'</div><div class="chint">'+esc(t("swipeHint"))+'</div></div>';
+  $("cOnTime").innerHTML = ico("check", 20, 2.6) + '<span>' + esc(q.time ? t("onTimeAt", {t:q.eff}) : t("didIt")) + '</span>';
+  $("cNow").style.display = q.time ? "" : "none";
+  $("cLater").innerHTML = ico("clock", 18) + '<span>' + esc(q.time ? t("plus30") : t("tomorrowB")) + '</span>';
+}
+function answer(how){
+  var q = cq[ci]; if(!q) return;
+  var o = how === "ontime" ? (q.time ? {at:q.eff} : {}) : how === "now" ? {} : how === "missed" ? {missed:true} : {later:true};
+  var card = $("cCard").firstChild; if(card) card.classList.add(how === "missed" ? "out-l" : "out-r");
+  apply(q.kind, q.id, q.time, o); save(); buzz(how === "missed" ? [8, 40, 8] : 14);
+  setTimeout(function(){ ci++; paintCatch(true); lastHTML = ""; render(); }, 220);
+}
+$("cBtns").addEventListener("click", function(e){ var b = e.target.closest("[data-c]"); if(b) answer(b.getAttribute("data-c")); });
+$("cScrim").addEventListener("click", closeCatch); $("cClose").addEventListener("click", closeCatch);
+(function(){
+  var x0 = null, dx = 0, el = $("cCard");
+  el.addEventListener("touchstart", function(e){ x0 = e.touches[0].clientX; dx = 0; }, {passive:true});
+  el.addEventListener("touchmove", function(e){ if(x0 === null) return; dx = e.touches[0].clientX - x0; var c = el.firstChild; if(c && c.classList.contains("ccard")){ c.style.transition = "none"; c.style.transform = "translateX(" + dx + "px) rotate(" + (dx/25) + "deg)"; c.classList.toggle("lean-r", dx > 60); c.classList.toggle("lean-l", dx < -60); } }, {passive:true});
+  el.addEventListener("touchend", function(){ if(x0 === null) return; x0 = null; var c = el.firstChild; if(!c || !c.classList.contains("ccard")) return; c.style.transition = ""; c.style.transform = "";
+    var rtl = document.documentElement.dir === "rtl", r = rtl ? -dx : dx;
+    if(r > 90) answer("ontime"); else if(r < -90) answer("missed"); else c.classList.remove("lean-r", "lean-l"); });
+})();
+function maybeCatch(){
+  if($("sheet").classList.contains("on") || $("catch").classList.contains("on")) return;
+  if(Date.now() - (+get("r.catchAt") || 0) < 25*60e3) return;
+  if(lateQueue().length) setTimeout(openCatch, 450);
+}
+document.addEventListener("keydown", function(e){
+  if(!$("catch").classList.contains("on")) return;
+  if(e.key === "ArrowRight") answer("ontime"); else if(e.key === "ArrowLeft") answer("missed"); else if(e.key === "Escape") closeCatch();
+});
 
 /* ---------- sheet ---------- */
 var editing = null, F = {}, calMonth = today();
@@ -729,9 +915,9 @@ function nextHour(){ var v = Math.ceil((nowMin() + 1)/60)*60; return hm(v >= 144
 function openSheet(it){
   editing = it || null;
   var td = iso(today());
-  if(it && it.kind === "window") F = {name:it.name, n:1, unit:it.period, mode:"flex", goal:true, shift:false, quota:it.quota, times:[], date:td};
-  else if(it) F = {name:it.name, n:it.n, unit:it.unit, mode:it.kind, goal:false, shift:it.shift, quota:it.quota, times:it.times.slice(), date:it.next};
-  else F = {name:"", n:1, unit:"d", mode:"fixed", goal:false, shift:false, quota:1, times:[], date:td};
+  F = {name:"", nBy:{h:1, d:1, w:1, m:1}, unit:"d", mode:"fixed", shift:false, quota:1, times:[], date:td};
+  if(it && it.kind === "window"){ F.name = it.name; F.unit = it.period; F.mode = "flex"; F.quota = it.quota; }
+  else if(it){ F.name = it.name; F.unit = it.unit; F.nBy[it.unit] = it.n; F.shift = it.shift || it.kind === "flex"; F.times = it.times.slice(); F.date = it.next; }
   if(parse(F.date) < today()) F.date = td;
   $("shTitle").textContent = t(it ? "editT" : "newT");
   $("fName").value = F.name; $("fName").placeholder = t("ph");
@@ -745,44 +931,44 @@ function closeSheet(){
   $("scrim").classList.remove("on"); $("sheet").classList.remove("on"); $("sheet").style.transform = "";
   document.documentElement.classList.remove("lock"); if(document.activeElement) document.activeElement.blur();
 }
-function stepper(f, v){ return '<div class="step"><button type="button" data-stp="'+f+'" data-d="-1" aria-label="−">'+ico("minus")+'</button><output class="tab">'+v+'</output><button type="button" data-stp="'+f+'" data-d="1" aria-label="+">'+ico("plus")+'</button></div>'; }
-function toggle(id, on, title, sub, extra){ return '<div class="tgl'+(on ? " on" : "")+'"><button type="button" class="tgh" data-tg="'+id+'"><span class="ot"><b>'+esc(title)+'</b><small>'+esc(sub)+'</small></span><span class="sw"><i></i></span></button>'+(on && extra ? extra : '')+'</div>'; }
+function N(){ return F.nBy[F.unit]; }
+function canNoFix(){ return F.unit !== "h" && N() === 1; }
+function stepper(f, v){ return '<div class="step"><button type="button" data-stp="'+f+'" data-d="-1" aria-label="−"'+(v <= 1 ? ' class="dim"' : '')+'>'+ico("minus")+'</button><output class="tab">'+v+'</output><button type="button" data-stp="'+f+'" data-d="1" aria-label="+">'+ico("plus")+'</button></div>'; }
+function toggle(id, on, title, sub){ return '<div class="tgl'+(on ? " on" : "")+'"><button type="button" class="tgh" data-tg="'+id+'"><span class="ot"><b>'+esc(title)+'</b><small>'+esc(sub)+'</small></span><span class="sw"><i></i></span></button></div>'; }
 function joinTimes(a){ return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + t("and") + a[a.length-1]; }
 function dayName(d){ var dd = diff(today(), d); return dd === 0 ? t("today").toLowerCase() : dd === 1 ? t("tomorrow").toLowerCase() : fmt(d, {weekday:"long", day:"numeric", month:"long"}); }
-function gridPreview(){ var st = mins(F.times[0] || nextHour()), out = []; for(var k = 0; k < 3; k++){ var v = st + k*F.n*60; if(v >= 1440) break; out.push(hm(v)); } return out.join(", ") + (out.length === 3 ? "…" : ""); }
-function isGoal(){ return F.goal && F.mode === "flex" && (F.unit === "w" || F.unit === "m"); }
+function gridPreview(){ var st = mins(F.times[0] || nextHour()), out = []; for(var k = 0; k < 3; k++){ var v = st + k*N()*60; if(v >= 1440) break; out.push(hm(v)); } return out.join(", ") + (out.length === 3 ? "…" : ""); }
 function summary(){
-  var d = parse(F.date), s;
-  if(isGoal()) return [t("sumGoal", {q:qtxt(F.quota), p:t("u1"+F.unit)}), ""];
+  var d = parse(F.date), s, n = N();
+  if(F.mode === "flex") return [t("sumAny", {q:qtxt(F.quota), p:t("p"+F.unit)}), ""];
   if(F.unit === "h"){
-    s = (F.n === 1 ? t("eHour") : t("eN", {n:F.n, u:t("uh")})) + ", " + t("fromT", {t:F.times[0] || nextHour()});
-    s += F.mode === "fixed" && !F.shift ? " · " + gridPreview() : " · " + t("sumShift");
+    s = (n === 1 ? t("eHour") : t("eN", {n:n, u:t("uh")})) + ", " + t("fromT", {t:F.times[0] || nextHour()});
+    s += !F.shift ? " · " + gridPreview() : " · " + t("sumShift");
   } else {
-    if(F.n === 1 && F.unit === "d") s = t("eDay");
-    else if(F.n === 1 && F.unit === "w" && F.mode === "fixed") s = t("eWeekOn", {w:fmt(d, {weekday:"long"})});
-    else if(F.n === 1 && F.unit === "m") s = t("eMonth") + (F.mode === "fixed" ? " · " + t("onDay", {n:ord(d.getDate())}) : "");
-    else s = t("eN", {n:F.n, u:t("u"+F.unit)}) + (F.mode === "fixed" && F.unit === "m" ? " · " + t("onDay", {n:ord(d.getDate())}) : "");
+    if(n === 1 && F.unit === "d") s = t("eDay");
+    else if(n === 1 && F.unit === "w") s = t("eWeekOn", {w:fmt(d, {weekday:"long"})});
+    else if(n === 1 && F.unit === "m") s = t("eMonth") + " · " + t("onDay", {n:ord(d.getDate())});
+    else s = t("eN", {n:n, u:t("u"+F.unit)}) + (F.unit === "m" ? " · " + t("onDay", {n:ord(d.getDate())}) : "");
     if(F.times.length) s += t("sumAt", {t:joinTimes(F.times)});
-    if(F.mode === "flex") s += " · " + t("afterDone"); else if(F.shift) s += " · " + t("sumShift");
+    if(F.shift) s += " · " + t("sumShift");
   }
   return [s, t(editing ? "sumNext" : "sumFrom", {d:dayName(d)})];
 }
 function paintSheet(){
-  var H = F.unit === "h", goal = isGoal();
+  var H = F.unit === "h";
+  if(!canNoFix() && F.mode === "flex") F.mode = "fixed";
+  var flex = F.mode === "flex";
   if(H && !F.times.length) F.times = [nextHour()];
   if(H && F.times.length > 1) F.times = [F.times[0]];
-  var units = ["h","d","w","m"].map(function(u){ return '<button type="button" data-unit="'+u+'" class="'+(F.unit === u ? "on" : "")+'">'+esc(t(F.n === 1 ? u : u + u))+'</button>'; }).join("");
-  var h = '<div class="line"'+(goal ? ' style="display:none"' : '')+'>'+stepper("n", F.n)+'<div class="seg">'+units+'</div></div>';
-  if(goal) h = '<div class="line"><div class="seg">'+units+'</div></div>';
-  var K = [["fixed", H ? "fixedT" : "fixedD", H ? t("fixedSH", {x:gridPreview()}) : t("fixedS"), "cal"], ["flex", H ? "flexT" : "flexD", t(H ? "flexSH" : "flexS"), "repeat"]];
-  h += '<div class="kinds" style="margin-top:8px">' + K.map(function(k){
-    return '<button type="button" class="kind'+(F.mode === k[0] ? " on" : "")+'" data-mode="'+k[0]+'"><span class="ki">'+ico(k[3])+'</span><span><b>'+esc(t(k[1]))+'</b><span>'+esc(k[2])+'</span></span></button>';
-  }).join("") + '</div>';
-  if(F.mode === "fixed") h += toggle("shift", F.shift, t("shiftT"), t(H || F.times.length ? "shiftS" : "shiftSD"));
-  if(F.mode === "flex" && (F.unit === "w" || F.unit === "m")) h += toggle("goal", F.goal, t("goalT", {p:t("u1"+F.unit)}), t("goalS", {s:t(F.unit === "m" ? "month" : "week")}),
-    '<div class="optx"><span class="ol">'+esc(t("howMany"))+'</span>'+stepper("q", F.quota)+'</div>');
-  $("fKind").innerHTML = h;
-  $("gTimes").style.display = $("gDate").style.display = goal ? "none" : "";
+  var units = ["h","d","w","m"].map(function(u){ return '<button type="button" data-unit="'+u+'" class="'+(F.unit === u ? "on" : "")+'">'+esc(t(F.nBy[u] === 1 ? u : u + u))+'</button>'; }).join("");
+  var h = '<div class="line">'+stepper("n", N())+'<div class="seg">'+units+'</div></div><div class="kinds" style="margin-top:8px">';
+  h += '<button type="button" class="kind'+(!flex ? " on" : "")+'" data-mode="fixed"><span class="ki">'+ico("cal")+'</span><span><b>'+esc(t(H ? "fixedT" : "fixedD"))+'</b><span>'+esc(H ? t("fixedSH", {x:gridPreview()}) : t("fixedS"))+'</span></span></button>';
+  if(!flex) h += toggle("shift", F.shift, t("shiftT"), t(H || F.times.length ? "shiftS" : "shiftSD"));
+  var dis = !canNoFix();
+  h += '<button type="button" class="kind'+(flex ? " on" : "")+(dis ? " off" : "")+'" data-mode="flex"'+(dis ? ' aria-disabled="true"' : '')+'><span class="ki">'+ico("target")+'</span><span><b>'+esc(t(H ? "flexT" : "flexD"))+'</b><span>'+esc(dis ? t("noFixDis") : t("noFixS", {p:t("p"+F.unit)}))+'</span></span></button>';
+  if(flex) h += '<div class="tgl on"><div class="optx" style="padding-top:12px"><span class="ol">'+esc(t("howMany"))+'</span>'+stepper("q", F.quota)+'</div></div>';
+  $("fKind").innerHTML = h + '</div>';
+  $("gTimes").style.display = $("gDate").style.display = flex ? "none" : "";
   $("timesLbl").textContent = t(H ? "fStartAt" : "fTimes"); $("timesOpt").textContent = H ? "" : t("optional");
   $("timeList").innerHTML = F.times.map(function(x){ return '<span class="tchip">'+x+(H ? '' : '<button type="button" data-rm="'+x+'" aria-label="Remove">'+ico("x", 16)+'</button>')+'</span>'; }).join("") +
     '<button type="button" class="tadd" id="tAdd">'+ico(H ? "clock" : "plus", 18)+esc(t(H ? "change" : "addTime"))+'</button>';
@@ -795,10 +981,15 @@ function paintSheet(){
 }
 $("sheet").addEventListener("click", function(e){
   var b;
-  if((b = e.target.closest("[data-mode]"))){ F.mode = b.getAttribute("data-mode"); paintSheet(); buzz(6); }
+  if((b = e.target.closest("[data-mode]"))){ if(b.classList.contains("off")){ buzz([10, 40, 10]); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); return; } F.mode = b.getAttribute("data-mode"); paintSheet(); buzz(6); }
   else if((b = e.target.closest("[data-tg]"))){ var k = b.getAttribute("data-tg"); F[k] = !F[k]; paintSheet(); buzz(8); }
-  else if((b = e.target.closest("[data-stp]"))){ var f = b.getAttribute("data-stp") === "n" ? "n" : "quota", mx = f === "quota" ? 31 : F.unit === "h" ? 23 : 365; F[f] = Math.min(mx, Math.max(1, F[f] + (+b.getAttribute("data-d")))); paintSheet(); buzz(5); }
-  else if((b = e.target.closest("[data-unit]"))){ F.unit = b.getAttribute("data-unit"); if(F.unit === "h" && F.n > 23) F.n = 23; paintSheet(); }
+  else if((b = e.target.closest("[data-stp]"))){
+    var dlt = +b.getAttribute("data-d");
+    if(b.getAttribute("data-stp") === "q") F.quota = Math.min(31, Math.max(1, F.quota + dlt));
+    else F.nBy[F.unit] = Math.min(F.unit === "h" ? 23 : 365, Math.max(1, N() + dlt));
+    paintSheet(); buzz(5);
+  }
+  else if((b = e.target.closest("[data-unit]"))){ F.unit = b.getAttribute("data-unit"); paintSheet(); buzz(4); }
   else if((b = e.target.closest("[data-rm]"))){ var x = b.getAttribute("data-rm"); F.times = F.times.filter(function(y){ return y !== x; }); paintSheet(); }
   else if(e.target.closest("#tAdd")){ openPicker(); }
   else if((b = e.target.closest("[data-day]"))){ F.date = b.getAttribute("data-day"); paintSheet(); buzz(5); }
@@ -866,9 +1057,9 @@ $("saveBtn").addEventListener("click", function(){
   var name = $("fName").value.trim();
   if(!name){ $("fName").focus(); $("fName").placeholder = t("needName"); buzz([10,50,10]); return; }
   var before = snap(), it = editing ? JSON.parse(JSON.stringify(editing)) : {id:uid(), last:null, log:[]};
-  var goal = isGoal(), kind = goal ? "window" : F.mode, times = goal ? [] : F.times.slice().sort();
-  var changed = !editing || editing.kind !== kind || editing.n !== F.n || editing.unit !== F.unit || editing.next !== F.date || (F.unit === "h" && editing.times[0] !== times[0]);
-  it.name = name; it.kind = kind; it.n = goal ? 1 : F.n; it.unit = F.unit; it.quota = F.quota; it.period = goal ? F.unit : "w"; it.times = times; it.shift = kind === "fixed" && F.shift;
+  var flex = F.mode === "flex", kind = flex ? "window" : "fixed", times = flex ? [] : F.times.slice().sort(), n = flex ? 1 : N();
+  var changed = !editing || editing.kind !== kind || editing.n !== n || editing.unit !== F.unit || editing.next !== F.date || (F.unit === "h" && editing.times[0] !== times[0]);
+  it.name = name; it.kind = kind; it.n = n; it.unit = flex ? "d" : F.unit; it.quota = F.quota; it.period = flex ? F.unit : "w"; it.times = times; it.shift = !flex && F.shift;
   if(changed){ it.next = F.date; it.anchor = F.date; it.at0 = times[0] || null; it.prev = null; it.slots = null; }
   var n = norm(it);
   if(editing) items[items.indexOf(editing)] = n; else items.push(n);
@@ -877,8 +1068,7 @@ $("saveBtn").addEventListener("click", function(){
 });
 $("skipBtn").addEventListener("click", function(){
   if(!editing) return; var before = snap(), it = editing;
-  if(it.unit === "h"){ var occ = dt(it.next, it.times[0]); setOcc(it, it.kind === "fixed" && !it.shift ? gridAfter(it, occ) : new Date(occ.getTime() + it.n*36e5)); }
-  else it.next = iso(it.kind === "fixed" && !it.shift ? nextFixed(it, parse(it.next)) : step(it, parse(it.next), 1));
+  skipItem(it);
   save(); closeSheet(); lastHTML = ""; render();
   toast(t("skipped", {d:fmt(parse(it.next), {weekday:"short", day:"numeric", month:"short"})}), before);
 });
@@ -953,10 +1143,10 @@ $("file").addEventListener("change", function(){
 /* ---------- live: the clock moves, so does the list ---------- */
 window.addEventListener("scroll", function(){ $("hdr").classList.toggle("sh", window.pageYOffset > 4); }, {passive:true});
 setInterval(function(){ if(!document.hidden && !$("sheet").classList.contains("on")) render(); else $("clock").textContent = hm(nowMin()); }, 20000);
-document.addEventListener("visibilitychange", function(){ if(!document.hidden){ lastHTML = ""; render(); } });
+document.addEventListener("visibilitychange", function(){ if(!document.hidden){ lastHTML = ""; render(); maybeCatch(); } });
 window.addEventListener("pageshow", function(){ lastHTML = ""; render(); });
 
-applyTheme(); applyLang();
+applyTheme(); applyLang(); maybeCatch();
 if("serviceWorker" in navigator && location.protocol.indexOf("http") === 0){
   window.addEventListener("load", function(){ try{ navigator.serviceWorker.register("sw.js"); }catch(e){} });
 }
