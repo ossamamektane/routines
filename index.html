@@ -239,24 +239,6 @@ html[data-theme="dark"] .toast{background:#333}
 #presets .chip{flex-direction:column;gap:0;height:48px;padding:0 4px;line-height:1.15;min-width:0}
 #presets .chip small{font-size:12px}
 .picker .btn:not(.y){background:var(--bg)}
-.opts{background:var(--bg2);border-radius:16px;overflow:hidden}
-.opt{position:relative}
-.opt+.opt::before{content:"";position:absolute;top:0;inset-inline:48px 0;height:1px;background:var(--line)}
-.oh{width:100%;display:flex;align-items:center;gap:14px;min-height:52px;padding:10px 14px}
-.radio{width:22px;height:22px;border-radius:50%;border:2px solid var(--line2);flex:none;transition:border .15s}
-.opt.on .radio{border:7px solid var(--y)}
-.ot b{display:block;font-size:15px;font-weight:500}.opt.on .ot b{font-weight:700}
-.ot small{display:block;font-size:13px;color:var(--ink2);margin-top:1px}
-.optx{display:flex;align-items:center;gap:8px;padding:0 14px 12px 50px}
-html[dir="rtl"] .optx{padding:0 50px 12px 14px}
-.optx .step,.optx .seg{background:var(--bg)}
-.optx .seg{min-width:0;flex:1}.optx .seg button{padding:0 4px;white-space:nowrap}
-.optx .seg button.on{background:var(--y);color:#000;box-shadow:none}
-.ol{font-size:14px;color:var(--ink2)}
-.sum{flex:none;display:flex;gap:10px;align-items:flex-start;margin:0 16px;padding:12px 14px;border-radius:14px;background:var(--ysoft);font-size:15px;line-height:1.35}
-.sum svg{margin-top:1px}
-.sum small{display:block;color:var(--ink2);font-size:13px;margin-top:2px}
-.empty .btn{margin-top:4px}
 </style>
 </head>
 <body>
@@ -299,8 +281,17 @@ html[dir="rtl"] .optx{padding:0 50px 12px 14px}
     <div class="fl">
       <div class="lb"><span data-t="fName"></span></div>
       <input class="in" id="fName" type="text" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="60" enterkeyhint="done">
+      <div class="sugg" id="sugg"></div>
     </div>
     <div class="fl"><div class="lb"><span data-t="fKind"></span></div><div class="kinds" id="fKind"></div></div>
+
+    <div class="fl" id="gEvery"><div class="lb"><span data-t="fEvery"></span></div>
+      <div class="line"><div class="step"><button type="button" data-stp="n" data-d="-1"><span data-i="minus"></span></button><output id="oN" class="tab">1</output><button type="button" data-stp="n" data-d="1"><span data-i="plus"></span></button></div>
+      <div class="seg" id="fUnit"><button type="button" data-v="d"></button><button type="button" data-v="w"></button><button type="button" data-v="m"></button></div></div></div>
+
+    <div class="fl" id="gQuota"><div class="lb"><span data-t="fQuota"></span></div>
+      <div class="line"><div class="step"><button type="button" data-stp="q" data-d="-1"><span data-i="minus"></span></button><output id="oQ" class="tab">1</output><button type="button" data-stp="q" data-d="1"><span data-i="plus"></span></button></div>
+      <div class="seg" id="fPeriod"><button type="button" data-v="w"></button><button type="button" data-v="m"></button></div></div></div>
 
     <div class="fl" id="gTimes"><div class="lb"><span data-t="fTimes"></span><span data-t="optional"></span></div>
       <div class="times" id="timeList"></div>
@@ -315,8 +306,8 @@ html[dir="rtl"] .optx{padding:0 50px 12px 14px}
       <button class="dbtn" type="button" id="dateBtn"><span data-i="cal"></span><span id="dateTxt"></span><span class="chev" data-i="chev"></span></button>
       <div class="cal" id="cal"></div>
     </div>
+    <p class="hint" id="hint"></p>
   </div>
-  <div class="sum" id="hint"></div>
   <div class="sfoot">
     <button class="btn ic" type="button" id="delBtn" aria-label="Delete"><span data-i="trash"></span><span id="delTx"></span></button>
     <button class="btn ic" type="button" id="skipBtn" aria-label="Skip"><span data-i="skip"></span></button>
@@ -366,16 +357,12 @@ var T = {
   goalDone:["done for this {p}","fait pour ce {p}","منجز لهذا {p}"], pw:["week","semaine","الأسبوع"], pm:["month","mois","الشهر"],
   lateD:["{n}d late","{n} j de retard","متأخر {n} ي"], tomorrow:["Tomorrow","Demain","غدًا"],
   showMore:["Show {n} more","Afficher {n} de plus","عرض {n} أخرى"], showLess:["Show less","Moins","أقل"],
-  emptyT:["No tasks yet","Aucune tâche","لا توجد مهام بعد"], emptyP:["Add something you do regularly. Give it a time, a repeat, or a weekly goal — then check it off through the day.","Ajoutez une chose que vous faites régulièrement : une heure, une répétition ou un objectif. Puis cochez-la dans la journée.","أضف شيئًا تفعله بانتظام: وقتًا أو تكرارًا أو هدفًا أسبوعيًا، ثم أنجزه خلال اليوم."], addFirst:["Add your first task","Ajouter une tâche","أضف أول مهمة"],
-  newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["Name","Nom","الاسم"], ph:["Task name","Nom de la tâche","اسم المهمة"],
-  fKind:["Repeat","Répéter","التكرار"],
-  rDay:["Every day","Tous les jours","كل يوم"], rWeek:["Every week","Chaque semaine","كل أسبوع"], rMonth:["Every month","Chaque mois","كل شهر"],
-  rCustom:["Every few days, weeks or months","Tous les X jours, semaines ou mois","كل بضعة أيام أو أسابيع أو أشهر"],
-  rAfter:["Some time after I last did it","Un certain temps après la dernière fois","بعد مدة من آخر مرة"], rAfterS:["The clock restarts when you check it","Le compte repart quand vous cochez","يبدأ العد من جديد عند الإنجاز"],
-  rGoal:["A number of times per week or month","Un nombre de fois par semaine ou mois","عدد مرات في الأسبوع أو الشهر"], rGoalS:["No set day — any day works","Pas de jour fixe","بدون يوم محدد"],
-  onW:["on {w}","le {w}","يوم {w}"], everyL:["Every","Tous les","كل"], afterL:["after","après","بعد"], perL:["per","par","في"],
-  sumDay:["Every day","Tous les jours","كل يوم"], sumAfter:["{e} after you last do it","{e} après la dernière fois","بعد {e} من آخر مرة"], sumGoal:["{q} a {p}, any day","{q} par {p}, n’importe quel jour","{q} في {p}، أي يوم"],
-  sumAt:[" at {t}"," à {t}"," في {t}"], sumFrom:["Starts {d}","Commence {d}","يبدأ {d}"], sumNext:["Next: {d}","Prochaine : {d}","التالي: {d}"], and:[" and "," et "," و"],
+  emptyT:["Build your day","Construisez votre journée","ابنِ يومك"], emptyP:["Tap to add — you can edit any of them later.","Touchez pour ajouter — modifiable ensuite.","اضغط للإضافة — يمكنك التعديل لاحقًا."],
+  newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["What","Quoi","ماذا"], ph:["Brush teeth","Se brosser les dents","غسل الأسنان"],
+  fKind:["How it repeats","Répétition","التكرار"],
+  kFixed:["Set schedule","Planning fixe","جدول ثابت"], kFixedS:["Same days and hours — breakfast at 08:00","Mêmes jours et heures — petit-déj à 08:00","نفس الأيام والساعات — الفطور 08:00"],
+  kFlex:["After I do it","Après l’avoir fait","بعد إنجازها"], kFlexS:["Clock restarts when done — barber every 3 weeks","Repart quand c’est fait — coiffeur toutes les 3 sem.","يبدأ العد بعد الإنجاز — الحلاق كل 3 أسابيع"],
+  kWin:["Week / month goal","Objectif semaine / mois","هدف أسبوعي / شهري"], kWinS:["No set day — laundry once this week","Pas de jour fixe — lessive 1× cette semaine","بدون يوم محدد — الغسيل مرة هذا الأسبوع"],
   fEvery:["Every","Tous les","كل"], fQuota:["Times per","Fois par","مرات في"], d:["Day","Jour","يوم"], w:["Week","Semaine","أسبوع"], m:["Month","Mois","شهر"],
   dd:["Days","Jours","أيام"], ww:["Weeks","Semaines","أسابيع"], mm:["Months","Mois","أشهر"],
   fTimes:["At","À","في الساعة"], optional:["optional","facultatif","اختياري"], addTime:["Add time","Ajouter","إضافة"], cancel:["Cancel","Annuler","إلغاء"],
@@ -396,6 +383,9 @@ var T = {
   onDay:["on the {n}","le {n}","يوم {n}"], afterDone:["after done","après coup","بعد الإنجاز"], winSub:["{q} a {p}","{q} par {p}","{q} في {p}"],
   lastDone:["last {x}","dernière {x}","آخر مرة {x}"], ago:["{n}d ago","il y a {n} j","منذ {n} ي"], agoToday:["today","aujourd’hui","اليوم"],
   today:["Today","Aujourd’hui","اليوم"], nextWeek:["In a week","Dans 1 sem.","بعد أسبوع"],
+  sBreakfast:["Breakfast","Petit-déjeuner","الفطور"], sLunch:["Lunch","Déjeuner","الغداء"], sDinner:["Dinner","Dîner","العشاء"], sTeeth:["Brush teeth","Se brosser les dents","غسل الأسنان"],
+  sShower:["Shower","Douche","الاستحمام"], sWater:["Drink water","Boire de l’eau","شرب الماء"], sWorkout:["Workout","Sport","التمرين"], sLaundry:["Laundry","Lessive","الغسيل"],
+  sBarber:["Barber","Coiffeur","الحلاق"], sNails:["Cut nails","Couper les ongles","قص الأظافر"], sSheets:["Change bed sheets","Changer les draps","تغيير الأغطية"], sRoom:["Clean room","Ranger la chambre","ترتيب الغرفة"]
 };
 var LANGS = ["en","fr","ar"];
 var lang = get("r.lang") || (navigator.language || "en").slice(0,2);
@@ -403,6 +393,20 @@ if(LANGS.indexOf(lang) < 0) lang = "en";
 function t(k, v){ var r = T[k], s = r ? (r[LANGS.indexOf(lang)] || r[0]) : k; if(v) for(var x in v) s = s.split("{"+x+"}").join(v[x]); return s; }
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 
+var SUGG = [
+  {k:"sBreakfast", kind:"fixed", unit:"d", n:1, times:["08:00"]},
+  {k:"sTeeth", kind:"fixed", unit:"d", n:1, times:["08:30","22:30"]},
+  {k:"sLunch", kind:"fixed", unit:"d", n:1, times:["13:00"]},
+  {k:"sDinner", kind:"fixed", unit:"d", n:1, times:["20:00"]},
+  {k:"sShower", kind:"fixed", unit:"d", n:1, times:["07:30"]},
+  {k:"sWater", kind:"fixed", unit:"d", n:1, times:["10:00","15:00","18:00"]},
+  {k:"sWorkout", kind:"window", period:"w", quota:3},
+  {k:"sLaundry", kind:"window", period:"w", quota:1},
+  {k:"sRoom", kind:"window", period:"w", quota:2},
+  {k:"sSheets", kind:"window", period:"m", quota:2},
+  {k:"sBarber", kind:"flex", unit:"w", n:3},
+  {k:"sNails", kind:"flex", unit:"w", n:2}
+];
 
 /* ---------- storage ---------- */
 function get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
@@ -548,7 +552,8 @@ function render(){
   $("meter").style.display = seg.length ? "" : "none";
 
   if(!items.length){
-    out = '<div class="empty"><h2>'+esc(t("emptyT"))+'</h2><p>'+esc(t("emptyP"))+'</p><button class="btn y" type="button" data-act="add" style="flex:none">'+ico("plus")+esc(t("addFirst"))+'</button></div>';
+    out = '<div class="empty"><h2>'+esc(t("emptyT"))+'</h2><p>'+esc(t("emptyP"))+'</p><div class="chips">'+
+      SUGG.map(function(s, i){ return '<button class="chip" type="button" data-sugg="'+i+'">'+ico("plus", 16)+esc(t(s.k))+(s.times ? '<small class="tab">'+s.times.join(" · ")+'</small>' : '')+'</button>'; }).join("")+'</div></div>';
   } else {
     out += nowCard(m);
     if(m.overdue.length) out += sec(t("overdue"), m.overdue.length, "", m.overdue.map(function(o){
@@ -660,10 +665,15 @@ function act(kind, id, time, el){
   }, on ? 260 : 0);
   toast(on ? t("checked", {n:it.name}) : t("unchecked"), before);
 }
+function fromTemplate(s){
+  var td = iso(today());
+  return norm({id:uid(), name:t(s.k), kind:s.kind, n:s.n || 1, unit:s.unit || "d", quota:s.quota || 1, period:s.period || "w", times:s.times || [], next:td, anchor:td});
+}
 document.addEventListener("click", function(e){
+  var sg = e.target.closest("[data-sugg]");
+  if(sg){ var s = SUGG[+sg.getAttribute("data-sugg")], before = snap(); items.push(fromTemplate(s)); save(); buzz(); lastHTML = ""; render(); toast(t("added", {n:t(s.k)}), before); return; }
   var b = e.target.closest("[data-act]"); if(!b || !b.closest("#app")) return;
   var a = b.getAttribute("data-act");
-  if(a === "add"){ openSheet(null); return; }
   if(a === "more"){ expanded = !expanded; render(); return; }
   if(a === "add"){ openSheet(null); return; }
   var host = b.closest("[data-id]"); if(!host) return;
@@ -681,84 +691,57 @@ $("undoBtn").addEventListener("click", function(){ if(!undoState) return; items 
 
 /* ---------- sheet ---------- */
 var editing = null, F = {}, calMonth = today();
-function repOf(it){
-  if(it.kind === "window") return "goal";
-  if(it.kind === "flex") return "after";
-  if(it.n === 1) return it.unit === "d" ? "day" : it.unit === "w" ? "week" : "month";
-  return "custom";
-}
 function openSheet(it){
   editing = it || null;
   var td = iso(today());
-  F = it ? {name:it.name, rep:repOf(it), n:it.n, unit:it.unit, quota:it.quota, period:it.period, times:it.times.slice(), date:it.next}
-         : {name:"", rep:"day", n:2, unit:"d", quota:1, period:"w", times:[], date:td};
-  if(F.rep === "custom" || F.rep === "after"){} else if(F.n < 2 && F.rep !== "goal"){ F.n = 2; }
+  F = it ? {name:it.name, kind:it.kind, n:it.n, unit:it.unit, quota:it.quota, period:it.period, times:it.times.slice(), date:it.next}
+         : {name:"", kind:"fixed", n:1, unit:"d", quota:1, period:"w", times:[], date:td};
   if(parse(F.date) < today()) F.date = td;
   $("shTitle").textContent = t(it ? "editT" : "newT");
   $("fName").value = F.name; $("fName").placeholder = t("ph");
   $("delBtn").style.display = it ? "" : "none"; $("skipBtn").style.display = it && it.kind !== "window" ? "" : "none";
   disarm(); $("picker").classList.remove("on"); $("cal").classList.remove("on"); $("dateBtn").classList.remove("open");
   calMonth = parse(F.date); calMonth.setDate(1);
+  $("sugg").style.display = it ? "none" : "";
+  $("sugg").innerHTML = SUGG.map(function(s, i){ return '<button class="chip" type="button" data-fill="'+i+'">'+esc(t(s.k))+'</button>'; }).join("");
   paintSheet(); $("sbody").scrollTop = 0;
   $("scrim").classList.add("on"); $("sheet").classList.add("on"); document.documentElement.classList.add("lock");
-  if(!it) setTimeout(function(){ $("fName").focus(); }, 320);
 }
 function closeSheet(){
   $("scrim").classList.remove("on"); $("sheet").classList.remove("on"); $("sheet").style.transform = "";
   document.documentElement.classList.remove("lock"); if(document.activeElement) document.activeElement.blur();
 }
-function stepper(f, v){ return '<div class="step"><button type="button" data-stp="'+f+'" data-d="-1" aria-label="−">'+ico("minus")+'</button><output class="tab">'+v+'</output><button type="button" data-stp="'+f+'" data-d="1" aria-label="+">'+ico("plus")+'</button></div>'; }
-function unitSeg(n){ return '<div class="seg">'+["d","w","m"].map(function(u){ return '<button type="button" data-unit="'+u+'" class="'+(F.unit === u ? "on" : "")+'">'+esc(t(n === 1 ? "u1"+u : "u"+u))+'</button>'; }).join("")+'</div>'; }
-function perSeg(){ return '<div class="seg">'+["w","m"].map(function(p){ return '<button type="button" data-per="'+p+'" class="'+(F.period === p ? "on" : "")+'">'+esc(t("u1"+p))+'</button>'; }).join("")+'</div>'; }
-function joinTimes(a){ return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + t("and") + a[a.length-1]; }
-function dayName(d){ var dd = diff(today(), d); return dd === 0 ? t("today").toLowerCase() : dd === 1 ? t("tomorrow").toLowerCase() : fmt(d, {weekday:"long", day:"numeric", month:"long"}); }
-function summary(){
-  var d = parse(F.date), s, u = function(n){ return n === 1 ? t("u1"+F.unit) : n + " " + t("u"+F.unit); };
-  if(F.rep === "goal") return t("sumGoal", {q:qtxt(F.quota), p:t("u1"+F.period)});
-  if(F.rep === "day") s = t("sumDay");
-  else if(F.rep === "week") s = t("eWeekOn", {w:fmt(d, {weekday:"long"})});
-  else if(F.rep === "month") s = t("eMonth") + " · " + t("onDay", {n:ord(d.getDate())});
-  else if(F.rep === "custom") s = t("eN", {n:F.n, u:t("u"+F.unit)});
-  else s = t("sumAfter", {e:u(F.n)});
-  if(F.times.length) s += t("sumAt", {t:joinTimes(F.times)});
-  return s + "\n" + t(editing ? "sumNext" : "sumFrom", {d:dayName(d)});
-}
 function paintSheet(){
-  var d = parse(F.date);
-  var R = [
-    ["day", t("rDay"), ""],
-    ["week", t("rWeek"), t("onW", {w:fmt(d, {weekday:"long"})})],
-    ["month", t("rMonth"), t("onDay", {n:ord(d.getDate())})],
-    ["custom", t("rCustom"), ""],
-    ["after", t("rAfter"), t("rAfterS")],
-    ["goal", t("rGoal"), t("rGoalS")]
-  ];
-  $("fKind").innerHTML = '<div class="opts">' + R.map(function(r){
-    var on = F.rep === r[0], x = "";
-    if(on && r[0] === "custom") x = '<div class="optx"><span class="ol">'+esc(t("everyL"))+'</span>'+stepper("n", F.n)+unitSeg(F.n)+'</div>';
-    if(on && r[0] === "after") x = '<div class="optx">'+stepper("n", F.n)+unitSeg(F.n)+'</div>';
-    if(on && r[0] === "goal") x = '<div class="optx">'+stepper("q", F.quota)+'<span class="ol">'+esc(t("perL"))+'</span>'+perSeg()+'</div>';
-    return '<div class="opt'+(on ? " on" : "")+'"><button type="button" class="oh" data-rep="'+r[0]+'"><span class="radio"></span><span class="ot"><b>'+esc(r[1])+'</b>'+(r[2] ? '<small>'+esc(r[2])+'</small>' : '')+'</span></button>'+x+'</div>';
-  }).join("") + '</div>';
-  var goal = F.rep === "goal";
-  $("gTimes").style.display = $("gDate").style.display = goal ? "none" : "";
+  var K = [["fixed","clock","kFixed"],["flex","repeat","kFlex"],["window","target","kWin"]];
+  $("fKind").innerHTML = K.map(function(k){ return '<button type="button" class="kind'+(F.kind === k[0] ? " on" : "")+'" data-k="'+k[0]+'"><span class="ki">'+ico(k[1])+'</span><span><b>'+esc(t(k[2]))+'</b><span>'+esc(t(k[2]+"S"))+'</span></span></button>'; }).join("");
+  var win = F.kind === "window";
+  $("gEvery").style.display = $("gTimes").style.display = $("gDate").style.display = win ? "none" : "";
+  $("gQuota").style.display = win ? "" : "none";
+  $("oN").textContent = F.n; $("oQ").textContent = F.quota;
+  [].forEach.call($("fUnit").children, function(b){ var v = b.getAttribute("data-v"); b.textContent = t(F.n === 1 ? v : v + v); b.classList.toggle("on", v === F.unit); });
+  [].forEach.call($("fPeriod").children, function(b){ var v = b.getAttribute("data-v"); b.textContent = t(v); b.classList.toggle("on", v === F.period); });
   $("timeList").innerHTML = F.times.map(function(x){ return '<span class="tchip">'+x+'<button type="button" data-rm="'+x+'" aria-label="Remove">'+ico("x", 16)+'</button></span>'; }).join("") +
     '<button type="button" class="tadd" id="tAdd">'+ico("plus", 18)+esc(t("addTime"))+'</button>';
   $("dateLbl").textContent = t(editing ? "fNext" : "fStart");
-  var dd = diff(today(), d);
+  var d = parse(F.date), dd = diff(today(), d);
   $("dateTxt").textContent = (dd === 0 ? t("today") + ", " : dd === 1 ? t("tomorrow") + ", " : "") + fmt(d, dd > 1 ? {weekday:"long", day:"numeric", month:"long"} : {day:"numeric", month:"long"});
   if($("cal").classList.contains("on")) paintCal();
-  var sm = summary().split("\n");
-  $("hint").innerHTML = ico("repeat", 18) + '<span><b>'+esc(sm[0])+'</b>'+(sm[1] && !goal ? '<small>'+esc(sm[1])+'</small>' : '')+'</span>';
+  $("hint").textContent = win ? t("hWin", {p:t(F.period === "m" ? "month" : "week"), q:qtxt(F.quota), u:t("u1"+F.period)})
+    : t(F.kind === "fixed" ? "hFixed" : "hFlex", {e:every(F)}) + (F.times.length ? t("hTimes") : "");
 }
 $("sheet").addEventListener("click", function(e){
   var b;
-  if((b = e.target.closest("[data-rep]"))){ F.rep = b.getAttribute("data-rep"); if((F.rep === "custom" || F.rep === "after") && F.n < 2 && F.unit === "d") F.n = 2; paintSheet(); buzz(6); }
+  if((b = e.target.closest("[data-k]"))){ F.kind = b.getAttribute("data-k"); paintSheet(); buzz(6); }
   else if((b = e.target.closest("[data-stp]"))){ var f = b.getAttribute("data-stp") === "n" ? "n" : "quota", mx = f === "n" ? 365 : 31; F[f] = Math.min(mx, Math.max(1, F[f] + (+b.getAttribute("data-d")))); paintSheet(); buzz(5); }
-  else if((b = e.target.closest("[data-unit]"))){ F.unit = b.getAttribute("data-unit"); paintSheet(); }
-  else if((b = e.target.closest("[data-per]"))){ F.period = b.getAttribute("data-per"); paintSheet(); }
+  else if((b = e.target.closest("#fUnit [data-v]"))){ F.unit = b.getAttribute("data-v"); paintSheet(); }
+  else if((b = e.target.closest("#fPeriod [data-v]"))){ F.period = b.getAttribute("data-v"); paintSheet(); }
   else if((b = e.target.closest("[data-rm]"))){ var x = b.getAttribute("data-rm"); F.times = F.times.filter(function(y){ return y !== x; }); paintSheet(); }
   else if(e.target.closest("#tAdd")){ openPicker(); }
+  else if((b = e.target.closest("[data-fill]"))){
+    var s = SUGG[+b.getAttribute("data-fill")];
+    F.name = t(s.k); $("fName").value = F.name; F.kind = s.kind; F.n = s.n || 1; F.unit = s.unit || "d"; F.quota = s.quota || 1; F.period = s.period || "w"; F.times = (s.times || []).slice();
+    paintSheet(); buzz(6);
+  }
   else if((b = e.target.closest("[data-day]"))){ F.date = b.getAttribute("data-day"); paintSheet(); buzz(5); }
   else if((b = e.target.closest("[data-mon]"))){ calMonth = addMonths(calMonth, +b.getAttribute("data-mon"), 1); paintCal(); }
   else if((b = e.target.closest("[data-quick]"))){ F.date = iso(addDays(today(), +b.getAttribute("data-quick"))); calMonth = parse(F.date); calMonth.setDate(1); paintSheet(); }
@@ -824,10 +807,8 @@ $("saveBtn").addEventListener("click", function(){
   var name = $("fName").value.trim();
   if(!name){ $("fName").focus(); $("fName").placeholder = t("needName"); buzz([10,50,10]); return; }
   var before = snap(), it = editing ? JSON.parse(JSON.stringify(editing)) : {id:uid(), last:null, log:[]};
-  var kind = F.rep === "goal" ? "window" : F.rep === "after" ? "flex" : "fixed";
-  var nn = F.rep === "custom" || F.rep === "after" ? F.n : 1, unit = F.rep === "day" ? "d" : F.rep === "week" ? "w" : F.rep === "month" ? "m" : F.unit;
-  var changed = !editing || editing.kind !== kind || editing.n !== nn || editing.unit !== unit || editing.next !== F.date;
-  it.name = name; it.kind = kind; it.n = nn; it.unit = unit; it.quota = F.quota; it.period = F.period; it.times = kind === "window" ? [] : F.times.slice();
+  var changed = !editing || editing.kind !== F.kind || editing.n !== F.n || editing.unit !== F.unit || editing.next !== F.date;
+  it.name = name; it.kind = F.kind; it.n = F.n; it.unit = F.unit; it.quota = F.quota; it.period = F.period; it.times = F.times.slice();
   if(changed){ it.next = F.date; it.anchor = F.date; it.prev = null; }
   var n = norm(it);
   if(editing) items[items.indexOf(editing)] = n; else items.push(n);
