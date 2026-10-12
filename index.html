@@ -239,6 +239,24 @@ html[data-theme="dark"] .toast{background:#333}
 #presets .chip{flex-direction:column;gap:0;height:48px;padding:0 4px;line-height:1.15;min-width:0}
 #presets .chip small{font-size:12px}
 .picker .btn:not(.y){background:var(--bg)}
+.tgl{background:var(--bg2);border-radius:14px;margin-top:6px}
+.tgh{width:100%;display:flex;align-items:center;gap:12px;padding:12px 14px}
+.tgh .ot{flex:1;min-width:0}
+.ot b{display:block;font-size:15px;font-weight:700}
+.ot small{display:block;font-size:13px;color:var(--ink2);margin-top:2px;line-height:1.3}
+.sw{width:46px;height:28px;border-radius:14px;background:var(--bg3);position:relative;flex:none;transition:background .2s}
+.sw i{position:absolute;top:3px;inset-inline-start:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(0,0,0,.25);transition:transform .2s}
+.tgl.on .sw{background:var(--y)}
+.tgl.on .sw i{transform:translateX(18px)} html[dir="rtl"] .tgl.on .sw i{transform:translateX(-18px)}
+.optx{display:flex;align-items:center;gap:10px;padding:0 14px 12px}
+.optx .step{background:var(--bg)}
+.ol{font-size:14px;color:var(--ink2);flex:1}
+#fKind .seg{flex:1;min-width:0}
+#fKind .seg button{padding:0 2px;white-space:nowrap;font-size:13px}
+.sum{flex:none;display:flex;gap:10px;align-items:flex-start;margin:0 16px;padding:12px 14px;border-radius:14px;background:var(--ysoft);font-size:15px;line-height:1.35}
+.sum svg{margin-top:1px}
+.sum small{display:block;color:var(--ink2);font-size:13px;margin-top:2px}
+.empty .btn{margin-top:4px}
 </style>
 </head>
 <body>
@@ -281,19 +299,10 @@ html[data-theme="dark"] .toast{background:#333}
     <div class="fl">
       <div class="lb"><span data-t="fName"></span></div>
       <input class="in" id="fName" type="text" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="60" enterkeyhint="done">
-      <div class="sugg" id="sugg"></div>
     </div>
     <div class="fl"><div class="lb"><span data-t="fKind"></span></div><div class="kinds" id="fKind"></div></div>
 
-    <div class="fl" id="gEvery"><div class="lb"><span data-t="fEvery"></span></div>
-      <div class="line"><div class="step"><button type="button" data-stp="n" data-d="-1"><span data-i="minus"></span></button><output id="oN" class="tab">1</output><button type="button" data-stp="n" data-d="1"><span data-i="plus"></span></button></div>
-      <div class="seg" id="fUnit"><button type="button" data-v="d"></button><button type="button" data-v="w"></button><button type="button" data-v="m"></button></div></div></div>
-
-    <div class="fl" id="gQuota"><div class="lb"><span data-t="fQuota"></span></div>
-      <div class="line"><div class="step"><button type="button" data-stp="q" data-d="-1"><span data-i="minus"></span></button><output id="oQ" class="tab">1</output><button type="button" data-stp="q" data-d="1"><span data-i="plus"></span></button></div>
-      <div class="seg" id="fPeriod"><button type="button" data-v="w"></button><button type="button" data-v="m"></button></div></div></div>
-
-    <div class="fl" id="gTimes"><div class="lb"><span data-t="fTimes"></span><span data-t="optional"></span></div>
+    <div class="fl" id="gTimes"><div class="lb"><span id="timesLbl"></span><span id="timesOpt"></span></div>
       <div class="times" id="timeList"></div>
       <div class="picker" id="picker">
         <div class="wheel"><div class="col" id="wH"></div><div class="colon">:</div><div class="col" id="wM"></div></div>
@@ -306,8 +315,8 @@ html[data-theme="dark"] .toast{background:#333}
       <button class="dbtn" type="button" id="dateBtn"><span data-i="cal"></span><span id="dateTxt"></span><span class="chev" data-i="chev"></span></button>
       <div class="cal" id="cal"></div>
     </div>
-    <p class="hint" id="hint"></p>
   </div>
+  <div class="sum" id="hint"></div>
   <div class="sfoot">
     <button class="btn ic" type="button" id="delBtn" aria-label="Delete"><span data-i="trash"></span><span id="delTx"></span></button>
     <button class="btn ic" type="button" id="skipBtn" aria-label="Skip"><span data-i="skip"></span></button>
@@ -349,7 +358,7 @@ var T = {
   kNow:["Now","Maintenant","الآن"], kLate:["Missed","En retard","فاتك"], kNext:["Next","Ensuite","التالي"], kAny:["Anytime today","Dans la journée","خلال اليوم"],
   kGoal:["Goal","Objectif","هدف"],
   allDone:["Everything is checked","Tout est coché","كل شيء منجز"], allDoneSub:["Next: {n} · {w}","Ensuite : {n} · {w}","التالي: {n} · {w}"], allDoneNone:["Nothing else today","Rien d’autre aujourd’hui","لا شيء آخر اليوم"],
-  inX:["in {x}","dans {x}","بعد {x}"], lateX:["{x} late","{x} de retard","متأخر {x}"], h:["h","h","س"], min:["min","min","د"],
+  inX:["in {x}","dans {x}","بعد {x}"], lateX:["{x} late","{x} de retard","متأخر {x}"], hAbbr:["h","h","س"], min:["min","min","د"],
   nowTag:["now","maintenant","الآن"], doneAt:["done {t}","fait à {t}","أُنجز {t}"],
   overdue:["Overdue","En retard","متأخرة"], schedule:["Today","Aujourd’hui","اليوم"], anytime:["Anytime today","Dans la journée","خلال اليوم"],
   week:["This week","Cette semaine","هذا الأسبوع"], month:["This month","Ce mois-ci","هذا الشهر"], coming:["Coming up","À venir","قادم"],
@@ -357,13 +366,20 @@ var T = {
   goalDone:["done for this {p}","fait pour ce {p}","منجز لهذا {p}"], pw:["week","semaine","الأسبوع"], pm:["month","mois","الشهر"],
   lateD:["{n}d late","{n} j de retard","متأخر {n} ي"], tomorrow:["Tomorrow","Demain","غدًا"],
   showMore:["Show {n} more","Afficher {n} de plus","عرض {n} أخرى"], showLess:["Show less","Moins","أقل"],
-  emptyT:["Build your day","Construisez votre journée","ابنِ يومك"], emptyP:["Tap to add — you can edit any of them later.","Touchez pour ajouter — modifiable ensuite.","اضغط للإضافة — يمكنك التعديل لاحقًا."],
-  newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["What","Quoi","ماذا"], ph:["Brush teeth","Se brosser les dents","غسل الأسنان"],
-  fKind:["How it repeats","Répétition","التكرار"],
-  kFixed:["Set schedule","Planning fixe","جدول ثابت"], kFixedS:["Same days and hours — breakfast at 08:00","Mêmes jours et heures — petit-déj à 08:00","نفس الأيام والساعات — الفطور 08:00"],
-  kFlex:["After I do it","Après l’avoir fait","بعد إنجازها"], kFlexS:["Clock restarts when done — barber every 3 weeks","Repart quand c’est fait — coiffeur toutes les 3 sem.","يبدأ العد بعد الإنجاز — الحلاق كل 3 أسابيع"],
-  kWin:["Week / month goal","Objectif semaine / mois","هدف أسبوعي / شهري"], kWinS:["No set day — laundry once this week","Pas de jour fixe — lessive 1× cette semaine","بدون يوم محدد — الغسيل مرة هذا الأسبوع"],
-  fEvery:["Every","Tous les","كل"], fQuota:["Times per","Fois par","مرات في"], d:["Day","Jour","يوم"], w:["Week","Semaine","أسبوع"], m:["Month","Mois","شهر"],
+  emptyT:["No tasks yet","Aucune tâche","لا توجد مهام بعد"], emptyP:["Add something you do regularly — with a time, a repeat, or a weekly goal — then check it off through the day.","Ajoutez une chose que vous faites régulièrement — avec une heure, une répétition ou un objectif — puis cochez-la dans la journée.","أضف شيئًا تفعله بانتظام — بوقت أو تكرار أو هدف — ثم أنجزه خلال اليوم."], addFirst:["Add your first task","Ajouter une tâche","أضف أول مهمة"],
+  newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["Name","Nom","الاسم"], ph:["Task name","Nom de la tâche","اسم المهمة"],
+  fKind:["Repeat every","Répéter tous les","التكرار كل"],
+  fixedD:["Fixed date","Date fixe","تاريخ ثابت"], fixedT:["Fixed time","Heure fixe","وقت ثابت"],
+  fixedS:["Stays on the calendar, like every Sunday","Reste au calendrier, comme chaque dimanche","ثابت في التقويم، مثل كل أحد"], fixedSH:["Stays on the clock: {x}","Reste sur l’horloge : {x}","ثابت على الساعة: {x}"],
+  flexD:["No fixed date","Sans date fixe","بدون تاريخ ثابت"], flexT:["No fixed time","Sans heure fixe","بدون وقت ثابت"],
+  flexS:["Counts from the day you do it","Compte à partir du jour où c’est fait","يُحسب من يوم إنجازه"], flexSH:["Counts from the moment you check it","Compte à partir du moment où vous cochez","يُحسب من لحظة الإنجاز"],
+  shiftT:["Restart from when I check it","Repartir de quand je coche","ابدأ من وقت الإنجاز"], shiftS:["Checked 30 min late? Everything after moves 30 min later.","Cochée 30 min en retard ? La suite décale de 30 min.","تأخرت 30 د؟ كل ما بعده يتأخر 30 د."],
+  shiftSD:["Checked 2 days late? The next date counts from that day.","Cochée 2 jours en retard ? La suite compte depuis ce jour.","تأخرت يومين؟ التاريخ التالي يُحسب من ذلك اليوم."],
+  goalT:["Any day this {p}","N’importe quel jour de la {p}","أي يوم في {p}"], goalS:["Shows under “{s}” until you've done it","Reste dans « {s} » jusqu’à ce que ce soit fait","يظهر في «{s}» حتى تنجزه"], howMany:["How many times","Combien de fois","كم مرة"],
+  fStartAt:["Starts at","Commence à","يبدأ في"], change:["Change","Changer","تغيير"],
+  sumGoal:["{q} a {p}, any day","{q} par {p}, n’importe quel jour","{q} في {p}، أي يوم"], sumAt:[" at {t}"," à {t}"," في {t}"], sumFrom:["Starts {d}","Commence {d}","يبدأ {d}"], sumNext:["Next: {d}","Prochaine : {d}","التالي: {d}"], and:[" and "," et "," و"],
+  sumShift:["moves to when you check it","se décale quand vous cochez","يتحرك عند الإنجاز"], eHour:["Every hour","Toutes les heures","كل ساعة"], fromT:["from {t}","à partir de {t}","من {t}"],
+  fEvery:["Every","Tous les","كل"], fQuota:["Times per","Fois par","مرات في"], h:["Hour","Heure","ساعة"], hh:["Hours","Heures","ساعات"], d:["Day","Jour","يوم"], w:["Week","Semaine","أسبوع"], m:["Month","Mois","شهر"],
   dd:["Days","Jours","أيام"], ww:["Weeks","Semaines","أسابيع"], mm:["Months","Mois","أشهر"],
   fTimes:["At","À","في الساعة"], optional:["optional","facultatif","اختياري"], addTime:["Add time","Ajouter","إضافة"], cancel:["Cancel","Annuler","إلغاء"],
   morning:["Morning","Matin","صباح"], noon:["Noon","Midi","ظهر"], evening:["Evening","Soir","مساء"], night:["Night","Nuit","ليل"],
@@ -379,13 +395,10 @@ var T = {
   imported:["Imported {n} tasks","{n} tâches importées","استيراد {n} مهام"], badFile:["That file isn't a Routines backup","Ce fichier n’est pas une sauvegarde","الملف ليس نسخة صالحة"],
   needName:["Give it a name first","Donnez-lui un nom","أعطها اسمًا"],
   eDay:["Every day","Tous les jours","كل يوم"], eWeekOn:["Every {w}","Chaque {w}","كل {w}"], eMonth:["Every month","Tous les mois","كل شهر"], eN:["Every {n} {u}","Tous les {n} {u}","كل {n} {u}"],
-  ud:["days","jours","أيام"], uw:["weeks","semaines","أسابيع"], um:["months","mois","أشهر"], u1d:["day","jour","يوم"], u1w:["week","semaine","أسبوع"], u1m:["month","mois","شهر"],
+  uh:["hours","heures","ساعات"], u1h:["hour","heure","ساعة"], ud:["days","jours","أيام"], uw:["weeks","semaines","أسابيع"], um:["months","mois","أشهر"], u1d:["day","jour","يوم"], u1w:["week","semaine","أسبوع"], u1m:["month","mois","شهر"],
   onDay:["on the {n}","le {n}","يوم {n}"], afterDone:["after done","après coup","بعد الإنجاز"], winSub:["{q} a {p}","{q} par {p}","{q} في {p}"],
   lastDone:["last {x}","dernière {x}","آخر مرة {x}"], ago:["{n}d ago","il y a {n} j","منذ {n} ي"], agoToday:["today","aujourd’hui","اليوم"],
   today:["Today","Aujourd’hui","اليوم"], nextWeek:["In a week","Dans 1 sem.","بعد أسبوع"],
-  sBreakfast:["Breakfast","Petit-déjeuner","الفطور"], sLunch:["Lunch","Déjeuner","الغداء"], sDinner:["Dinner","Dîner","العشاء"], sTeeth:["Brush teeth","Se brosser les dents","غسل الأسنان"],
-  sShower:["Shower","Douche","الاستحمام"], sWater:["Drink water","Boire de l’eau","شرب الماء"], sWorkout:["Workout","Sport","التمرين"], sLaundry:["Laundry","Lessive","الغسيل"],
-  sBarber:["Barber","Coiffeur","الحلاق"], sNails:["Cut nails","Couper les ongles","قص الأظافر"], sSheets:["Change bed sheets","Changer les draps","تغيير الأغطية"], sRoom:["Clean room","Ranger la chambre","ترتيب الغرفة"]
 };
 var LANGS = ["en","fr","ar"];
 var lang = get("r.lang") || (navigator.language || "en").slice(0,2);
@@ -393,20 +406,6 @@ if(LANGS.indexOf(lang) < 0) lang = "en";
 function t(k, v){ var r = T[k], s = r ? (r[LANGS.indexOf(lang)] || r[0]) : k; if(v) for(var x in v) s = s.split("{"+x+"}").join(v[x]); return s; }
 function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]; }); }
 
-var SUGG = [
-  {k:"sBreakfast", kind:"fixed", unit:"d", n:1, times:["08:00"]},
-  {k:"sTeeth", kind:"fixed", unit:"d", n:1, times:["08:30","22:30"]},
-  {k:"sLunch", kind:"fixed", unit:"d", n:1, times:["13:00"]},
-  {k:"sDinner", kind:"fixed", unit:"d", n:1, times:["20:00"]},
-  {k:"sShower", kind:"fixed", unit:"d", n:1, times:["07:30"]},
-  {k:"sWater", kind:"fixed", unit:"d", n:1, times:["10:00","15:00","18:00"]},
-  {k:"sWorkout", kind:"window", period:"w", quota:3},
-  {k:"sLaundry", kind:"window", period:"w", quota:1},
-  {k:"sRoom", kind:"window", period:"w", quota:2},
-  {k:"sSheets", kind:"window", period:"m", quota:2},
-  {k:"sBarber", kind:"flex", unit:"w", n:3},
-  {k:"sNails", kind:"flex", unit:"w", n:2}
-];
 
 /* ---------- storage ---------- */
 function get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
@@ -430,9 +429,14 @@ function fmt(d, o){ try{ return new Intl.DateTimeFormat(lang === "ar" ? "ar-MA" 
 function hm(m){ return ("0"+Math.floor(m/60)).slice(-2)+":"+("0"+(m%60)).slice(-2); }
 function mins(s){ var p = /^(\d{1,2}):(\d{2})$/.exec(s || ""); return p ? (+p[1])*60 + (+p[2]) : null; }
 function nowMin(){ var d = new Date(); return d.getHours()*60 + d.getMinutes(); }
-function dur(m){ m = Math.abs(m); var h = Math.floor(m/60), r = m % 60; return h ? h+" "+t("h")+(r ? " "+r+" "+t("min") : "") : r+" "+t("min"); }
+function dur(m){ m = Math.abs(m); var h = Math.floor(m/60), r = m % 60; return h ? h+" "+t("hAbbr")+(r ? " "+r+" "+t("min") : "") : r+" "+t("min"); }
 function weekStart(d){ return addDays(d, -((d.getDay()+6) % 7)); }
 function period(p, d){ if(p === "m") return [new Date(d.getFullYear(), d.getMonth(), 1, 12), new Date(d.getFullYear(), d.getMonth()+1, 0, 12)]; var w = weekStart(d); return [w, addDays(w, 6)]; }
+function dt(d, h){ var x = parse(d) || today(), m = mins(h) || 0; return new Date(x.getFullYear(), x.getMonth(), x.getDate(), Math.floor(m/60), m % 60, 0, 0); }
+function setOcc(it, D){ it.next = iso(D); it.times = [hm(D.getHours()*60 + D.getMinutes())]; }
+function gridA(it){ return dt(it.anchor, it.at0); }
+function gridAfter(it, x){ var A = gridA(it), s = it.n*36e5; if(x < A) return A; return new Date(A.getTime() + (Math.floor((x - A)/s) + 1)*s); }
+function gridLE(it, x){ var A = gridA(it), s = it.n*36e5; if(x < A) return A; return new Date(A.getTime() + Math.floor((x - A)/s)*s); }
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 /* ---------- normalise (old exports still load) ---------- */
@@ -440,7 +444,7 @@ function norm(i){
   if(!i || !i.name) return null;
   var it = {id:String(i.id || uid()), name:String(i.name).slice(0,60)};
   it.kind = i.kind === "window" || i.kind === "fixed" || i.kind === "flex" ? i.kind : (i.mode === "fixed" ? "fixed" : "flex");
-  it.n = Math.min(365, Math.max(1, +i.n || 1)); it.unit = /^[dwm]$/.test(i.unit) ? i.unit : "w";
+  it.n = Math.min(365, Math.max(1, +i.n || 1)); it.unit = /^[hdwm]$/.test(i.unit) ? i.unit : "w"; it.shift = !!i.shift;
   it.quota = Math.min(31, Math.max(1, +i.quota || 1)); it.period = i.period === "m" ? "m" : "w";
   var tm = (Array.isArray(i.times) ? i.times : []).filter(function(x){ return mins(x) !== null; }).map(function(x){ return hm(mins(x)); });
   it.times = tm.filter(function(x, k){ return tm.indexOf(x) === k; }).sort();
@@ -450,6 +454,8 @@ function norm(i){
   it.log = Array.isArray(i.log) ? i.log.filter(parse) : [];
   it.prev = i.prev || null;
   if(it.kind === "window") it.times = [];
+  if(it.unit === "h"){ if(it.kind === "window") it.kind = "flex"; if(!it.times.length) it.times = ["08:00"]; it.times = [it.times[0]]; it.n = Math.min(23, it.n); }
+  it.at0 = mins(i.at0) !== null ? hm(mins(i.at0)) : (it.times[0] || null);
   return it;
 }
 items = items.map(norm).filter(Boolean);
@@ -458,7 +464,12 @@ items = items.map(norm).filter(Boolean);
 function roll(){
   var td = today(), T0 = iso(td), ch = false, cut = iso(addDays(td, -70));
   items.forEach(function(it){
-    if(it.kind !== "window" && it.times.length && parse(it.next) < td){ it.next = iso(it.kind === "fixed" ? firstOnOrAfter(it, td) : td); ch = true; }
+    if(it.unit === "h"){
+      var occ = dt(it.next, it.times[0]), now = new Date();
+      if(it.kind === "fixed" && !it.shift){ var L = gridLE(it, now); if(occ < L){ setOcc(it, L); ch = true; } }
+      else if(parse(it.next) < td){ setOcc(it, dt(T0, it.times[0])); ch = true; }
+    }
+    else if(it.kind !== "window" && it.times.length && parse(it.next) < td){ it.next = iso(it.kind === "fixed" ? firstOnOrAfter(it, td) : td); ch = true; }
     if(it.slots && it.slots.date < T0){ it.slots = null; ch = true; }
     var l = it.log.length; it.log = it.log.filter(function(d){ return d >= cut; }); if(l !== it.log.length) ch = true;
   });
@@ -476,6 +487,16 @@ function model(){
       var o = {it:it, count:c, today:it.log.indexOf(T0) > -1, left:diff(td, pr[1])};
       o.met = c >= it.quota && !o.today ? true : c >= it.quota;
       (it.period === "m" ? m.month : m.week).push(o);
+      return;
+    }
+    if(it.unit === "h"){
+      var hd = it.slots && it.slots.date === T0 ? it.slots.done : {}, dh = diff(td, parse(it.next));
+      Object.keys(hd).forEach(function(tm){ var mm = mins(tm); m.slots.push({it:it, time:tm, min:mm, done:true, at:hd[tm], delta:mm - nm, state:"done"}); m.total++; m.done++; });
+      if(dh === 0 && !hd[it.times[0]]){
+        var mm = mins(it.times[0]), s = {it:it, time:it.times[0], min:mm, done:false, at:null, delta:mm - nm};
+        s.state = s.delta < -30 ? "late" : s.delta <= 0 ? "now" : "soon";
+        m.slots.push(s); m.total++; if(s.state !== "soon") m.pending++;
+      } else if(dh > 0) m.coming.push({it:it, d:dh});
       return;
     }
     var d = diff(td, parse(it.next)), doneToday = it.last === T0;
@@ -511,12 +532,13 @@ function qtxt(q){ return q === 1 ? t("once") : t("timesN", {n:q}); }
 function describe(it){
   if(it.kind === "window") return t("winSub", {q:qtxt(it.quota), p:t("p"+it.period)});
   var s, a = parse(it.anchor) || parse(it.next);
+  if(it.unit === "h") return (it.n === 1 ? t("eHour") : t("eN", {n:it.n, u:t("uh")})) + (it.kind === "flex" || it.shift ? " · " + t("afterDone") : "");
   if(it.unit === "d" && it.n === 1) s = t("eDay");
   else if(it.unit === "w" && it.n === 1 && it.kind === "fixed") s = t("eWeekOn", {w:fmt(a, {weekday:"long"})});
   else if(it.unit === "m" && it.n === 1) s = t("eMonth");
   else s = t("eN", {n:it.n, u:t("u"+it.unit)});
   if(it.kind === "fixed" && it.unit === "m") s += " · " + t("onDay", {n:ord(a.getDate())});
-  if(it.kind === "flex") s += " · " + t("afterDone");
+  if(it.kind === "flex" || it.shift) s += " · " + t("afterDone");
   if(it.last && !it.times.length){ var g = diff(parse(it.last), today()); s += " · " + t("lastDone", {x: g <= 0 ? t("agoToday") : t("ago", {n:g})}); }
   return s;
 }
@@ -552,8 +574,7 @@ function render(){
   $("meter").style.display = seg.length ? "" : "none";
 
   if(!items.length){
-    out = '<div class="empty"><h2>'+esc(t("emptyT"))+'</h2><p>'+esc(t("emptyP"))+'</p><div class="chips">'+
-      SUGG.map(function(s, i){ return '<button class="chip" type="button" data-sugg="'+i+'">'+ico("plus", 16)+esc(t(s.k))+(s.times ? '<small class="tab">'+s.times.join(" · ")+'</small>' : '')+'</button>'; }).join("")+'</div></div>';
+    out = '<div class="empty"><h2>'+esc(t("emptyT"))+'</h2><p>'+esc(t("emptyP"))+'</p><button class="btn y" type="button" data-act="add">'+ico("plus")+esc(t("addFirst"))+'</button></div>';
   } else {
     out += nowCard(m);
     if(m.overdue.length) out += sec(t("overdue"), m.overdue.length, "", m.overdue.map(function(o){
@@ -630,22 +651,41 @@ function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p || 12); }catch(
 function stamp(){ return hm(nowMin()); }
 function advance(it){
   var td = today(), T0 = iso(td);
-  it.prev = {next:it.next, last:it.last, date:T0};
+  it.prev = {next:it.next, last:it.last, anchor:it.anchor, times:it.times.slice(), at0:it.at0, date:T0};
   it.last = T0;
-  if(it.kind === "fixed") it.next = iso(nextFixed(it, parse(it.next) > td ? parse(it.next) : td));
-  else it.next = iso(step(it, td, 1));
+  if(it.unit === "h"){
+    var occ = dt(it.next, it.times[0]), now = new Date(), N; now.setSeconds(0, 0);
+    if(it.kind === "fixed" && !it.shift) N = gridAfter(it, now > occ ? now : occ);
+    else { N = new Date(now.getTime() + it.n*36e5); if(it.shift){ it.anchor = iso(now); it.at0 = hm(now.getHours()*60 + now.getMinutes()); } }
+    setOcc(it, N); return;
+  }
+  if(it.kind === "fixed" && !it.shift) it.next = iso(nextFixed(it, parse(it.next) > td ? parse(it.next) : td));
+  else { it.next = iso(step(it, td, 1)); if(it.shift) it.anchor = it.next; }
 }
-function restore(it){ if(it.prev && it.prev.date === iso(today()) && it.prev.next){ it.next = it.prev.next; it.last = it.prev.last; it.prev = null; } }
+function restore(it){
+  var p = it.prev; if(!p || p.date !== iso(today()) || !p.next) return;
+  it.next = p.next; it.last = p.last; if(p.anchor) it.anchor = p.anchor; if(p.times) it.times = p.times; if(p.at0) it.at0 = p.at0; it.prev = null;
+}
 function act(kind, id, time, el){
   var it = find(id); if(!it) return;
   var before = snap(), T0 = iso(today()), on = true;
   if(kind === "slot"){
     if(!it.slots || it.slots.date !== T0) it.slots = {date:T0, done:{}};
-    var wasDone = !!it.slots.done[time] || (it.last === T0 && it.next !== T0);
-    if(wasDone){ delete it.slots.done[time]; on = false; if(it.next !== T0) restore(it); }
-    else {
-      it.slots.done[time] = stamp();
-      if(it.next === T0 && it.times.every(function(x){ return it.slots.done[x]; })) advance(it);
+    if(it.unit === "h"){
+      if(it.slots.done[time]){ delete it.slots.done[time]; on = false; restore(it); }
+      else { it.slots.done[time] = stamp(); advance(it); }
+    } else {
+      var wasDone = !!it.slots.done[time] || (it.last === T0 && it.next !== T0);
+      if(wasDone){ delete it.slots.done[time]; on = false; if(it.next !== T0) restore(it); }
+      else {
+        var st = stamp(), key = time;
+        if(it.kind === "fixed" && it.shift && st !== time){
+          var tt2 = it.times.filter(function(x){ return x !== time; }); if(tt2.indexOf(st) < 0) tt2.push(st);
+          it.times = tt2.sort(); key = st; time = st;
+        }
+        it.slots.done[key] = st;
+        if(it.next === T0 && it.times.every(function(x){ return it.slots.done[x]; })) advance(it);
+      }
     }
   } else if(kind === "win"){
     var k = it.log.indexOf(T0);
@@ -665,13 +705,7 @@ function act(kind, id, time, el){
   }, on ? 260 : 0);
   toast(on ? t("checked", {n:it.name}) : t("unchecked"), before);
 }
-function fromTemplate(s){
-  var td = iso(today());
-  return norm({id:uid(), name:t(s.k), kind:s.kind, n:s.n || 1, unit:s.unit || "d", quota:s.quota || 1, period:s.period || "w", times:s.times || [], next:td, anchor:td});
-}
 document.addEventListener("click", function(e){
-  var sg = e.target.closest("[data-sugg]");
-  if(sg){ var s = SUGG[+sg.getAttribute("data-sugg")], before = snap(); items.push(fromTemplate(s)); save(); buzz(); lastHTML = ""; render(); toast(t("added", {n:t(s.k)}), before); return; }
   var b = e.target.closest("[data-act]"); if(!b || !b.closest("#app")) return;
   var a = b.getAttribute("data-act");
   if(a === "more"){ expanded = !expanded; render(); return; }
@@ -691,19 +725,19 @@ $("undoBtn").addEventListener("click", function(){ if(!undoState) return; items 
 
 /* ---------- sheet ---------- */
 var editing = null, F = {}, calMonth = today();
+function nextHour(){ var v = Math.ceil((nowMin() + 1)/60)*60; return hm(v >= 1440 ? 1380 : v); }
 function openSheet(it){
   editing = it || null;
   var td = iso(today());
-  F = it ? {name:it.name, kind:it.kind, n:it.n, unit:it.unit, quota:it.quota, period:it.period, times:it.times.slice(), date:it.next}
-         : {name:"", kind:"fixed", n:1, unit:"d", quota:1, period:"w", times:[], date:td};
+  if(it && it.kind === "window") F = {name:it.name, n:1, unit:it.period, mode:"flex", goal:true, shift:false, quota:it.quota, times:[], date:td};
+  else if(it) F = {name:it.name, n:it.n, unit:it.unit, mode:it.kind, goal:false, shift:it.shift, quota:it.quota, times:it.times.slice(), date:it.next};
+  else F = {name:"", n:1, unit:"d", mode:"fixed", goal:false, shift:false, quota:1, times:[], date:td};
   if(parse(F.date) < today()) F.date = td;
   $("shTitle").textContent = t(it ? "editT" : "newT");
   $("fName").value = F.name; $("fName").placeholder = t("ph");
   $("delBtn").style.display = it ? "" : "none"; $("skipBtn").style.display = it && it.kind !== "window" ? "" : "none";
   disarm(); $("picker").classList.remove("on"); $("cal").classList.remove("on"); $("dateBtn").classList.remove("open");
   calMonth = parse(F.date); calMonth.setDate(1);
-  $("sugg").style.display = it ? "none" : "";
-  $("sugg").innerHTML = SUGG.map(function(s, i){ return '<button class="chip" type="button" data-fill="'+i+'">'+esc(t(s.k))+'</button>'; }).join("");
   paintSheet(); $("sbody").scrollTop = 0;
   $("scrim").classList.add("on"); $("sheet").classList.add("on"); document.documentElement.classList.add("lock");
 }
@@ -711,37 +745,62 @@ function closeSheet(){
   $("scrim").classList.remove("on"); $("sheet").classList.remove("on"); $("sheet").style.transform = "";
   document.documentElement.classList.remove("lock"); if(document.activeElement) document.activeElement.blur();
 }
+function stepper(f, v){ return '<div class="step"><button type="button" data-stp="'+f+'" data-d="-1" aria-label="−">'+ico("minus")+'</button><output class="tab">'+v+'</output><button type="button" data-stp="'+f+'" data-d="1" aria-label="+">'+ico("plus")+'</button></div>'; }
+function toggle(id, on, title, sub, extra){ return '<div class="tgl'+(on ? " on" : "")+'"><button type="button" class="tgh" data-tg="'+id+'"><span class="ot"><b>'+esc(title)+'</b><small>'+esc(sub)+'</small></span><span class="sw"><i></i></span></button>'+(on && extra ? extra : '')+'</div>'; }
+function joinTimes(a){ return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + t("and") + a[a.length-1]; }
+function dayName(d){ var dd = diff(today(), d); return dd === 0 ? t("today").toLowerCase() : dd === 1 ? t("tomorrow").toLowerCase() : fmt(d, {weekday:"long", day:"numeric", month:"long"}); }
+function gridPreview(){ var st = mins(F.times[0] || nextHour()), out = []; for(var k = 0; k < 3; k++){ var v = st + k*F.n*60; if(v >= 1440) break; out.push(hm(v)); } return out.join(", ") + (out.length === 3 ? "…" : ""); }
+function isGoal(){ return F.goal && F.mode === "flex" && (F.unit === "w" || F.unit === "m"); }
+function summary(){
+  var d = parse(F.date), s;
+  if(isGoal()) return [t("sumGoal", {q:qtxt(F.quota), p:t("u1"+F.unit)}), ""];
+  if(F.unit === "h"){
+    s = (F.n === 1 ? t("eHour") : t("eN", {n:F.n, u:t("uh")})) + ", " + t("fromT", {t:F.times[0] || nextHour()});
+    s += F.mode === "fixed" && !F.shift ? " · " + gridPreview() : " · " + t("sumShift");
+  } else {
+    if(F.n === 1 && F.unit === "d") s = t("eDay");
+    else if(F.n === 1 && F.unit === "w" && F.mode === "fixed") s = t("eWeekOn", {w:fmt(d, {weekday:"long"})});
+    else if(F.n === 1 && F.unit === "m") s = t("eMonth") + (F.mode === "fixed" ? " · " + t("onDay", {n:ord(d.getDate())}) : "");
+    else s = t("eN", {n:F.n, u:t("u"+F.unit)}) + (F.mode === "fixed" && F.unit === "m" ? " · " + t("onDay", {n:ord(d.getDate())}) : "");
+    if(F.times.length) s += t("sumAt", {t:joinTimes(F.times)});
+    if(F.mode === "flex") s += " · " + t("afterDone"); else if(F.shift) s += " · " + t("sumShift");
+  }
+  return [s, t(editing ? "sumNext" : "sumFrom", {d:dayName(d)})];
+}
 function paintSheet(){
-  var K = [["fixed","clock","kFixed"],["flex","repeat","kFlex"],["window","target","kWin"]];
-  $("fKind").innerHTML = K.map(function(k){ return '<button type="button" class="kind'+(F.kind === k[0] ? " on" : "")+'" data-k="'+k[0]+'"><span class="ki">'+ico(k[1])+'</span><span><b>'+esc(t(k[2]))+'</b><span>'+esc(t(k[2]+"S"))+'</span></span></button>'; }).join("");
-  var win = F.kind === "window";
-  $("gEvery").style.display = $("gTimes").style.display = $("gDate").style.display = win ? "none" : "";
-  $("gQuota").style.display = win ? "" : "none";
-  $("oN").textContent = F.n; $("oQ").textContent = F.quota;
-  [].forEach.call($("fUnit").children, function(b){ var v = b.getAttribute("data-v"); b.textContent = t(F.n === 1 ? v : v + v); b.classList.toggle("on", v === F.unit); });
-  [].forEach.call($("fPeriod").children, function(b){ var v = b.getAttribute("data-v"); b.textContent = t(v); b.classList.toggle("on", v === F.period); });
-  $("timeList").innerHTML = F.times.map(function(x){ return '<span class="tchip">'+x+'<button type="button" data-rm="'+x+'" aria-label="Remove">'+ico("x", 16)+'</button></span>'; }).join("") +
-    '<button type="button" class="tadd" id="tAdd">'+ico("plus", 18)+esc(t("addTime"))+'</button>';
+  var H = F.unit === "h", goal = isGoal();
+  if(H && !F.times.length) F.times = [nextHour()];
+  if(H && F.times.length > 1) F.times = [F.times[0]];
+  var units = ["h","d","w","m"].map(function(u){ return '<button type="button" data-unit="'+u+'" class="'+(F.unit === u ? "on" : "")+'">'+esc(t(F.n === 1 ? u : u + u))+'</button>'; }).join("");
+  var h = '<div class="line"'+(goal ? ' style="display:none"' : '')+'>'+stepper("n", F.n)+'<div class="seg">'+units+'</div></div>';
+  if(goal) h = '<div class="line"><div class="seg">'+units+'</div></div>';
+  var K = [["fixed", H ? "fixedT" : "fixedD", H ? t("fixedSH", {x:gridPreview()}) : t("fixedS"), "cal"], ["flex", H ? "flexT" : "flexD", t(H ? "flexSH" : "flexS"), "repeat"]];
+  h += '<div class="kinds" style="margin-top:8px">' + K.map(function(k){
+    return '<button type="button" class="kind'+(F.mode === k[0] ? " on" : "")+'" data-mode="'+k[0]+'"><span class="ki">'+ico(k[3])+'</span><span><b>'+esc(t(k[1]))+'</b><span>'+esc(k[2])+'</span></span></button>';
+  }).join("") + '</div>';
+  if(F.mode === "fixed") h += toggle("shift", F.shift, t("shiftT"), t(H || F.times.length ? "shiftS" : "shiftSD"));
+  if(F.mode === "flex" && (F.unit === "w" || F.unit === "m")) h += toggle("goal", F.goal, t("goalT", {p:t("u1"+F.unit)}), t("goalS", {s:t(F.unit === "m" ? "month" : "week")}),
+    '<div class="optx"><span class="ol">'+esc(t("howMany"))+'</span>'+stepper("q", F.quota)+'</div>');
+  $("fKind").innerHTML = h;
+  $("gTimes").style.display = $("gDate").style.display = goal ? "none" : "";
+  $("timesLbl").textContent = t(H ? "fStartAt" : "fTimes"); $("timesOpt").textContent = H ? "" : t("optional");
+  $("timeList").innerHTML = F.times.map(function(x){ return '<span class="tchip">'+x+(H ? '' : '<button type="button" data-rm="'+x+'" aria-label="Remove">'+ico("x", 16)+'</button>')+'</span>'; }).join("") +
+    '<button type="button" class="tadd" id="tAdd">'+ico(H ? "clock" : "plus", 18)+esc(t(H ? "change" : "addTime"))+'</button>';
   $("dateLbl").textContent = t(editing ? "fNext" : "fStart");
   var d = parse(F.date), dd = diff(today(), d);
   $("dateTxt").textContent = (dd === 0 ? t("today") + ", " : dd === 1 ? t("tomorrow") + ", " : "") + fmt(d, dd > 1 ? {weekday:"long", day:"numeric", month:"long"} : {day:"numeric", month:"long"});
   if($("cal").classList.contains("on")) paintCal();
-  $("hint").textContent = win ? t("hWin", {p:t(F.period === "m" ? "month" : "week"), q:qtxt(F.quota), u:t("u1"+F.period)})
-    : t(F.kind === "fixed" ? "hFixed" : "hFlex", {e:every(F)}) + (F.times.length ? t("hTimes") : "");
+  var sm = summary();
+  $("hint").innerHTML = ico("repeat", 18) + '<span><b>'+esc(sm[0])+'</b>'+(sm[1] ? '<small>'+esc(sm[1])+'</small>' : '')+'</span>';
 }
 $("sheet").addEventListener("click", function(e){
   var b;
-  if((b = e.target.closest("[data-k]"))){ F.kind = b.getAttribute("data-k"); paintSheet(); buzz(6); }
-  else if((b = e.target.closest("[data-stp]"))){ var f = b.getAttribute("data-stp") === "n" ? "n" : "quota", mx = f === "n" ? 365 : 31; F[f] = Math.min(mx, Math.max(1, F[f] + (+b.getAttribute("data-d")))); paintSheet(); buzz(5); }
-  else if((b = e.target.closest("#fUnit [data-v]"))){ F.unit = b.getAttribute("data-v"); paintSheet(); }
-  else if((b = e.target.closest("#fPeriod [data-v]"))){ F.period = b.getAttribute("data-v"); paintSheet(); }
+  if((b = e.target.closest("[data-mode]"))){ F.mode = b.getAttribute("data-mode"); paintSheet(); buzz(6); }
+  else if((b = e.target.closest("[data-tg]"))){ var k = b.getAttribute("data-tg"); F[k] = !F[k]; paintSheet(); buzz(8); }
+  else if((b = e.target.closest("[data-stp]"))){ var f = b.getAttribute("data-stp") === "n" ? "n" : "quota", mx = f === "quota" ? 31 : F.unit === "h" ? 23 : 365; F[f] = Math.min(mx, Math.max(1, F[f] + (+b.getAttribute("data-d")))); paintSheet(); buzz(5); }
+  else if((b = e.target.closest("[data-unit]"))){ F.unit = b.getAttribute("data-unit"); if(F.unit === "h" && F.n > 23) F.n = 23; paintSheet(); }
   else if((b = e.target.closest("[data-rm]"))){ var x = b.getAttribute("data-rm"); F.times = F.times.filter(function(y){ return y !== x; }); paintSheet(); }
   else if(e.target.closest("#tAdd")){ openPicker(); }
-  else if((b = e.target.closest("[data-fill]"))){
-    var s = SUGG[+b.getAttribute("data-fill")];
-    F.name = t(s.k); $("fName").value = F.name; F.kind = s.kind; F.n = s.n || 1; F.unit = s.unit || "d"; F.quota = s.quota || 1; F.period = s.period || "w"; F.times = (s.times || []).slice();
-    paintSheet(); buzz(6);
-  }
   else if((b = e.target.closest("[data-day]"))){ F.date = b.getAttribute("data-day"); paintSheet(); buzz(5); }
   else if((b = e.target.closest("[data-mon]"))){ calMonth = addMonths(calMonth, +b.getAttribute("data-mon"), 1); paintCal(); }
   else if((b = e.target.closest("[data-quick]"))){ F.date = iso(addDays(today(), +b.getAttribute("data-quick"))); calMonth = parse(F.date); calMonth.setDate(1); paintSheet(); }
@@ -791,14 +850,14 @@ function setWheels(m, smooth){
 function openPicker(){
   if(!wheelBuilt) buildWheels();
   $("picker").classList.add("on");
-  var v = F.times.length ? mins(F.times[F.times.length-1]) + 60 : Math.ceil((nowMin() + 1)/60)*60;
+  var v = F.unit === "h" && F.times.length ? mins(F.times[0]) : F.times.length ? mins(F.times[F.times.length-1]) + 60 : Math.ceil((nowMin() + 1)/60)*60;
   if(v >= 1440) v = 1380;
   requestAnimationFrame(function(){ setWheels(v, false); $("picker").scrollIntoView({block:"nearest", behavior:"smooth"}); });
 }
 $("pCancel").addEventListener("click", function(){ $("picker").classList.remove("on"); });
 $("pAdd").addEventListener("click", function(){
   var h = Math.min(23, Math.max(0, Math.round($("wH").scrollTop/40))), m = Math.min(55, Math.max(0, Math.round($("wM").scrollTop/40)*5));
-  var v = hm(h*60 + m); if(F.times.indexOf(v) < 0) F.times.push(v); F.times.sort();
+  var v = hm(h*60 + m); if(F.unit === "h") F.times = [v]; else if(F.times.indexOf(v) < 0) F.times.push(v); F.times.sort();
   $("picker").classList.remove("on"); paintSheet(); buzz(10);
 });
 
@@ -807,9 +866,10 @@ $("saveBtn").addEventListener("click", function(){
   var name = $("fName").value.trim();
   if(!name){ $("fName").focus(); $("fName").placeholder = t("needName"); buzz([10,50,10]); return; }
   var before = snap(), it = editing ? JSON.parse(JSON.stringify(editing)) : {id:uid(), last:null, log:[]};
-  var changed = !editing || editing.kind !== F.kind || editing.n !== F.n || editing.unit !== F.unit || editing.next !== F.date;
-  it.name = name; it.kind = F.kind; it.n = F.n; it.unit = F.unit; it.quota = F.quota; it.period = F.period; it.times = F.times.slice();
-  if(changed){ it.next = F.date; it.anchor = F.date; it.prev = null; }
+  var goal = isGoal(), kind = goal ? "window" : F.mode, times = goal ? [] : F.times.slice().sort();
+  var changed = !editing || editing.kind !== kind || editing.n !== F.n || editing.unit !== F.unit || editing.next !== F.date || (F.unit === "h" && editing.times[0] !== times[0]);
+  it.name = name; it.kind = kind; it.n = goal ? 1 : F.n; it.unit = F.unit; it.quota = F.quota; it.period = goal ? F.unit : "w"; it.times = times; it.shift = kind === "fixed" && F.shift;
+  if(changed){ it.next = F.date; it.anchor = F.date; it.at0 = times[0] || null; it.prev = null; it.slots = null; }
   var n = norm(it);
   if(editing) items[items.indexOf(editing)] = n; else items.push(n);
   save(); closeSheet(); lastHTML = ""; render(); buzz(10);
@@ -817,7 +877,8 @@ $("saveBtn").addEventListener("click", function(){
 });
 $("skipBtn").addEventListener("click", function(){
   if(!editing) return; var before = snap(), it = editing;
-  it.next = iso(it.kind === "fixed" ? nextFixed(it, parse(it.next)) : step(it, parse(it.next), 1)); it.slots = null;
+  if(it.unit === "h"){ var occ = dt(it.next, it.times[0]); setOcc(it, it.kind === "fixed" && !it.shift ? gridAfter(it, occ) : new Date(occ.getTime() + it.n*36e5)); }
+  else it.next = iso(it.kind === "fixed" && !it.shift ? nextFixed(it, parse(it.next)) : step(it, parse(it.next), 1));
   save(); closeSheet(); lastHTML = ""; render();
   toast(t("skipped", {d:fmt(parse(it.next), {weekday:"short", day:"numeric", month:"short"})}), before);
 });
