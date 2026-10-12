@@ -109,7 +109,7 @@ svg{display:block;flex:none}
 .now-tx{flex:1;min-width:0}
 .now-k{font-size:13px;font-weight:500;opacity:.66;display:flex;gap:6px;align-items:center}
 .now-k b{background:#000;color:var(--y);font-size:11px;font-weight:700;border-radius:6px;padding:2px 6px}
-.now-n{font-size:22px;font-weight:700;line-height:1.15;margin:3px 0 2px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.now-n{font-size:22px;font-weight:700;line-height:1.15;margin:3px 0 2px;overflow-wrap:anywhere}
 .now-r{font-size:14px;opacity:.75}
 .bigck{width:60px;height:60px;border-radius:50%;background:#000;color:var(--y);display:grid;place-items:center;flex:none;transition:transform .15s}
 .bigck:active{transform:scale(.92)}
@@ -135,8 +135,8 @@ svg{display:block;flex:none}
 .row.done .ck,.ck.on{background:var(--y);border-color:var(--y)}
 .row.done .ck svg,.ck.on svg{opacity:1;transform:none}
 .bd{flex:1;min-width:0;padding:4px 0}
-.nm{font-size:16px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.sb{font-size:13px;color:var(--ink2);margin-top:1px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.nm{font-size:16px;font-weight:500;line-height:1.3;overflow-wrap:anywhere}
+.sb{font-size:13px;color:var(--ink2);margin-top:2px;line-height:1.35;overflow-wrap:anywhere}
 .row.done .nm{color:var(--ink3);text-decoration:line-through;text-decoration-color:var(--ink3)}
 .row.done .sb{color:var(--ink3)}
 .tag{flex:none;font-size:12px;font-weight:500;padding:4px 8px;border-radius:8px;background:var(--bg3);color:var(--ink2);white-space:nowrap}
@@ -313,6 +313,7 @@ html[data-theme="dark"] .toast{background:#333}
 .seg.mode button.off{opacity:.38}
 .why{font-size:13px;color:var(--ink3);margin:6px 4px 0}
 .mini .none{opacity:.7}
+.row{padding-top:10px;padding-bottom:10px}
 </style>
 </head>
 <body>
@@ -358,7 +359,7 @@ html[data-theme="dark"] .toast{background:#333}
   <div class="sbody" id="sbody">
     <div class="fl">
       <div class="lb"><span data-t="fName"></span></div>
-      <input class="in" id="fName" type="text" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="60" enterkeyhint="done">
+      <input class="in" id="fName" type="text" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="120" enterkeyhint="done">
     </div>
     <div class="fl"><div class="lb"><span data-t="fKind"></span></div><div class="kinds" id="fKind"></div></div>
 
@@ -431,6 +432,7 @@ var T = {
   inX:["in {x}","dans {x}","بعد {x}"], lateX:["{x} late","{x} de retard","متأخر {x}"], hAbbr:["h","h","س"], min:["min","min","د"],
   clockF:["Time format","Format de l’heure","صيغة الوقت"], c24:["24-hour","24 heures","24 ساعة"], c12:["12-hour","12 heures","12 ساعة"],
   none:["Nothing","Rien","لا شيء"], noFixWhy:["Only for “every 1 day, week or month”","Seulement pour « chaque jour, semaine ou mois »","فقط لـ«كل يوم أو أسبوع أو شهر»"],
+  somed:["Any time today","Quand vous voulez aujourd’hui","في أي وقت اليوم"], somew:["Somewhere this week","Dans la semaine","في وقت ما هذا الأسبوع"], somem:["Somewhere this month","Dans le mois","في وقت ما هذا الشهر"],
   nowTag:["now","maintenant","الآن"], doneAt:["done {t}","fait à {t}","أُنجز {t}"],
   overdue:["Overdue","En retard","متأخرة"], schedule:["Today","Aujourd’hui","اليوم"], anytime:["Anytime today","Dans la journée","خلال اليوم"],
   week:["This week","Cette semaine","هذا الأسبوع"], month:["This month","Ce mois-ci","هذا الشهر"], coming:["Coming up","À venir","قادم"],
@@ -479,7 +481,7 @@ var T = {
   eDay:["Every day","Tous les jours","كل يوم"], eWeekOn:["Every {w}","Chaque {w}","كل {w}"], eMonth:["Every month","Tous les mois","كل شهر"], eN:["Every {n} {u}","Tous les {n} {u}","كل {n} {u}"],
   uh:["hours","heures","ساعات"], u1h:["hour","heure","ساعة"], ud:["days","jours","أيام"], uw:["weeks","semaines","أسابيع"], um:["months","mois","أشهر"], u1d:["day","jour","يوم"], u1w:["week","semaine","أسبوع"], u1m:["month","mois","شهر"],
   onDay:["on the {n}","le {n}","يوم {n}"], afterDone:["after done","après coup","بعد الإنجاز"], winSub:["{q} a {p}","{q} par {p}","{q} في {p}"],
-  lastDone:["last {x}","dernière {x}","آخر مرة {x}"], ago:["{n}d ago","il y a {n} j","منذ {n} ي"], agoToday:["today","aujourd’hui","اليوم"],
+  lastDone:["done {x}","fait {x}","أُنجز {x}"], ago:["{n}d ago","il y a {n} j","منذ {n} ي"], agoToday:["today","aujourd’hui","اليوم"],
   today:["Today","Aujourd’hui","اليوم"], nextWeek:["In a week","Dans 1 sem.","بعد أسبوع"],
 };
 var LANGS = ["en","fr","ar"];
@@ -529,7 +531,7 @@ function uid(){ return Date.now().toString(36) + Math.random().toString(36).slic
 /* ---------- normalise (old exports still load) ---------- */
 function norm(i){
   if(!i || !i.name) return null;
-  var it = {id:String(i.id || uid()), name:String(i.name).slice(0,60)};
+  var it = {id:String(i.id || uid()), name:String(i.name).slice(0,120)};
   it.kind = i.kind === "window" || i.kind === "fixed" || i.kind === "flex" ? i.kind : (i.mode === "fixed" ? "fixed" : "flex");
   it.n = Math.min(365, Math.max(1, +i.n || 1)); it.unit = /^[hdwm]$/.test(i.unit) ? i.unit : "w"; it.shift = !!i.shift;
   it.quota = Math.min(31, Math.max(1, +i.quota || 1)); it.period = i.period === "m" || i.period === "d" ? i.period : "w";
@@ -619,7 +621,7 @@ function ord(n){ if(lang !== "en") return lang === "fr" && n === 1 ? "1er" : n; 
 function every(it){ return it.n === 1 ? t("u1"+it.unit) : it.n + " " + t("u"+it.unit); }
 function qtxt(q){ return q === 1 ? t("once") : t("timesN", {n:q}); }
 function describe(it){
-  if(it.kind === "window") return t("winSub", {q:qtxt(it.quota), p:t("p"+it.period)});
+  if(it.kind === "window"){ var sp = t("some" + it.period); return it.quota > 1 ? t("timesN", {n:it.quota}) + " · " + sp.charAt(0).toLowerCase() + sp.slice(1) : sp; }
   var s, a = parse(it.anchor) || parse(it.next);
   if(it.unit === "h") return (it.n === 1 ? t("eHour") : t("eN", {n:it.n, u:t("uh")})) + (it.kind === "flex" || it.shift ? " · " + t("afterDone") : "");
   if(it.unit === "d" && it.n === 1) s = t("eDay");
@@ -682,7 +684,7 @@ function render(){
     out += nowCard(m);
     var we = iso(addDays(weekStart(td), 6)), me = iso(new Date(td.getFullYear(), td.getMonth()+1, 0, 12));
     var cw = [], cm = [], cl = [];
-    m.coming.forEach(function(c){ (c.it.next <= we ? cw : c.it.next <= me ? cm : cl).push(c); });
+    m.coming.forEach(function(c){ if(c.it.unit === "h" || (c.it.unit === "d" && c.it.n === 1)) return; (c.it.next <= we ? cw : c.it.next <= me ? cm : cl).push(c); });
     function comingRow(c, long){
       var nd = parse(c.it.next), lbl = c.d === 1 ? t("tomorrow") : fmt(nd, long ? {day:"numeric", month:"short"} : {weekday:"short"});
       if(c.it.times.length) lbl += " · " + ft(c.it.times[0]) + (c.it.times.length > 1 ? " +" + (c.it.times.length - 1) : "");
@@ -987,7 +989,7 @@ function joinTimes(a){ a = a.map(ft); return a.length < 2 ? a.join("") : a.slice
 function gridPreview(){ if(!F.times[0]) return ""; var st = mins(F.times[0]), out = []; for(var k = 0; k < 3; k++){ var v = st + k*N()*60; if(v >= 1440) break; out.push(ft(v)); } return out.join(", ") + (out.length === 3 ? "…" : ""); }
 function summary(){
   var d = startDate(), s, n = N();
-  if(F.mode === "flex") return t("sumAny", {q:qtxt(F.quota), p:t("p"+F.unit)});
+  if(F.mode === "flex") return describe({kind:"window", quota:F.quota, period:F.unit});
   if(F.unit === "h"){
     s = n === 1 ? t("eHour") : t("eN", {n:n, u:t("uh")});
     s += ", " + (F.times[0] ? t("fromT", {t:ft(F.times[0])}) : t("startsNow"));
