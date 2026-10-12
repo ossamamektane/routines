@@ -308,6 +308,11 @@ html[data-theme="dark"] .toast{background:#333}
 .mx+.mk{margin-inline-start:8px}
 .mi>span,.mx{white-space:nowrap}
 .h12 .clock{font-size:24px}
+
+.seg.mode{flex:none}
+.seg.mode button.off{opacity:.38}
+.why{font-size:13px;color:var(--ink3);margin:6px 4px 0}
+.mini .none{opacity:.7}
 </style>
 </head>
 <body>
@@ -425,6 +430,7 @@ var T = {
   allDone:["Everything is checked","Tout est coché","كل شيء منجز"], allDoneSub:["Next: {n} · {w}","Ensuite : {n} · {w}","التالي: {n} · {w}"], allDoneNone:["Nothing else today","Rien d’autre aujourd’hui","لا شيء آخر اليوم"],
   inX:["in {x}","dans {x}","بعد {x}"], lateX:["{x} late","{x} de retard","متأخر {x}"], hAbbr:["h","h","س"], min:["min","min","د"],
   clockF:["Time format","Format de l’heure","صيغة الوقت"], c24:["24-hour","24 heures","24 ساعة"], c12:["12-hour","12 heures","12 ساعة"],
+  none:["Nothing","Rien","لا شيء"], noFixWhy:["Only for “every 1 day, week or month”","Seulement pour « chaque jour, semaine ou mois »","فقط لـ«كل يوم أو أسبوع أو شهر»"],
   nowTag:["now","maintenant","الآن"], doneAt:["done {t}","fait à {t}","أُنجز {t}"],
   overdue:["Overdue","En retard","متأخرة"], schedule:["Today","Aujourd’hui","اليوم"], anytime:["Anytime today","Dans la journée","خلال اليوم"],
   week:["This week","Cette semaine","هذا الأسبوع"], month:["This month","Ce mois-ci","هذا الشهر"], coming:["Coming up","À venir","قادم"],
@@ -432,7 +438,7 @@ var T = {
   goalDone:["done for this {p}","fait pour ce {p}","منجز لهذا {p}"], pd:["day","jour","اليوم"], pw:["week","semaine","الأسبوع"], pm:["month","mois","الشهر"],
   lateD:["{n}d late","{n} j de retard","متأخر {n} ي"], tomorrow:["Tomorrow","Demain","غدًا"],
   showMore:["Show {n} more","Afficher {n} de plus","عرض {n} أخرى"], showLess:["Show less","Moins","أقل"],
-  emptyT:["No tasks yet","Aucune tâche","لا توجد مهام بعد"], emptyP:["Add something you do regularly — with a time, a repeat, or a weekly goal — then check it off through the day.","Ajoutez une chose que vous faites régulièrement — avec une heure, une répétition ou un objectif — puis cochez-la dans la journée.","أضف شيئًا تفعله بانتظام — بوقت أو تكرار أو هدف — ثم أنجزه خلال اليوم."], addFirst:["Add your first task","Ajouter une tâche","أضف أول مهمة"],
+  emptyT:["No tasks yet","Aucune tâche","لا توجد مهام بعد"], emptyP:["Add what you do regularly. Check it off.","Ajoutez ce que vous faites souvent. Cochez.","أضف ما تفعله بانتظام. ثم أنجزه."], addFirst:["Add your first task","Ajouter une tâche","أضف أول مهمة"],
   newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["Name","Nom","الاسم"], ph:["Task name","Nom de la tâche","اسم المهمة"],
   fKind:["Every","Tous les","كل"],
   fixedD:["Fixed date","Date fixe","تاريخ ثابت"], fixedT:["Fixed time","Heure fixe","وقت ثابت"],
@@ -535,7 +541,7 @@ function norm(i){
   it.log = Array.isArray(i.log) ? i.log.filter(parse) : [];
   it.prev = i.prev || null;
   if(it.kind === "window") it.times = [];
-  if(it.unit === "h"){ if(it.kind === "window") it.kind = "flex"; if(!it.times.length) it.times = ["08:00"]; it.times = [it.times[0]]; it.n = Math.min(23, it.n); }
+  if(it.unit === "h"){ if(it.kind === "window") it.kind = "flex"; if(!it.times.length){ var _n = new Date(); it.times = [hm(_n.getHours()*60 + _n.getMinutes())]; } it.times = [it.times[0]]; it.n = Math.min(23, it.n); }
   it.at0 = mins(i.at0) !== null ? hm(mins(i.at0)) : (it.times[0] || null);
   return it;
 }
@@ -645,10 +651,9 @@ function winRow(o){
   return row(o.met ? "done" : "", "win", o.it.id, "", "", o.it.name, sub, dots, o.today);
 }
 function sec3(title, count, right, fixed, free){
-  if(!fixed && !free) return "";
+  function mini(k, body){ return body ? '<div class="mini">'+esc(t(k))+'</div><div class="box">'+body+'</div>' : '<div class="mini">'+esc(t(k))+'<span class="none"> · '+esc(t("none"))+'</span></div>'; }
   return '<section class="sec"><div class="sh2"><h2>'+esc(title)+'</h2>'+(count ? '<span>'+count+'</span>' : '')+(right || "")+'</div>'+
-    (fixed ? '<div class="mini">'+esc(t("fixedD"))+'</div><div class="box">'+fixed+'</div>' : '')+
-    (free ? '<div class="mini">'+esc(t("flexD"))+'</div><div class="box">'+free+'</div>' : '')+'</section>';
+    mini("fixedD", fixed) + mini("flexD", free) + '</section>';
 }
 function left(l, list){ var open = list.filter(function(o){ return !o.met; }).length; return '<em class="'+(l <= 1 && open ? "red" : "")+'">'+esc(l === 0 ? t("lastDay") : t("daysLeft", {n:l + 1}))+'</em>'; }
 function render(){
@@ -1005,12 +1010,11 @@ function paintSheet(){
   if(H && F.times.length > 1) F.times = [F.times[0]];
   var units = ["h","d","w","m"].map(function(u){ return '<button type="button" data-unit="'+u+'" class="'+(F.unit === u ? "on" : "")+'">'+esc(t(F.nBy[u] === 1 ? u : u + u))+'</button>'; }).join("");
   var h = '<div class="line">'+stepper("n", N())+'<div class="seg">'+units+'</div></div><div class="kinds" style="margin-top:8px">';
-  var gp = gridPreview();
-  h += '<button type="button" class="kind'+(!flex ? " on" : "")+'" data-mode="fixed"><span class="ki">'+ico("cal")+'</span><span><b>'+esc(t(H ? "fixedT" : "fixedD"))+'</b><span>'+esc(H && gp ? t("fixedSH", {x:gp}) : t("fixedS"))+'</span></span></button>';
-  if(!flex) h += toggle("shift", F.shift, t("shiftT"), t(H || F.times.length ? "shiftS" : "shiftSD"));
   var dis = !canNoFix();
-  h += '<button type="button" class="kind'+(flex ? " on" : "")+(dis ? " off" : "")+'" data-mode="flex"'+(dis ? ' aria-disabled="true"' : '')+'><span class="ki">'+ico("target")+'</span><span><b>'+esc(t(H ? "flexT" : "flexD"))+'</b><span>'+esc(dis ? t("noFixDis") : t("noFixS", {p:t("p"+F.unit)}))+'</span></span></button>';
-  if(flex) h += '<div class="tgl on"><div class="optx" style="padding-top:12px"><span class="ol">'+esc(t("howMany"))+'</span>'+stepper("q", F.quota)+'</div></div>';
+  h += '<div class="seg mode"><button type="button" data-mode="fixed" class="'+(!flex ? "on" : "")+'">'+esc(t(H ? "fixedT" : "fixedD"))+'</button><button type="button" data-mode="flex" class="'+(flex ? "on" : "")+(dis ? " off" : "")+'"'+(dis ? ' aria-disabled="true"' : '')+'>'+esc(t(H ? "flexT" : "flexD"))+'</button></div>';
+  if(dis && F.why) h += '<p class="why">'+esc(t("noFixWhy"))+'</p>';
+  if(!flex) h += toggle("shift", F.shift, t("shiftT"), t(H || F.times.length ? "shiftS" : "shiftSD"));
+  else h += '<div class="tgl on"><div class="optx"><span class="ol">'+esc(t("howMany"))+'</span>'+stepper("q", F.quota)+'</div></div>';
   $("fKind").innerHTML = h + '</div>';
   // On: weekday or day of month (fixed weeks / months only)
   var showOn = !flex && (F.unit === "w" || F.unit === "m");
@@ -1030,7 +1034,7 @@ function paintSheet(){
 }
 $("sheet").addEventListener("click", function(e){
   var b;
-  if((b = e.target.closest("[data-mode]"))){ if(b.classList.contains("off")){ buzz([10, 40, 10]); b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); return; } F.mode = b.getAttribute("data-mode"); paintSheet(); buzz(6); }
+  if((b = e.target.closest("[data-mode]"))){ if(b.classList.contains("off")){ buzz([10, 40, 10]); if(!F.why){ F.why = true; paintSheet(); b = $("fKind").querySelector('[data-mode="flex"]'); } b.classList.remove("shake"); void b.offsetWidth; b.classList.add("shake"); return; } F.mode = b.getAttribute("data-mode"); paintSheet(); buzz(6); }
   else if((b = e.target.closest("[data-tg]"))){ var k = b.getAttribute("data-tg"); F[k] = !F[k]; paintSheet(); buzz(8); }
   else if((b = e.target.closest("[data-stp]"))){
     var dlt = +b.getAttribute("data-d");
