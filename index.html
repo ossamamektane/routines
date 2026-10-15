@@ -143,6 +143,8 @@ svg{display:block;flex:none}
 .tag.tnow{background:var(--y);color:#000}.tag.late{background:var(--redsoft);color:var(--red)}
 .dots{display:flex;gap:4px;flex:none}.dots i{width:8px;height:8px;border-radius:50%;background:var(--bg3)}.dots i.on{background:var(--y)}
 .nowline{display:flex;align-items:center;gap:8px;padding:0 14px 0 25px;height:20px;color:var(--red);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
+.nowline.end{height:36px;padding-bottom:6px}
+.box > .nowline:first-child{height:34px;padding-top:4px}
 .nowline::after{content:"";flex:1;height:2px;background:var(--red);border-radius:2px}
 .row.pop{animation:pop .45s ease}
 @keyframes pop{30%{background:var(--ysoft)}}
@@ -230,6 +232,9 @@ svg{display:block;flex:none}
 html[data-theme="dark"] .toast{background:#333}
 .toast.on{opacity:1;transform:translate(-50%,0);pointer-events:auto}
 .toast span{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.toast.stack{flex-wrap:wrap;width:calc(100vw - 24px);max-width:440px;padding:12px 8px 8px 16px;row-gap:6px}
+.toast.stack #toastTx{white-space:normal;overflow:visible;flex:1 1 100%;line-height:1.35;padding-inline-end:8px}
+.toast.stack #extraBtn,.toast.stack #extraBtn[style*="none"] + #undoBtn{margin-inline-start:auto}
 .toast button{height:34px;padding:0 10px;border-radius:9px;color:var(--y);font-weight:700;display:flex;align-items:center;gap:5px;flex:none}
 .toast button:hover{background:rgba(255,255,255,.1)}
 @media (max-width:420px){.ib.pri .tx{display:none}.ib.pri{padding:0 10px}.day h1{font-size:25px}.clock{font-size:25px}}
@@ -1027,12 +1032,20 @@ function render(){
         var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" && s.delta >= -2 ? "tnow" : s.state === "now" || s.state === "late" || s.state === "missed" ? "late" : "")+'">'+esc(r)+'</span>' : '';
         fx += row("timed " + (s.state === "now" ? (s.delta >= -2 ? "due" : "due lt") : s.state), "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(s.time)}) + " · " : "") + describe(s.it), tag);
       });
-      if(!placed) fx += '<div class="nowline"><b>'+ft(nm)+'</b></div>';
     }
-    m.any.forEach(function(a){ var ww = a.it.wake !== null && !a.done; fx += row(a.done ? "done" : ww ? "wwait" : "", a.wh ? "wakeEdit" : "item", a.it.id, "", ww && m.slots.length ? '<div class="tm">'+ico("sun", 18)+'</div>' : gap, a.it.name, describe(a.it), ww ? '<span class="tag">'+esc(t("wakeWait"))+'</span>' : ""); });
+    var openFix = m.overdue.length + m.slots.filter(function(s){ return !s.done && !s.missed; }).length + m.any.filter(function(a){ return !a.done; }).length;
+    var freeOpen = m.dayWin.some(function(o){ return !o.met; }), nl = '<div class="nowline"><b>'+ft(nm)+'</b></div>', freeHTML = m.dayWin.map(winRow).join("");
+    /* nothing ahead on the clock: point "now" at what's still open, or drop it when the day is finished */
+    if(m.slots.length && !placed){
+      if(freeOpen && !m.any.some(function(a){ return !a.done; })) freeHTML = nl + freeHTML;
+      else if(openFix) fx += nl.replace('class="nowline"', 'class="nowline end"');
+    }
+    if(m.slots.length && !placed && m.any.some(function(a){ return !a.done; })) placed = "any";
+    var anyNl = placed === "any";
+    m.any.forEach(function(a){ if(anyNl && !a.done){ anyNl = false; fx += nl; } var ww = a.it.wake !== null && !a.done; fx += row(a.done ? "done" : ww ? "wwait" : "", a.wh ? "wakeEdit" : "item", a.it.id, "", ww && m.slots.length ? '<div class="tm">'+ico("sun", 18)+'</div>' : gap, a.it.name, describe(a.it), ww ? '<span class="tag">'+esc(t("wakeWait"))+'</span>' : ""); });
     var todayLeft = m.overdue.length + m.slots.filter(function(s){ return !s.done && !s.missed; }).length + m.any.filter(function(a){ return !a.done; }).length + m.dayWin.filter(function(o){ return !o.met; }).length;
     var tl = 1440 - nm, dueLeft = todayLeft > 0;
-    out += sec3(t("schedule"), todayLeft, '<em class="tab'+(tl <= 120 && dueLeft ? " red" : "")+'">'+esc(t("leftX", {x:dur(tl)}))+'</em>', fx, m.dayWin.map(winRow).join(""));
+    out += sec3(t("schedule"), todayLeft, '<em class="tab'+(tl <= 120 && dueLeft ? " red" : "")+'">'+esc(t("leftX", {x:dur(tl)}))+'</em>', fx, freeHTML);
     // THIS WEEK / THIS MONTH
     var wl = diff(td, parse(we)), ml = diff(td, parse(me));
     out += sec3(t("week"), cw.length + m.week.filter(function(o){ return !o.met; }).length, left(wl, m.week), cw.map(function(c){ return comingRow(c, false); }).join(""), m.week.map(winRow).join(""));
@@ -1214,7 +1227,9 @@ function toast(msg, undo, extra){
   undoState = undo || null; toastExtra = extra || null;
   $("toastTx").textContent = msg; $("undoBtn").style.display = undo ? "" : "none";
   $("extraBtn").style.display = extra ? "" : "none"; if(extra) $("extraTx").textContent = extra.label;
-  $("toast").classList.add("on"); clearTimeout(tt); tt = setTimeout(function(){ $("toast").classList.remove("on"); undoState = null; toastExtra = null; }, extra ? 7000 : 4500);
+  var T = $("toast"); T.classList.remove("stack"); T.classList.add("on");
+  if($("toastTx").scrollWidth > $("toastTx").clientWidth + 1) T.classList.add("stack");
+  clearTimeout(tt); tt = setTimeout(function(){ $("toast").classList.remove("on"); undoState = null; toastExtra = null; }, extra ? 7000 : 4500);
 }
 $("undoBtn").addEventListener("click", function(){ if(!undoState) return; items = JSON.parse(undoState).map(norm).filter(Boolean); save(); lastHTML = ""; render(); $("toast").classList.remove("on"); undoState = null; buzz(8); });
 $("extraBtn").addEventListener("click", function(){ var x = toastExtra; toastExtra = null; if(x) x.fn(); });
