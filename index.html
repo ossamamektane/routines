@@ -274,7 +274,7 @@ html[data-theme="dark"] .toast{background:#333}
 .ccard.in{animation:cin .28s ease}
 @keyframes cin{from{opacity:0;transform:translateY(14px) scale(.97)}}
 .ccard.out-r{transform:translateX(120%) rotate(8deg);opacity:0}.ccard.out-l{transform:translateX(-120%) rotate(-8deg);opacity:0}
-.ccard.lean-r{background:var(--ysoft)}.ccard.lean-l{background:var(--redsoft)}
+.ccard.lean-r{background:var(--ysoft)}.ccard.lean-l{background:var(--bg3)}
 .ctime{font-size:46px;font-weight:700;letter-spacing:-.02em;line-height:1;display:flex;justify-content:center;color:var(--ink)}
 .cname{font-size:24px;font-weight:700;margin-top:12px;overflow-wrap:anywhere}
 .clate{display:inline-block;margin-top:10px;padding:4px 10px;border-radius:8px;background:var(--redsoft);color:var(--red);font-size:13px;font-weight:700}
@@ -336,6 +336,11 @@ html[data-theme="dark"] .toast{background:#333}
 .lopt:disabled{opacity:.4;pointer-events:none}
 .lopt:active{transform:scale(.98)}
 #lPicker{margin-top:10px}
+#aScrim{z-index:52}#all{z-index:53}
+#all .row{min-height:60px}#all .row+.row::before{inset-inline-start:14px}
+#all .row.paused .nm{color:var(--ink3)}
+#all .row>.tag{display:inline-block;max-width:46%}
+.alltasks{margin-top:4px;gap:8px}
 .cbulk{grid-column:1/-1;display:flex;gap:8px}
 .cbulk button{flex:1;height:38px;border-radius:10px;font-size:13px;font-weight:500;color:var(--ink2);text-align:center;box-shadow:inset 0 0 0 1px var(--line2)}
 .cbulk button.r{color:var(--red)}
@@ -358,7 +363,10 @@ html[data-theme="dark"] .toast{background:#333}
       <button class="mi" data-lang-choice="ar" role="menuitemradio"><span class="tab" style="width:20px;font-weight:700;font-size:12px">AR</span>العربية<span class="mk"><span data-i="check"></span></span></button>
     </div></div>
   <div class="dd"><button class="ib" type="button" data-dd aria-haspopup="menu" aria-label="More"><span data-i="dots"></span></button>
-    <div class="menu" role="menu"><div class="mh" data-t="clockF"></div>
+    <div class="menu" role="menu">
+      <button class="mi" id="allBtn"><span data-i="dots"></span><span data-t="allT"></span><small class="mx tab" id="allCount"></small></button>
+      <div class="msep"></div>
+      <div class="mh" data-t="clockF"></div>
       <button class="mi" data-clock="24" role="menuitemradio"><span data-i="clock"></span><span data-t="c24"></span><small class="mx tab" id="c24s"></small><span class="mk"><span data-i="check"></span></span></button>
       <button class="mi" data-clock="12" role="menuitemradio"><span data-i="clock"></span><span data-t="c12"></span><small class="mx tab" id="c12s"></small><span class="mk"><span data-i="check"></span></span></button>
       <div class="msep"></div>
@@ -398,6 +406,7 @@ html[data-theme="dark"] .toast{background:#333}
     </div>
 
     <div class="fl" id="gOn"><div class="lb"><span id="onLbl"></span></div><div id="onPick"></div></div>
+    <div class="fl" id="gPause"></div>
   </div>
   <div class="sum" id="hint"></div>
   <div class="sfoot">
@@ -420,6 +429,12 @@ html[data-theme="dark"] .toast{background:#333}
     <button class="btn cmiss" type="button" data-c="missed"><span data-i="x"></span><span data-t="missedB"></span></button>
     <div class="cbulk" id="cBulk"><button type="button" data-c="allnow"><span data-t="allNow"></span></button><button type="button" class="r" data-c="allmissed"><span data-t="allMissed"></span></button></div>
   </div>
+</section>
+<div class="scrim" id="aScrim"></div>
+<section class="sheet" id="all" role="dialog" aria-modal="true" aria-labelledby="aTitle">
+  <div class="sgrab"><i></i></div>
+  <div class="shd"><h3 id="aTitle" data-t="allT"></h3><button class="ib pri" type="button" id="aAdd" aria-label="Add"><span data-i="plus"></span></button><button class="ib" type="button" id="aClose" aria-label="Close"><span data-i="x"></span></button></div>
+  <div class="sbody" id="aList" style="padding-bottom:calc(16px + var(--sb))"></div>
 </section>
 <div class="scrim" id="lScrim"></div>
 <section class="sheet" id="later" role="dialog" aria-modal="true" aria-labelledby="lTitle">
@@ -466,7 +481,7 @@ var T = {
   foot:["Stored on this device · works offline","Sur cet appareil · hors ligne","على هذا الجهاز · بدون إنترنت"],
   ofDone:["{a} of {b} done","{a} sur {b} faits","{a} من {b} منجزة"], streak:["{n}-day streak","{n} jours d’affilée","{n} أيام متتالية"],
   noTasks:["Nothing planned today","Rien de prévu aujourd’hui","لا شيء اليوم"],
-  kNow:["Now","Maintenant","الآن"], kLate:["Missed","En retard","فاتك"], kNext:["Next","Ensuite","التالي"], kAny:["Anytime today","Dans la journée","خلال اليوم"],
+  kNow:["Now","Maintenant","الآن"], kLate:["Late","En retard","متأخر"], kNext:["Next","Ensuite","التالي"], kAny:["Anytime today","Dans la journée","خلال اليوم"],
   kGoal:["Goal","Objectif","هدف"],
   allDone:["Everything is checked","Tout est coché","كل شيء منجز"], allDoneSub:["Next: {n} · {w}","Ensuite : {n} · {w}","التالي: {n} · {w}"], allDoneNone:["Nothing else today","Rien d’autre aujourd’hui","لا شيء آخر اليوم"],
   inX:["in {x}","dans {x}","بعد {x}"], lateX:["{x} late","{x} de retard","متأخر {x}"], hAbbr:["h","h","س"], min:["min","min","د"],
@@ -498,7 +513,7 @@ var T = {
   onTimeAt:["Did it at {t}","Fait à {t}","أنجزته في {t}"], didIt:["Did it","Fait","أنجزته"], justNow:["Just now","À l’instant","الآن"], missedB:["Missed it","Raté","فاتني"],
   plus30:["Later…","Plus tard…","لاحقًا…"], tomorrowB:["Move to tomorrow","Reporter à demain","انقل للغد"],
   caught:["All caught up","Tout est à jour","كل شيء محدّث"], caughtS:["Nice — your day is honest again.","Parfait — votre journée est à jour.","رائع — يومك محدّث."],
-  catchBtn:["Catch up","Rattraper","استدراك"], swipeHint:["Swipe right: did it · left: missed","Glissez à droite : fait · à gauche : raté","اسحب يمينًا: أنجزت · يسارًا: فاتني"],
+  catchBtn:["Catch up","Rattraper","استدراك"], swipeHint:["Swipe right: did it · left: later","Glissez à droite : fait · à gauche : plus tard","اسحب يمينًا: أنجزت · يسارًا: لاحقًا"],
   onTimeBtn:["On time","À l’heure","في وقته"], markedOT:["Saved as done at {t}","Enregistré à {t}","حُفظ كمنجز في {t}"],
   ontimeN:["{n} on time","{n} à l’heure","{n} في وقتها"], missedTag:["missed","raté","فاتت"], movedTo:["moved to {t}","décalé à {t}","نُقل إلى {t}"], moved:["Moved to {t}","Décalé à {t}","نُقل إلى {t}"], toTomorrow:["Moved to tomorrow","Reporté à demain","نُقل للغد"],
   sumGoal:["{q} a {p}, any day","{q} par {p}, n’importe quel jour","{q} في {p}، أي يوم"], sumAt:[" at {t}"," à {t}"," في {t}"], sumFrom:["Starts {d}","Commence {d}","يبدأ {d}"], sumNext:["Next: {d}","Prochaine : {d}","التالي: {d}"], and:[" and "," et "," و"],
@@ -530,6 +545,11 @@ var T = {
   inDays:["In {n} days","Dans {n} jours","بعد {n} أيام"], movedDay:["Moved to {d}","Reporté au {d}","نُقل إلى {d}"],
   allNow:["Did all just now","Tout fait à l’instant","أنجزتها كلها الآن"], allMissed:["Missed all","Tout raté","فاتتني كلها"],
   bulkDone:["Updated {n} tasks","{n} tâches mises à jour","حُدّثت {n} مهام"], pastTime:["Pick a time later than now","Choisissez une heure plus tard","اختر وقتًا بعد الآن"],
+  leftX:["{x} left","{x} restantes","باقي {x}"], clockBack:["Your clock went back — list restored","L’horloge a reculé — liste restaurée","رجعت الساعة — تمت استعادة القائمة"],
+  allT:["All tasks","Toutes les tâches","كل المهام"], pausedN:["{n} paused","{n} en pause","{n} موقوفة"], activeT:["Active","Actives","نشطة"], pausedT:["Paused","En pause","موقوفة"],
+  pauseT:["Pause this task","Mettre en pause","إيقاف المهمة مؤقتًا"], pauseS:["Hidden from your day until you turn this off","Masquée jusqu’à la reprise","مخفية حتى تعيد تشغيلها"],
+  paused1:["Paused","En pause","موقوفة"], resumed:["Resumed “{n}”","« {n} » reprise","استُؤنفت «{n}»"], pausedMsg:["Paused “{n}”","« {n} » en pause","أُوقفت «{n}»"],
+  noneYet:["No tasks yet","Aucune tâche","لا توجد مهام"], dueToday:["Today","Aujourd’hui","اليوم"], thisP:["this {p}","ce/cette {p}","هذا {p}"],
   midnight:["after midnight — use tomorrow","après minuit","بعد منتصف الليل"], plusX:["+{x}","+{x}","+{x}"],
 };
 var LANGS = ["en","fr","ar"];
@@ -545,7 +565,46 @@ function set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
 var items = [], hist = {};
 try{ items = JSON.parse(get("r.items") || "[]"); if(!Array.isArray(items)) items = []; }catch(e){ items = []; }
 try{ hist = JSON.parse(get("r.hist") || "{}") || {}; }catch(e){ hist = {}; }
-function save(){ set("r.items", JSON.stringify(items)); }
+function save(){ var j = JSON.stringify(items); set("r.items", j); pushSnap(j); }
+/* The clock can lie (manual change, travel, dead battery). Every saved state is stamped;
+   if time ever runs backwards we go back to the last state that existed at that time. */
+function snaps(){ try{ var a = JSON.parse(get("r.snaps") || "[]"); return Array.isArray(a) ? a : []; }catch(e){ return []; } }
+function pushSnap(j){
+  var a = snaps(), now = Date.now();
+  if(a.length && a[a.length-1].s === j) return;
+  a.push({ts:now, s:j});
+  /* never prune by age: "now" may be fake. Keep the last 30 states + the last state of each of 14 days */
+  if(a.length > 30){
+    var last = {}; a.forEach(function(x, k){ last[iso(new Date(x.ts))] = k; });
+    var keepK = Object.keys(last).sort().slice(-14).map(function(d){ return last[d]; }), n = a.length;
+    a = a.filter(function(x, k){ return k >= n - 30 || keepK.indexOf(k) > -1; });
+  }
+  set("r.snaps", JSON.stringify(a));
+}
+var warped = null;
+function guardClock(){
+  var now = Date.now(), seen = +get("r.seen") || 0;
+  if(seen && now < seen - 5*60e3){
+    var a = snaps(), pick = null, T0 = iso(today());
+    for(var i = a.length - 1; i >= 0; i--) if(a[i].ts <= now){ pick = a[i]; break; }
+    var before = JSON.stringify(items);
+    if(pick){ try{ items = JSON.parse(pick.s).map(norm).filter(Boolean); }catch(e){} }
+    items.forEach(function(it){                     /* nothing can have happened after "now" */
+      if(it.last && it.last > T0) it.last = null;
+      it.log = it.log.filter(function(d){ return d <= T0; });
+      if(it.slots && it.slots.date > T0) it.slots = null;
+      if(it.prev && it.prev.date > T0) it.prev = null;
+    });
+    Object.keys(hist).forEach(function(k){ if(k > T0) delete hist[k]; });
+    set("r.hist", JSON.stringify(hist));
+    set("r.snaps", JSON.stringify(a.filter(function(x){ return x.ts <= now; })));
+    if((+get("r.catchAt") || 0) > now) set("r.catchAt", "0");
+    set("r.items", JSON.stringify(items));
+    warped = before;
+  }
+  else pushSnap(JSON.stringify(items));   /* baseline: the state as it is right now */
+  set("r.seen", String(now));
+}
 
 /* ---------- dates ---------- */
 function today(){ var d = new Date(); d.setHours(12,0,0,0); return d; }
@@ -589,7 +648,7 @@ function norm(i){
   it.last = parse(i.last) ? i.last : null;
   it.slots = i.slots && i.slots.date ? {date:i.slots.date, done:i.slots.done || {}, snz:i.slots.snz || {}} : null;
   it.log = Array.isArray(i.log) ? i.log.filter(parse) : [];
-  it.prev = i.prev || null;
+  it.prev = i.prev || null; it.paused = !!i.paused;
   if(it.kind === "window") it.times = [];
   if(it.unit === "h"){ if(it.kind === "window") it.kind = "flex"; if(!it.times.length){ var _n = new Date(); it.times = [hm(_n.getHours()*60 + _n.getMinutes())]; } it.times = [it.times[0]]; it.n = Math.min(23, it.n); }
   it.at0 = mins(i.at0) !== null ? hm(mins(i.at0)) : (it.times[0] || null);
@@ -601,6 +660,7 @@ items = items.map(norm).filter(Boolean);
 function roll(){
   var td = today(), T0 = iso(td), ch = false, cut = iso(addDays(td, -70));
   items.forEach(function(it){
+    if(it.paused) return;
     if(it.unit === "h"){
       var occ = dt(it.next, it.times[0]), now = new Date();
       if(it.kind === "fixed" && !it.shift){ var L = gridLE(it, now); if(occ < L){ setOcc(it, L); ch = true; } }
@@ -627,6 +687,7 @@ function model(){
     if(s.done) m.done++; else if(s.state === "late" || s.state === "now") m.pending++;
   }
   items.forEach(function(it){
+    if(it.paused) return;
     if(it.kind === "window"){
       var pr = period(it.period, td), a = iso(pr[0]), b = iso(pr[1]);
       var c = it.log.filter(function(d){ return d >= a && d <= b; }).length;
@@ -645,7 +706,7 @@ function model(){
       return;
     }
     var d = diff(td, parse(it.next)), doneToday = it.last === T0;
-    if(it.times.length && (d === 0 || doneToday)){
+    if(it.times.length && (d === 0 || doneToday || (on && it.times.every(function(x){ return sd[x]; })))){
       it.times.forEach(function(tm){ slot(it, tm, sd, snz, doneToday && d !== 0); });
       if(d > 0) m.coming.push({it:it, d:d});
       return;
@@ -702,13 +763,14 @@ function winRow(o){
   return row(o.met ? "done" : "", "win", o.it.id, "", "", o.it.name, sub, dots, o.today);
 }
 function sec3(title, count, right, fixed, free){
-  function mini(k, body){ return body ? '<div class="mini">'+esc(t(k))+'</div><div class="box">'+body+'</div>' : '<div class="mini">'+esc(t(k))+'<span class="none"> · '+esc(t("none"))+'</span></div>'; }
+  if(!fixed && !free) return "";
+  function mini(k, body){ return body ? '<div class="mini">'+esc(t(k))+'</div><div class="box">'+body+'</div>' : ''; }
   return '<section class="sec"><div class="sh2"><h2>'+esc(title)+'</h2>'+(count ? '<span>'+count+'</span>' : '')+(right || "")+'</div>'+
     mini("fixedD", fixed) + mini("flexD", free) + '</section>';
 }
-function left(l, list){ var open = list.filter(function(o){ return !o.met; }).length; return '<em class="'+(l <= 1 && open ? "red" : "")+'">'+esc(l === 0 ? t("lastDay") : t("daysLeft", {n:l + 1}))+'</em>'; }
+function left(l, list){ var open = list.filter(function(o){ return !o.met; }).length; if(l === 0) return '<em class="tab'+(open ? " red" : "")+'">'+esc(t("leftX", {x:dur(1440 - nowMin())}))+'</em>'; return '<em class="'+(l <= 1 && open ? "red" : "")+'">'+esc(l === 0 ? t("lastDay") : t("daysLeft", {n:l + 1}))+'</em>'; }
 function render(){
-  roll();
+  guardClock(); roll();
   var td = today(), m = model(), nm = nowMin(), out = "";
   $("dayName").textContent = fmt(td, {weekday:"long", day:"numeric", month:"long"});
   $("clock").innerHTML = ftH(nm);
@@ -718,7 +780,7 @@ function render(){
   if(m.total && m.done >= m.total) streak++;
   var hk = Object.keys(hist).sort(); while(hk.length > 120) delete hist[hk.shift()];
   set("r.hist", JSON.stringify(hist));
-  $("dayMeta").textContent = m.total ? t("ofDone", {a:m.done, b:m.total}) + (m.done ? " · " + t("ontimeN", {n:m.ontime}) : "") + (streak > 1 ? " · " + t("streak", {n:streak}) : "") : (items.length ? t("noTasks") : "");
+  $("dayMeta").textContent = m.total ? t("ofDone", {a:m.done, b:m.total}) + (m.ontime ? " · " + t("ontimeN", {n:m.ontime}) : "") + (streak > 1 ? " · " + t("streak", {n:streak}) : "") : (items.length ? t("noTasks") : "");
   var seg = [];
   m.overdue.forEach(function(){ seg.push("late"); });
   m.slots.forEach(function(s){ seg.push(s.done ? "on" : s.state === "late" || s.state === "missed" ? "late" : ""); });
@@ -754,7 +816,8 @@ function render(){
     }
     m.any.forEach(function(a){ fx += row(a.done ? "done" : "", "item", a.it.id, "", gap, a.it.name, describe(a.it), ""); });
     var todayLeft = m.overdue.length + m.slots.filter(function(s){ return !s.done && !s.missed; }).length + m.any.filter(function(a){ return !a.done; }).length + m.dayWin.filter(function(o){ return !o.met; }).length;
-    out += sec3(t("schedule"), todayLeft, "", fx, m.dayWin.map(winRow).join(""));
+    var tl = 1440 - nm, dueLeft = todayLeft > 0;
+    out += sec3(t("schedule"), todayLeft, '<em class="tab'+(tl <= 120 && dueLeft ? " red" : "")+'">'+esc(t("leftX", {x:dur(tl)}))+'</em>', fx, m.dayWin.map(winRow).join(""));
     // THIS WEEK / THIS MONTH
     var wl = diff(td, parse(we)), ml = diff(td, parse(me));
     out += sec3(t("week"), cw.length + m.week.filter(function(o){ return !o.met; }).length, left(wl, m.week), cw.map(function(c){ return comingRow(c, false); }).join(""), m.week.map(winRow).join(""));
@@ -763,8 +826,12 @@ function render(){
       out += '<button class="more later" type="button" data-act="more">'+esc(t("laterN", {n:cl.length}))+'<span style="display:contents">'+ico("chev", 16).replace("<svg", expanded ? '<svg style="transform:rotate(180deg)"' : "<svg")+'</span></button>';
       if(expanded) out += '<div class="box">'+cl.map(function(c){ return comingRow(c, true); }).join("")+'</div>';
     }
+    var np = items.filter(function(i){ return i.paused; }).length;
+    out += '<button class="more alltasks" type="button" data-act="all">'+ico("dots", 16)+esc(t("allT"))+' · '+items.length+(np ? ' · '+esc(t("pausedN", {n:np})) : '')+'</button>';
   }
   if(out !== lastHTML){ $("app").innerHTML = out; lastHTML = out; }
+  if(warped){ var wb = warped; warped = null; setTimeout(function(){ toast(t("clockBack"), wb); }, 300); }
+  $("allCount").textContent = items.length || "";
   document.title = (m.pending ? "(" + m.pending + ") " : "") + "Routines";
   try{ if(navigator.setAppBadge){ if(m.pending) navigator.setAppBadge(m.pending); else navigator.clearAppBadge(); } }catch(e){}
 }
@@ -895,6 +962,7 @@ document.addEventListener("click", function(e){
   if(a === "add"){ openSheet(null); return; }
   if(a === "catch"){ openCatch(); return; }
   if(a === "more"){ expanded = !expanded; render(); return; }
+  if(a === "all"){ openAll(); return; }
   var host = b.closest("[data-id]"); if(!host) return;
   var id = host.getAttribute("data-id");
   if(a === "edit") openSheet(find(id));
@@ -981,7 +1049,7 @@ function answer(how, ox){
   if(how === "allnow" || how === "allmissed") return answerAll(how === "allmissed");
   if(how === "later" && !ox){ openLater(q.kind, q.id, q.time, function(o){ answer("later", o); }); return; }
   var o = how === "ontime" ? (q.time ? {at:q.eff} : {}) : how === "now" ? {} : how === "missed" ? {missed:true} : ox;
-  var card = $("cCard").firstChild; if(card) card.classList.add(how === "missed" ? "out-l" : "out-r");
+  var card = $("cCard").firstChild; if(card) card.classList.add(how === "missed" || how === "later" ? "out-l" : "out-r");
   apply(q.kind, q.id, q.time, o); save(); buzz(how === "missed" ? [8, 40, 8] : 14);
   setTimeout(function(){ ci++; paintCatch(true); lastHTML = ""; render(); }, 220);
 }
@@ -999,17 +1067,17 @@ $("cScrim").addEventListener("click", closeCatch); $("cClose").addEventListener(
   el.addEventListener("touchmove", function(e){ if(x0 === null) return; dx = e.touches[0].clientX - x0; var c = el.firstChild; if(c && c.classList.contains("ccard")){ c.style.transition = "none"; c.style.transform = "translateX(" + dx + "px) rotate(" + (dx/25) + "deg)"; c.classList.toggle("lean-r", dx > 60); c.classList.toggle("lean-l", dx < -60); } }, {passive:true});
   el.addEventListener("touchend", function(){ if(x0 === null) return; x0 = null; var c = el.firstChild; if(!c || !c.classList.contains("ccard")) return; c.style.transition = ""; c.style.transform = "";
     var rtl = document.documentElement.dir === "rtl", r = rtl ? -dx : dx;
-    if(r > 90) answer("ontime"); else if(r < -90) answer("missed"); else c.classList.remove("lean-r", "lean-l"); });
+    if(r > 90) answer("ontime"); else if(r < -90){ c.classList.remove("lean-r", "lean-l"); answer("later"); } else c.classList.remove("lean-r", "lean-l"); });
 })();
 function maybeCatch(){
-  if($("later").classList.contains("on") || $("sheet").classList.contains("on") || $("catch").classList.contains("on")) return;
+  if($("all").classList.contains("on") || $("later").classList.contains("on") || $("sheet").classList.contains("on") || $("catch").classList.contains("on")) return;
   if(Date.now() - (+get("r.catchAt") || 0) < 25*60e3) return;
   if(lateQueue().length) setTimeout(openCatch, 450);
 }
 document.addEventListener("keydown", function(e){
   if($("later").classList.contains("on")){ if(e.key === "Escape") closeLater(); return; }
   if(!$("catch").classList.contains("on")) return;
-  if(e.key === "ArrowRight") answer("ontime"); else if(e.key === "ArrowLeft") answer("missed"); else if(e.key === "Escape") closeCatch();
+  if(e.key === "ArrowRight") answer("ontime"); else if(e.key === "ArrowLeft") answer("later"); else if(e.key === "Escape") closeCatch();
 });
 
 /* ---------- sheet ---------- */
@@ -1017,7 +1085,7 @@ var editing = null, F = {};
 function openSheet(it){
   editing = it || null;
   var td = today();
-  F = {name:"", nBy:{h:1, d:1, w:1, m:1}, unit:"d", mode:"fixed", shift:false, quota:1, times:[], wd:(td.getDay()+6)%7, md:td.getDate()};
+  F = {name:"", nBy:{h:1, d:1, w:1, m:1}, unit:"d", mode:"fixed", shift:false, quota:1, times:[], wd:(td.getDay()+6)%7, md:td.getDate(), paused:!!(it && it.paused)};
   if(it && it.kind === "window"){ F.name = it.name; F.unit = it.period; F.mode = "flex"; F.quota = it.quota; }
   else if(it){
     var a = parse(it.anchor) || parse(it.next);
@@ -1093,6 +1161,8 @@ function paintSheet(){
   $("timesLbl").textContent = t(H ? "fStartAt" : "fTimes");
   $("timeList").innerHTML = F.times.map(function(x){ return '<span class="tchip">'+ft(x)+'<button type="button" data-rm="'+x+'" aria-label="Remove">'+ico("x", 16)+'</button></span>'; }).join("") +
     (H && F.times.length ? '' : '<button type="button" class="tadd" id="tAdd">'+ico("plus", 18)+esc(t("addTime"))+'</button>');
+  $("gPause").style.display = editing ? "" : "none";
+  $("gPause").innerHTML = editing ? toggle("paused", F.paused, t("pauseT"), t("pauseS")) : "";
   $("hint").innerHTML = ico("repeat", 18) + '<span><b>'+esc(summary())+'</b></span>';
 }
 $("sheet").addEventListener("click", function(e){
@@ -1116,7 +1186,7 @@ $("fName").addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.pre
 $("addBtn").addEventListener("click", function(){ closeMenus(); openSheet(null); });
 $("scrim").addEventListener("click", closeSheet);
 $("closeBtn").addEventListener("click", closeSheet);
-document.addEventListener("keydown", function(e){ if(e.key === "Escape"){ if($("sheet").classList.contains("on")) closeSheet(); closeMenus(); } });
+document.addEventListener("keydown", function(e){ if(e.key === "Escape"){ if($("later").classList.contains("on")) return; if($("sheet").classList.contains("on")) closeSheet(); else if($("all").classList.contains("on")) closeAll(); closeMenus(); } });
 
 /* time: own scroll wheels, never the system picker */
 var wheelBuilt = false;
@@ -1183,6 +1253,31 @@ $("lpSet").addEventListener("click", function(){
   if(v <= nowMin()){ $("lWarn").textContent = t("pastTime"); $("lWarn").style.display = ""; buzz([10, 40, 10]); return; }
   pickLater({to:hm(v)});
 });
+function allTag(it){
+  if(it.paused) return '<span class="tag">'+esc(t("paused1"))+'</span>';
+  var td = today();
+  if(it.kind === "window"){ var pr = period(it.period, td), a = iso(pr[0]), b = iso(pr[1]), c = it.log.filter(function(d){ return d >= a && d <= b; }).length; return '<span class="tag tab'+(c >= it.quota ? " tnow" : "")+'">'+c+'/'+it.quota+'</span>'; }
+  var nx = parse(it.next), d = diff(td, nx), tm = it.times.length ? " · " + ft(it.times[0]) + (it.times.length > 1 ? " +" + (it.times.length - 1) : "") : "";
+  if(d < 0 && !it.times.length) return '<span class="tag late">'+esc(t("lateD", {n:-d}))+'</span>';
+  var lbl = d <= 0 ? t("dueToday") : d === 1 ? t("tomorrow") : fmt(nx, d < 7 ? {weekday:"short"} : {day:"numeric", month:"short"});
+  return '<span class="tag tab">'+esc(lbl + tm)+'</span>';
+}
+function allSort(a, b){ var ka = a.kind === "window" ? "9" : a.next + (a.times[0] || "99"), kb = b.kind === "window" ? "9" : b.next + (b.times[0] || "99"); return ka < kb ? -1 : ka > kb ? 1 : a.name.localeCompare(b.name); }
+function paintAll(){
+  var act = items.filter(function(i){ return !i.paused; }).sort(allSort), pz = items.filter(function(i){ return i.paused; }).sort(allSort);
+  function list(arr){ return arr.map(function(it){ return '<button type="button" class="row'+(it.paused ? " paused" : "")+'" data-aid="'+it.id+'" style="width:100%"><span class="bd"><span class="nm" style="display:block">'+esc(it.name)+'</span><span class="sb" style="display:block">'+esc(describe(it))+'</span></span>'+allTag(it)+'</button>'; }).join(""); }
+  var h = "";
+  if(!items.length) h = '<p class="hint">'+esc(t("noneYet"))+'</p>';
+  if(act.length) h += '<div class="mini">'+esc(t("activeT"))+' · '+act.length+'</div><div class="box">'+list(act)+'</div>';
+  if(pz.length) h += '<div class="mini">'+esc(t("pausedT"))+' · '+pz.length+'</div><div class="box">'+list(pz)+'</div>';
+  $("aList").innerHTML = h;
+}
+function openAll(){ closeMenus(); paintAll(); $("aList").scrollTop = 0; $("aScrim").classList.add("on"); $("all").classList.add("on"); document.documentElement.classList.add("lock"); }
+function closeAll(){ $("aScrim").classList.remove("on"); $("all").classList.remove("on"); document.documentElement.classList.remove("lock"); }
+$("aList").addEventListener("click", function(e){ var b = e.target.closest("[data-aid]"); if(!b) return; var it = find(b.getAttribute("data-aid")); closeAll(); if(it) setTimeout(function(){ openSheet(it); }, 120); });
+$("aScrim").addEventListener("click", closeAll); $("aClose").addEventListener("click", closeAll);
+$("aAdd").addEventListener("click", function(){ closeAll(); setTimeout(function(){ openSheet(null); }, 120); });
+$("allBtn").addEventListener("click", openAll);
 $("lScrim").addEventListener("click", closeLater); $("lClose").addEventListener("click", closeLater);
 function openPicker(){
   if(!wheelBuilt) buildWheels();
@@ -1209,10 +1304,18 @@ $("saveBtn").addEventListener("click", function(){
     || (F.unit === "w" && a0 && (a0.getDay()+6)%7 !== F.wd) || (F.unit === "m" && a0 && a0.getDate() !== F.md) || (F.unit === "h" && editing.times[0] !== times[0]);
   it.name = name; it.kind = kind; it.n = n; it.unit = flex ? "d" : F.unit; it.quota = F.quota; it.period = flex ? F.unit : "w"; it.times = times; it.shift = !flex && F.shift;
   if(changed){ var sd = iso(startDate()); it.next = sd; it.anchor = sd; it.at0 = times[0] || null; it.prev = null; it.slots = null; }
+  var wasPaused = !!(editing && editing.paused); it.paused = !!F.paused;
+  if(wasPaused && !it.paused && !changed && kind !== "window"){   /* resume from today, not from the past */
+    var td0 = today(), ni = norm(it);
+    if(it.unit === "h") it.next = iso(td0);
+    else if(parse(it.next) < td0) it.next = iso(ni.kind === "fixed" && !ni.shift ? firstOnOrAfter(ni, td0) : td0);
+    it.slots = null; it.prev = null;
+  }
   var n = norm(it);
   if(editing) items[items.indexOf(editing)] = n; else items.push(n);
   save(); closeSheet(); lastHTML = ""; render(); buzz(10);
   if(!editing) toast(t("added", {n:name}), before);
+  else if(wasPaused !== it.paused) toast(t(it.paused ? "pausedMsg" : "resumed", {n:name}), before);
 });
 $("skipBtn").addEventListener("click", function(){
   if(!editing) return; var before = snap(), it = editing;
