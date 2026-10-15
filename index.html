@@ -450,6 +450,22 @@ body{font-size:16px;letter-spacing:-.011em}
 .cbig{background:var(--ok);color:#fff}
 .cbtns .cmiss{color:var(--red)}
 .empty{border-radius:18px;box-shadow:var(--card-sh)}
+.wake{background:var(--bg2);border-radius:18px;padding:16px 18px;margin:0 0 14px;box-shadow:var(--card-sh)}
+.wk-k{display:flex;align-items:center;gap:6px;color:#c77700;font-size:13px;font-weight:600}
+html[data-theme="dark"] .wk-k{color:#ffb340}
+.wk-q{font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:4px}
+.wk-s{color:var(--ink2);font-size:14px;margin-top:3px}
+.wk-b{display:flex;gap:8px;margin-top:14px}.wk-b .btn{height:46px;flex:1}.wk-b .btn:not(.y){background:var(--bg3)}
+.wakebar{display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:14px;padding:0 6px 0 14px;height:48px;margin:0 0 12px;box-shadow:var(--card-sh)}
+.wk-i{color:#e08a00}.wk-t{flex:1;font-size:15px;font-weight:500}
+.wk-e{height:36px;padding:0 14px;border-radius:10px;color:var(--y);font-weight:600;font-size:15px}.wk-e:active{background:var(--ysoft)}
+.row.wwait .tm{color:#e08a00}
+.tchips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.tchips .lopt{min-height:56px}
+.sugg .chip.on{background:var(--y);color:#fff}
+.clink{grid-column:1/-1;height:36px;color:var(--y);font-size:14px;font-weight:600;text-align:center}
+#tScrim{z-index:56}#tsheet{z-index:57}
+html[data-theme="dark"] .sheet .sugg .chip:not(.on){background:#2c2c2e}
 .day h1{font-size:clamp(23px,6.6vw,30px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .day>div:first-child{min-width:0}
 </style>
@@ -505,6 +521,8 @@ body{font-size:16px;letter-spacing:-.011em}
     <div class="fl"><div class="lb"><span data-t="fKind"></span></div><div class="kinds" id="fKind"></div></div>
 
     <div class="fl" id="gTimes"><div class="lb"><span id="timesLbl"></span></div>
+      <div class="seg" id="tMode" style="margin-bottom:10px"></div>
+      <div id="wakeBox"></div>
       <div class="times" id="timeList"></div>
       <div class="picker" id="picker">
         <div class="wheel"><div class="col" id="wH"></div><div class="colon">:</div><div class="col" id="wM"></div></div>
@@ -535,6 +553,7 @@ body{font-size:16px;letter-spacing:-.011em}
     <button class="btn" type="button" data-c="now" id="cNow"><span data-i="check"></span><span data-t="justNow"></span></button>
     <button class="btn" type="button" data-c="later" id="cLater"></button>
     <button class="btn cmiss" type="button" data-c="missed"><span data-i="x"></span><span data-t="missedB"></span></button>
+    <button class="clink" type="button" data-c="other" id="cOther"><span data-t="otherTime"></span></button>
     <div class="cbulk" id="cBulk"><button type="button" data-c="allnow"><span data-t="allNow"></span></button><button type="button" class="r" data-c="allmissed"><span data-t="allMissed"></span></button></div>
   </div>
 </section>
@@ -543,6 +562,18 @@ body{font-size:16px;letter-spacing:-.011em}
   <div class="sgrab"><i></i></div>
   <div class="shd"><h3 id="aTitle" data-t="allT"></h3><button class="ib pri" type="button" id="aAdd" aria-label="Add"><span data-i="plus"></span></button><button class="ib" type="button" id="aClose" aria-label="Close"><span data-i="x"></span></button></div>
   <div class="sbody" id="aList" style="padding-bottom:calc(16px + var(--sb))"></div>
+</section>
+<div class="scrim" id="tScrim"></div>
+<section class="sheet" id="tsheet" role="dialog" aria-modal="true" aria-labelledby="tTitle">
+  <div class="sgrab"><i></i></div>
+  <div class="shd"><h3 id="tTitle"></h3><button class="ib" type="button" id="tClose" aria-label="Close"><span data-i="x"></span></button></div>
+  <div class="sbody">
+    <div class="lname" id="tSub"></div>
+    <div class="tchips" id="tChips"></div>
+    <div class="picker on" style="margin-top:12px"><div class="wheel"><div class="col" id="tH"></div><div class="colon">:</div><div class="col" id="tM"></div></div></div>
+    <p class="hint" id="tWarn" style="display:none;color:var(--red)"></p>
+  </div>
+  <div class="sfoot"><button class="btn" type="button" id="tClear" style="display:none"></button><button class="btn y" type="button" id="tSet"><span data-i="check"></span><span data-t="setTime"></span></button></div>
 </section>
 <div class="scrim" id="lScrim"></div>
 <section class="sheet" id="later" role="dialog" aria-modal="true" aria-labelledby="lTitle">
@@ -660,6 +691,16 @@ var T = {
   noneYet:["No tasks yet","Aucune tâche","لا توجد مهام"], dueToday:["Today","Aujourd’hui","اليوم"], thisP:["this {p}","ce/cette {p}","هذا {p}"],
   noneDue:["Nothing due right now","Rien de prévu maintenant","لا شيء مستحق الآن"], openToday:["{n} left today, whenever suits you","{n} à faire aujourd’hui, quand vous voulez","{n} متبقية اليوم، متى شئت"],
   repairedN:["Fixed {n} tasks moved by a clock change","{n} tâches corrigées après un changement d’heure","صُحّحت {n} مهام بعد تغيير الساعة"],
+  wakeQ:["When did you wake up?","À quelle heure vous êtes-vous levé ?","متى استيقظت؟"], wakeHi:["Good morning","Bonjour","صباح الخير"],
+  wakeStarts:["Starts {list}","Lance {list}","يبدأ {list}"], wakeNow:["Just now","À l’instant","الآن"], wakeEarlier:["Earlier…","Plus tôt…","قبل ذلك…"],
+  wokeAt:["Woke up at {t}","Réveil à {t}","استيقظت في {t}"], edit:["Edit","Modifier","تعديل"], wakeSet:["Woke up at {t} · {n} tasks timed","Réveil à {t} · {n} tâches planifiées","استيقظت {t} · جُدولت {n} مهام"],
+  wakeClear:["Clear wake time","Effacer l’heure du réveil","مسح وقت الاستيقاظ"], wakeCleared:["Wake time cleared","Heure du réveil effacée","مُسح وقت الاستيقاظ"],
+  wakeOff:["{x} after waking","{x} après le réveil","بعد {x} من الاستيقاظ"], wake0:["right after waking","dès le réveil","فور الاستيقاظ"],
+  wakeWait:["waits for your wake-up","attend votre réveil","ينتظر استيقاظك"],
+  tmClock:["At a time","À une heure","في وقت محدد"], tmWake:["After waking","Après le réveil","بعد الاستيقاظ"], wakeLbl:["How long after you wake up","Combien de temps après le réveil","كم بعد الاستيقاظ"],
+  agoX:["{x} ago","il y a {x}","قبل {x}"], asSched:["As scheduled","Comme prévu","كما هو مقرر"], didWhen:["When did you do it?","Quand l’avez-vous fait ?","متى أنجزتها؟"],
+  setTimeB:["Set time","Heure…","الوقت…"], didAt:["Done at {t}","Fait à {t}","أُنجز في {t}"], futureNo:["That time hasn’t happened yet","Cette heure n’est pas encore passée","هذا الوقت لم يأتِ بعد"],
+  otherTime:["I did it at another time…","Fait à une autre heure…","أنجزتها في وقت آخر…"],
   midnight:["after midnight — use tomorrow","après minuit","بعد منتصف الليل"], plusX:["+{x}","+{x}","+{x}"],
 };
 var LANGS = ["en","fr","ar"];
@@ -691,6 +732,9 @@ function pushSnap(j){
   }
   set("r.snaps", JSON.stringify(a));
 }
+function getWake(){ try{ var w = JSON.parse(get("r.wake") || "null"); return w && w.date === iso(today()) && mins(w.t) !== null ? mins(w.t) : null; }catch(e){ return null; } }
+function setWake(m){ if(m === null) set("r.wake", "null"); else set("r.wake", JSON.stringify({date:iso(today()), t:hm(m)})); }
+function wakeTasks(){ return items.filter(function(i){ return i.wake !== null && !i.paused; }); }
 var warped = null, repaired = 0;
 /* A task can be at most ~2 repeats ahead of today (done today + one skip). Anything further
    can only come from a clock that was set forward — put it back on today's schedule. */
@@ -787,6 +831,8 @@ function norm(i){
   it.slots = i.slots && i.slots.date ? {date:i.slots.date, done:i.slots.done || {}, snz:i.slots.snz || {}} : null;
   it.log = Array.isArray(i.log) ? i.log.filter(parse) : [];
   it.prev = i.prev || null; it.paused = !!i.paused;
+  it.wake = typeof i.wake === "number" && i.wake >= 0 && i.wake <= 1080 ? Math.round(i.wake) : null;
+  if(it.wake !== null && (it.kind === "window" || it.unit !== "d" || it.n !== 1)) it.wake = null;
   if(it.kind === "window") it.times = [];
   if(it.unit === "h"){ if(it.kind === "window") it.kind = "flex"; if(!it.times.length){ var _n = new Date(); it.times = [hm(_n.getHours()*60 + _n.getMinutes())]; } it.times = [it.times[0]]; it.n = Math.min(23, it.n); }
   it.at0 = mins(i.at0) !== null ? hm(mins(i.at0)) : (it.times[0] || null);
@@ -797,8 +843,19 @@ items = items.map(norm).filter(Boolean);
 /* timed tasks belong to the clock: missed hours roll to today instead of piling up */
 function roll(){
   var td = today(), T0 = iso(td), ch = false, cut = iso(addDays(td, -70));
+  var wk = getWake();
   items.forEach(function(it){
     if(it.paused) return;
+    if(it.wake !== null){
+      if(parse(it.next) < td){ it.next = T0; ch = true; }
+      var on = it.slots && it.slots.date === T0, did = it.last === T0 || (on && Object.keys(it.slots.done).length);
+      if(!did && it.next === T0){
+        var want = wk === null ? [] : [hm(Math.min(1435, wk + it.wake))];
+        if(want.join() !== it.times.join()){ it.times = want; it.at0 = want[0] || null; if(on) it.slots.snz = {}; ch = true; }
+      }
+      if(it.slots && it.slots.date < T0){ it.slots = null; ch = true; }
+      return;
+    }
     if(it.unit === "h"){
       var occ = dt(it.next, it.times[0]), now = new Date();
       if(it.kind === "fixed" && !it.shift){ var L = gridLE(it, now); if(occ < L){ setOcc(it, L); ch = true; } }
@@ -868,6 +925,7 @@ function ord(n){ if(lang !== "en") return lang === "fr" && n === 1 ? "1er" : n; 
 function every(it){ return it.n === 1 ? t("u1"+it.unit) : it.n + " " + t("u"+it.unit); }
 function qtxt(q){ return q === 1 ? t("once") : t("timesN", {n:q}); }
 function describe(it){
+  if(it.wake !== null && it.kind !== "window") return t("eDay") + " · " + (it.wake ? t("wakeOff", {x:dur(it.wake)}) : t("wake0"));
   if(it.kind === "window"){ var sp = t("some" + it.period); return it.quota > 1 ? t("timesN", {n:it.quota}) + " · " + sp.charAt(0).toLowerCase() + sp.slice(1) : sp; }
   var s, a = parse(it.anchor) || parse(it.next);
   if(it.unit === "h") return (it.n === 1 ? t("eHour") : t("eN", {n:it.n, u:t("uh")})) + (it.kind === "flex" || it.shift ? " · " + t("afterDone") : "");
@@ -930,7 +988,7 @@ function render(){
   if(!items.length){
     out = '<div class="empty"><h2>'+esc(t("emptyT"))+'</h2><p>'+esc(t("emptyP"))+'</p><button class="btn y" type="button" data-act="add">'+ico("plus")+esc(t("addFirst"))+'</button></div>';
   } else {
-    out += nowCard(m);
+    out += wakeCard() + nowCard(m);
     var we = iso(addDays(weekStart(td), 6)), me = iso(new Date(td.getFullYear(), td.getMonth()+1, 0, 12));
     var cw = [], cm = [], cl = [];
     m.coming.forEach(function(c){ if(c.it.unit === "h" || (c.it.unit === "d" && c.it.n === 1)) return; (c.it.next <= we ? cw : c.it.next <= me ? cm : cl).push(c); });
@@ -952,7 +1010,7 @@ function render(){
       });
       if(!placed) fx += '<div class="nowline"><b>'+ft(nm)+'</b></div>';
     }
-    m.any.forEach(function(a){ fx += row(a.done ? "done" : "", "item", a.it.id, "", gap, a.it.name, describe(a.it), ""); });
+    m.any.forEach(function(a){ var ww = a.it.wake !== null && !a.done; fx += row(a.done ? "done" : ww ? "wwait" : "", "item", a.it.id, "", ww && m.slots.length ? '<div class="tm">'+ico("sun", 18)+'</div>' : gap, a.it.name, describe(a.it), ww ? '<span class="tag">'+esc(t("wakeWait"))+'</span>' : ""); });
     var todayLeft = m.overdue.length + m.slots.filter(function(s){ return !s.done && !s.missed; }).length + m.any.filter(function(a){ return !a.done; }).length + m.dayWin.filter(function(o){ return !o.met; }).length;
     var tl = 1440 - nm, dueLeft = todayLeft > 0;
     out += sec3(t("schedule"), todayLeft, '<em class="tab'+(tl <= 120 && dueLeft ? " red" : "")+'">'+esc(t("leftX", {x:dur(tl)}))+'</em>', fx, m.dayWin.map(winRow).join(""));
@@ -973,6 +1031,24 @@ function render(){
   $("allCount").textContent = items.length || "";
   document.title = (m.pending ? "(" + m.pending + ") " : "") + "Routines";
   try{ if(navigator.setAppBadge){ if(m.pending) navigator.setAppBadge(m.pending); else navigator.clearAppBadge(); } }catch(e){}
+}
+function wakeCard(){
+  var wt = wakeTasks(); if(!wt.length) return "";
+  var w = getWake();
+  if(w !== null) return '<div class="wakebar"><span class="wk-i">'+ico("sun", 18)+'</span><span class="wk-t">'+esc(t("wokeAt", {t:ft(w)}))+'</span><button type="button" class="wk-e" data-act="wakeEdit">'+esc(t("edit"))+'</button></div>';
+  var list = wt.slice().sort(function(a, b){ return a.wake - b.wake; }).slice(0, 3).map(function(i){ return i.name + " +" + dur(i.wake); }).join(", ") + (wt.length > 3 ? " …" : "");
+  return '<div class="wake"><div class="wk-k">'+ico("sun", 16)+esc(t("wakeHi"))+'</div><div class="wk-q">'+esc(t("wakeQ"))+'</div><div class="wk-s">'+esc(t("wakeStarts", {list:list}))+'</div>'+
+    '<div class="wk-b"><button type="button" class="btn y" data-act="wakeNow">'+ico("check", 18, 2.6)+esc(t("wakeNow"))+'</button><button type="button" class="btn" data-act="wakeEdit">'+ico("clock", 18)+esc(t("wakeEarlier"))+'</button></div></div>';
+}
+function wakeIs(m, how){
+  var before = snap(); setWake(m); lastHTML = ""; render(); buzz(14);
+  var n = items.filter(function(i){ return i.wake !== null && !i.paused && i.next === iso(today()) && i.times.length && !(i.last === iso(today())); }).length;
+  toast(m === null ? t("wakeCleared") : t("wakeSet", {t:ft(m), n:n}));
+}
+function editWake(){
+  var w = getWake(), nm = nowMin();
+  openTime({title:t("wakeQ"), sub:"", init:w !== null ? w : nm, chips:[[t("wakeNow"), nm]].concat([15, 30, 60, 120, 180, 240].map(function(x){ return [t("agoX", {x:dur(x)}), nm - x]; })),
+    clear:w !== null ? t("wakeClear") : null, onClear:function(){ wakeIs(null); }, cb:function(m){ wakeIs(m); }});
 }
 function nowCard(m){
   var s = null, kind = "";
@@ -1086,14 +1162,16 @@ function act(kind, id, time, el, o){
   }, res.on ? 260 : 0);
   if(res.later) return toast(res.later === "tomorrow" ? t("toTomorrow") : res.later.indexOf("d:") === 0 ? t("movedDay", {d:fmt(parse(res.later.slice(2)), {weekday:"short", day:"numeric", month:"short"})}) : t("moved", {t:ft(res.later)}), before);
   var extra = null;
-  if(res.on && info && info.state === "late" && !(o && o.at)){
-    extra = {label:t("onTimeBtn"), fn:function(){
-      items = JSON.parse(before).map(norm).filter(Boolean);
-      apply(kind, id, time, {at:info.eff}); save(); lastHTML = ""; render(); buzz(10);
-      toast(t("markedOT", {t:ft(info.eff)}), before);
+  if(res.on && kind === "slot" && !(o && o.at)){
+    extra = {label:t("setTimeB"), fn:function(){
+      didAt(res.it.name, info ? mins(info.eff) : mins(time), function(mm){
+        items = JSON.parse(before).map(norm).filter(Boolean);
+        apply(kind, id, time, {at:hm(mm)}); save(); lastHTML = ""; render(); buzz(10);
+        toast(t("didAt", {t:ft(mm)}), before);
+      });
     }};
   }
-  toast(res.on ? t("checked", {n:res.it.name}) : (o && o.missed ? t("missedTag") : t("unchecked")), before, extra);
+  toast(res.on ? (o && o.at ? t("didAt", {t:ft(o.at)}) : t("checked", {n:res.it.name})) : (o && o.missed ? t("missedTag") : t("unchecked")), before, extra);
 }
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-act]"); if(!b || !b.closest("#app")) return;
@@ -1102,6 +1180,8 @@ document.addEventListener("click", function(e){
   if(a === "catch"){ openCatch(); return; }
   if(a === "more"){ expanded = !expanded; render(); return; }
   if(a === "all"){ openAll(); return; }
+  if(a === "wakeNow"){ wakeIs(nowMin()); return; }
+  if(a === "wakeEdit"){ editWake(); return; }
   var host = b.closest("[data-id]"); if(!host) return;
   var id = host.getAttribute("data-id");
   if(a === "edit") openSheet(find(id));
@@ -1120,6 +1200,20 @@ function toast(msg, undo, extra){
 $("undoBtn").addEventListener("click", function(){ if(!undoState) return; items = JSON.parse(undoState).map(norm).filter(Boolean); save(); lastHTML = ""; render(); $("toast").classList.remove("on"); undoState = null; buzz(8); });
 $("extraBtn").addEventListener("click", function(){ var x = toastExtra; toastExtra = null; if(x) x.fn(); });
 
+(function(){
+  var tmr = null, fired = false;
+  $("app").addEventListener("touchstart", function(e){
+    var c = e.target.closest('.ck[data-act="slot"], .bigck[data-act="slot"]'); fired = false; if(!c) return;
+    var host = c.closest("[data-id]"); if(!host || host.classList.contains("done")) return;
+    tmr = setTimeout(function(){ fired = true; buzz(18);
+      var id = host.getAttribute("data-id"), time = host.getAttribute("data-time"), info = slotInfo(id, time), it = find(id); if(!it) return;
+      didAt(it.name, info ? mins(info.eff) : mins(time), function(mm){ act("slot", id, time, null, {at:hm(mm)}); });
+    }, 520);
+  }, {passive:true});
+  function stop(){ clearTimeout(tmr); }
+  $("app").addEventListener("touchmove", stop, {passive:true}); $("app").addEventListener("touchend", stop); $("app").addEventListener("touchcancel", stop);
+  $("app").addEventListener("click", function(e){ if(fired){ fired = false; e.stopPropagation(); e.preventDefault(); } }, true);
+})();
 /* ---------- swipe a row: right = did it, left = later ---------- */
 (function(){
   var row = null, x0 = 0, y0 = 0, dx = 0, mode = 0;
@@ -1181,11 +1275,12 @@ function paintCatch(dir){
   $("cOnTime").innerHTML = ico("check", 20, 2.6) + '<span>' + esc(q.time ? t("onTimeAt", {t:ft(q.eff)}) : t("didIt")) + '</span>';
   $("cNow").style.display = q.time ? "" : "none";
   $("cLater").innerHTML = ico("clock", 18) + '<span>' + esc(t("laterB")) + '</span>';
-  $("cBulk").style.display = cq.length - ci >= 2 ? "" : "none";
+  $("cBulk").style.display = cq.length - ci >= 2 ? "" : "none"; $("cOther").style.display = q.time ? "" : "none";
 }
 function answer(how, ox){
   var q = cq[ci]; if(!q) return;
   if(how === "allnow" || how === "allmissed") return answerAll(how === "allmissed");
+  if(how === "other" && !ox){ didAt(q.name, q.time ? mins(q.eff) : null, function(mm){ answer("other", {at:hm(mm)}); }); return; }
   if(how === "later" && !ox){ openLater(q.kind, q.id, q.time, function(o){ answer("later", o); }); return; }
   var o = how === "ontime" ? (q.time ? {at:q.eff} : {}) : how === "now" ? {} : how === "missed" ? {missed:true} : ox;
   var card = $("cCard").firstChild; if(card) card.classList.add(how === "missed" || how === "later" ? "out-l" : "out-r");
@@ -1225,7 +1320,7 @@ function hideToast(){ $("toast").classList.remove("on"); }
 function openSheet(it){
   editing = it || null; hideToast();
   var td = today();
-  F = {name:"", nBy:{h:1, d:1, w:1, m:1}, unit:"d", mode:"fixed", shift:false, quota:1, times:[], wd:(td.getDay()+6)%7, md:td.getDate(), paused:!!(it && it.paused)};
+  F = {name:"", nBy:{h:1, d:1, w:1, m:1}, unit:"d", mode:"fixed", shift:false, quota:1, times:[], wd:(td.getDay()+6)%7, md:td.getDate(), paused:!!(it && it.paused), wake:it && it.kind !== "window" ? it.wake : null};
   if(it && it.kind === "window"){ F.name = it.name; F.unit = it.period; F.mode = "flex"; F.quota = it.quota; }
   else if(it){
     var a = parse(it.anchor) || parse(it.next);
@@ -1244,6 +1339,7 @@ function closeSheet(){
   document.documentElement.classList.remove("lock"); if(document.activeElement) document.activeElement.blur();
 }
 function N(){ return F.nBy[F.unit]; }
+function canWake(){ return F.unit === "d" && N() === 1 && F.mode !== "flex"; }
 function canNoFix(){ return F.unit !== "h" && N() === 1; }
 /* first date on/after today that matches the chosen weekday / day of month */
 function startDate(){
@@ -1258,6 +1354,7 @@ function joinTimes(a){ a = a.map(ft); return a.length < 2 ? a.join("") : a.slice
 function gridPreview(){ if(!F.times[0]) return ""; var st = mins(F.times[0]), out = []; for(var k = 0; k < 3; k++){ var v = st + k*N()*60; if(v >= 1440) break; out.push(ft(v)); } return out.join(", ") + (out.length === 3 ? "…" : ""); }
 function summary(){
   var d = startDate(), s, n = N();
+  if(F.mode !== "flex" && F.wake !== null && canWake()) return t("eDay") + " · " + (F.wake ? t("wakeOff", {x:dur(F.wake)}) : t("wake0"));
   if(F.mode === "flex") return describe({kind:"window", quota:F.quota, period:F.unit});
   if(F.unit === "h"){
     s = n === 1 ? t("eHour") : t("eN", {n:n, u:t("uh")});
@@ -1284,7 +1381,8 @@ function paintSheet(){
   var dis = !canNoFix();
   h += '<div class="seg mode"><button type="button" data-mode="fixed" class="'+(!flex ? "on" : "")+'">'+esc(t(H ? "fixedT" : "fixedD"))+'</button><button type="button" data-mode="flex" class="'+(flex ? "on" : "")+(dis ? " off" : "")+'"'+(dis ? ' aria-disabled="true"' : '')+'>'+esc(t(H ? "flexT" : "flexD"))+'</button></div>';
   if(dis && F.why) h += '<p class="why">'+esc(t("noFixWhy"))+'</p>';
-  if(!flex) h += toggle("shift", F.shift, t("shiftT"), t(H || F.times.length ? "shiftS" : "shiftSD"));
+  if(!canWake()) F.wake = null;
+  if(!flex){ if(F.wake === null) h += toggle("shift", F.shift, t("shiftT"), t(H || F.times.length ? "shiftS" : "shiftSD")); }
   else h += '<div class="tgl on"><div class="optx"><span class="ol">'+esc(t("howMany"))+'</span>'+stepper("q", F.quota)+'</div></div>';
   $("fKind").innerHTML = h + '</div>';
   // On: weekday or day of month (fixed weeks / months only)
@@ -1299,6 +1397,13 @@ function paintSheet(){
   }
   $("gTimes").style.display = flex ? "none" : "";
   $("timesLbl").textContent = t(H ? "fStartAt" : "fTimes");
+  var WK = F.wake !== null;
+  $("tMode").style.display = canWake() ? "" : "none";
+  $("tMode").innerHTML = '<button type="button" data-tmode="clock" class="'+(!WK ? "on" : "")+'">'+esc(t("tmClock"))+'</button><button type="button" data-tmode="wake" class="'+(WK ? "on" : "")+'">'+ico("sun", 16).replace("<svg", '<svg style="display:inline-block;vertical-align:-3px;margin-inline-end:5px"')+esc(t("tmWake"))+'</button>';
+  $("timeList").style.display = WK ? "none" : ""; if(WK) $("picker").classList.remove("on");
+  $("wakeBox").style.display = WK ? "" : "none";
+  if(WK) $("wakeBox").innerHTML = '<div class="tgl on"><div class="optx" style="padding-top:12px"><span class="ol">'+esc(t("wakeLbl"))+'</span><div class="step"><button type="button" data-stp="wo" data-d="-15" aria-label="−"'+(F.wake <= 0 ? ' class="dim"' : '')+'>'+ico("minus")+'</button><output class="tab" style="min-width:64px">'+(F.wake ? "+" + dur(F.wake) : "0")+'</output><button type="button" data-stp="wo" data-d="15" aria-label="+">'+ico("plus")+'</button></div></div></div>'+
+    '<div class="sugg">'+[0, 15, 30, 45, 60, 90, 120, 180, 240, 360].map(function(v){ return '<button type="button" class="chip'+(F.wake === v ? " on" : "")+'" data-wo="'+v+'">'+(v ? "+" + dur(v) : esc(t("wake0")))+'</button>'; }).join("")+'</div>';
   $("timeList").innerHTML = F.times.map(function(x){ return '<span class="tchip">'+ft(x)+'<button type="button" data-rm="'+x+'" aria-label="Remove">'+ico("x", 16)+'</button></span>'; }).join("") +
     (H && F.times.length ? '' : '<button type="button" class="tadd" id="tAdd">'+ico("plus", 18)+esc(t("addTime"))+'</button>');
   $("gPause").style.display = editing ? "" : "none";
@@ -1311,10 +1416,13 @@ $("sheet").addEventListener("click", function(e){
   else if((b = e.target.closest("[data-tg]"))){ var k = b.getAttribute("data-tg"); F[k] = !F[k]; paintSheet(); buzz(8); }
   else if((b = e.target.closest("[data-stp]"))){
     var dlt = +b.getAttribute("data-d");
-    if(b.getAttribute("data-stp") === "q") F.quota = Math.min(31, Math.max(1, F.quota + dlt));
+    if(b.getAttribute("data-stp") === "wo") F.wake = Math.min(1080, Math.max(0, F.wake + dlt));
+    else if(b.getAttribute("data-stp") === "q") F.quota = Math.min(31, Math.max(1, F.quota + dlt));
     else F.nBy[F.unit] = Math.min(F.unit === "h" ? 23 : 365, Math.max(1, N() + dlt));
     paintSheet(); buzz(5);
   }
+  else if((b = e.target.closest("[data-tmode]"))){ F.wake = b.getAttribute("data-tmode") === "wake" ? (F.wake === null ? 30 : F.wake) : null; paintSheet(); buzz(6); }
+  else if((b = e.target.closest("[data-wo]"))){ F.wake = +b.getAttribute("data-wo"); paintSheet(); buzz(5); }
   else if((b = e.target.closest("[data-unit]"))){ F.unit = b.getAttribute("data-unit"); paintSheet(); buzz(4); }
   else if((b = e.target.closest("[data-wd]"))){ F.wd = +b.getAttribute("data-wd"); paintSheet(); buzz(5); }
   else if((b = e.target.closest("[data-md]"))){ F.md = +b.getAttribute("data-md"); paintSheet(); buzz(5); }
@@ -1331,13 +1439,13 @@ document.addEventListener("keydown", function(e){ if(e.key === "Escape"){ if($("
 /* time: own scroll wheels, never the system picker */
 var wheelBuilt = false;
 function wheelLabels(){
-  var h = '<div class="pad"></div>', i; for(i = 0; i < 24; i++) h += '<div data-v="'+i+'">'+(h12() ? ((i % 12) || 12)+'<i class="ap">'+ap(i)+'</i>' : ("0"+i).slice(-2))+'</div>'; $("wH").innerHTML = $("lH").innerHTML = h + '<div class="pad"></div>';
+  var h = '<div class="pad"></div>', i; for(i = 0; i < 24; i++) h += '<div data-v="'+i+'">'+(h12() ? ((i % 12) || 12)+'<i class="ap">'+ap(i)+'</i>' : ("0"+i).slice(-2))+'</div>'; $("wH").innerHTML = $("lH").innerHTML = $("tH").innerHTML = h + '<div class="pad"></div>';
   $("presets").innerHTML = [["morning","08:00"],["noon","13:00"],["evening","20:00"],["night","23:00"]].map(function(p){ return '<button type="button" class="chip" data-pre="'+p[1]+'">'+esc(t(p[0]))+' <small class="tab">'+ft(p[1])+'</small></button>'; }).join("");
 }
 function buildWheels(){
   var h, i; wheelLabels();
-  h = '<div class="pad"></div>'; for(i = 0; i < 60; i += 5) h += '<div data-v="'+i+'">'+("0"+i).slice(-2)+'</div>'; $("wM").innerHTML = $("lM").innerHTML = h + '<div class="pad"></div>';
-  ["wH","wM","lH","lM"].forEach(function(id){
+  h = '<div class="pad"></div>'; for(i = 0; i < 60; i += 5) h += '<div data-v="'+i+'">'+("0"+i).slice(-2)+'</div>'; $("wM").innerHTML = $("lM").innerHTML = $("tM").innerHTML = h + '<div class="pad"></div>';
+  ["wH","wM","lH","lM","tH","tM"].forEach(function(id){
     var c = $(id), tm = null;
     c.addEventListener("scroll", function(){ clearTimeout(tm); tm = setTimeout(function(){ var k = Math.round(c.scrollTop / 40); if(c._k !== k){ c._k = k; buzz(3); } }, 60); }, {passive:true});
     c.addEventListener("click", function(e){ var d = e.target.closest("[data-v]"); if(d){ var k = [].indexOf.call(c.children, d) - 1; c.scrollTo({top:k*40, behavior:"smooth"}); } });
@@ -1418,7 +1526,37 @@ $("aList").addEventListener("click", function(e){ var b = e.target.closest("[dat
 $("aScrim").addEventListener("click", closeAll); $("aClose").addEventListener("click", closeAll);
 $("aAdd").addEventListener("click", function(){ closeAll(); setTimeout(function(){ openSheet(null); }, 120); });
 $("allBtn").addEventListener("click", openAll);
-$("lScrim").addEventListener("click", closeLater); $("lClose").addEventListener("click", closeLater);
+$("lScrim").addEventListener("click", closeLater);
+/* one sheet for "what time?" — wake-up and "I did it at…". Never accepts a future time. */
+var TS = null;
+function openTime(o){
+  if(!wheelBuilt) buildWheels(); hideToast(); TS = o;
+  var nm = nowMin();
+  $("tTitle").textContent = o.title; $("tSub").textContent = o.sub || ""; $("tSub").style.display = o.sub ? "" : "none";
+  $("tChips").innerHTML = o.chips.filter(function(c){ return c[1] >= 0 && c[1] <= nm; }).map(function(c, k){ return '<button type="button" class="lopt'+(k === 0 ? " best" : "")+'" data-tm="'+c[1]+'"><b>'+esc(c[0])+'</b><span>'+ft(c[1])+'</span></button>'; }).join("");
+  $("tWarn").style.display = "none";
+  $("tClear").style.display = o.clear ? "" : "none"; $("tClear").textContent = o.clear || "";
+  $("tScrim").classList.add("on"); $("tsheet").classList.add("on"); document.documentElement.classList.add("lock");
+  requestAnimationFrame(function(){ setWheels(Math.max(0, Math.min(nm, o.init)), false, "t"); });
+}
+function closeTime(){ $("tScrim").classList.remove("on"); $("tsheet").classList.remove("on"); TS = null;
+  if(!["sheet","catch","later","all"].some(function(id){ return $(id).classList.contains("on"); })) document.documentElement.classList.remove("lock"); }
+function pickTime(m){
+  if(m > nowMin()){ $("tWarn").textContent = t("futureNo"); $("tWarn").style.display = ""; buzz([10, 40, 10]); return; }
+  var x = TS; closeTime(); if(x) x.cb(m);
+}
+$("tChips").addEventListener("click", function(e){ var b = e.target.closest("[data-tm]"); if(b){ buzz(8); pickTime(+b.getAttribute("data-tm")); } });
+$("tSet").addEventListener("click", function(){ pickTime(readWheels("t")); });
+$("tClear").addEventListener("click", function(){ var x = TS; closeTime(); if(x && x.onClear) x.onClear(); });
+$("tScrim").addEventListener("click", closeTime); $("tClose").addEventListener("click", closeTime);
+/* "I did it at…" for a timed check */
+function didAt(name, sched, cb){
+  var nm = nowMin(), ch = [];
+  if(sched !== null && sched <= nm) ch.push([t("asSched"), sched]);
+  ch.push([t("wakeNow"), nm]);
+  [15, 30, 60, 120, 180].forEach(function(x){ ch.push([t("agoX", {x:dur(x)}), nm - x]); });
+  openTime({title:t("didWhen"), sub:name, init:sched !== null && sched <= nm ? sched : nm, chips:ch, cb:cb});
+} $("lClose").addEventListener("click", closeLater);
 function openPicker(){
   if(!wheelBuilt) buildWheels();
   $("picker").classList.add("on");
@@ -1437,12 +1575,14 @@ $("saveBtn").addEventListener("click", function(){
   var name = $("fName").value.trim();
   if(!name){ $("fName").focus(); $("fName").placeholder = t("needName"); buzz([10,50,10]); return; }
   var before = snap(), it = editing ? JSON.parse(JSON.stringify(editing)) : {id:uid(), last:null, log:[]};
-  var flex = F.mode === "flex", kind = flex ? "window" : "fixed", times = flex ? [] : F.times.slice().sort(), n = flex ? 1 : N();
+  var flex = F.mode === "flex", kind = flex ? "window" : "fixed", n = flex ? 1 : N();
+  var wakeOff = !flex && canWake() && F.wake !== null ? F.wake : null, times = flex || wakeOff !== null ? [] : F.times.slice().sort();
   if(!flex && F.unit === "h" && !times.length) times = [stamp()];
   var a0 = editing && (parse(editing.anchor) || parse(editing.next));
   var changed = !editing || editing.kind !== kind || editing.n !== n || editing.unit !== F.unit || editing.period !== (flex ? F.unit : editing.period)
-    || (F.unit === "w" && a0 && (a0.getDay()+6)%7 !== F.wd) || (F.unit === "m" && a0 && a0.getDate() !== F.md) || (F.unit === "h" && editing.times[0] !== times[0]);
-  it.name = name; it.kind = kind; it.n = n; it.unit = flex ? "d" : F.unit; it.quota = F.quota; it.period = flex ? F.unit : "w"; it.times = times; it.shift = !flex && F.shift;
+    || (F.unit === "w" && a0 && (a0.getDay()+6)%7 !== F.wd) || (F.unit === "m" && a0 && a0.getDate() !== F.md) || (F.unit === "h" && editing.times[0] !== times[0]) || (editing.wake === null) !== (wakeOff === null);
+  it.name = name; it.kind = kind; it.n = n; it.unit = flex ? "d" : F.unit; it.quota = F.quota; it.period = flex ? F.unit : "w"; it.times = times; it.shift = !flex && F.shift && wakeOff === null; it.wake = wakeOff;
+  if(editing && editing.wake !== null && wakeOff !== null && editing.wake !== wakeOff && it.last !== iso(today())){ it.times = []; it.slots = null; }
   if(changed){ var sd = iso(startDate()); it.next = sd; it.anchor = sd; it.at0 = times[0] || null; it.prev = null; it.slots = null; }
   var wasPaused = !!(editing && editing.paused); it.paused = !!F.paused;
   if(wasPaused && !it.paused && !changed && kind !== "window"){   /* resume from today, not from the past */
