@@ -140,7 +140,7 @@ svg{display:block;flex:none}
 .row.done .nm{color:var(--ink3);text-decoration:line-through;text-decoration-color:var(--ink3)}
 .row.done .sb{color:var(--ink3)}
 .tag{flex:none;font-size:12px;font-weight:500;padding:4px 8px;border-radius:8px;background:var(--bg3);color:var(--ink2);white-space:nowrap}
-.tag.now{background:var(--y);color:#000}.tag.late{background:var(--redsoft);color:var(--red)}
+.tag.tnow{background:var(--y);color:#000}.tag.late{background:var(--redsoft);color:var(--red)}
 .dots{display:flex;gap:4px;flex:none}.dots i{width:8px;height:8px;border-radius:50%;background:var(--bg3)}.dots i.on{background:var(--y)}
 .nowline{display:flex;align-items:center;gap:8px;padding:0 14px 0 25px;height:20px;color:var(--red);font-size:12px;font-weight:700;font-variant-numeric:tabular-nums}
 .nowline::after{content:"";flex:1;height:2px;background:var(--red);border-radius:2px}
@@ -314,6 +314,31 @@ html[data-theme="dark"] .toast{background:#333}
 .why{font-size:13px;color:var(--ink3);margin:6px 4px 0}
 .mini .none{opacity:.7}
 .row{padding-top:10px;padding-bottom:10px}
+
+/* fix: long status pills squeezed the name into one letter per line */
+.nm,.sb{overflow-wrap:break-word;word-break:normal}
+.row>.tag{flex:0 1 auto;min-width:0;max-width:40%;white-space:normal;text-align:center;line-height:1.25}
+.bd .tagin{display:none}
+@media (max-width:520px){.row>.tag{display:none}.bd .tagin{display:inline-block;margin-top:6px;max-width:100%}}
+.now-acts{display:flex;flex-wrap:wrap;gap:8px;margin-top:10px}.now-acts .cchip{margin-top:0}
+.cchip.ghost{background:rgba(0,0,0,.12);color:#000}.now.calm .cchip.ghost{background:var(--bg3);color:var(--ink)}
+
+/* later sheet */
+#lScrim{z-index:54}#later{z-index:55}
+.lname{font-size:15px;color:var(--ink2);margin:0 2px 12px}
+.lname b{color:var(--ink);font-weight:700}
+.lopts{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.lopt{min-height:64px;border-radius:14px;background:var(--bg2);padding:10px 12px;display:flex;flex-direction:column;justify-content:center;gap:2px;text-align:start}
+.lopt b{font-size:16px;font-weight:700}.lopt span{font-size:13px;color:var(--ink2);font-variant-numeric:tabular-nums}
+.lopt em{font-style:normal;font-size:12px;color:var(--red);overflow-wrap:break-word}
+.lopt.best{background:var(--ysoft);box-shadow:inset 0 0 0 2px var(--y)}
+.lopt.wide{grid-column:1/-1}
+.lopt:disabled{opacity:.4;pointer-events:none}
+.lopt:active{transform:scale(.98)}
+#lPicker{margin-top:10px}
+.cbulk{grid-column:1/-1;display:flex;gap:8px}
+.cbulk button{flex:1;height:38px;border-radius:10px;font-size:13px;font-weight:500;color:var(--ink2);text-align:center;box-shadow:inset 0 0 0 1px var(--line2)}
+.cbulk button.r{color:var(--red)}
 </style>
 </head>
 <body>
@@ -393,6 +418,21 @@ html[data-theme="dark"] .toast{background:#333}
     <button class="btn" type="button" data-c="now" id="cNow"><span data-i="check"></span><span data-t="justNow"></span></button>
     <button class="btn" type="button" data-c="later" id="cLater"></button>
     <button class="btn cmiss" type="button" data-c="missed"><span data-i="x"></span><span data-t="missedB"></span></button>
+    <div class="cbulk" id="cBulk"><button type="button" data-c="allnow"><span data-t="allNow"></span></button><button type="button" class="r" data-c="allmissed"><span data-t="allMissed"></span></button></div>
+  </div>
+</section>
+<div class="scrim" id="lScrim"></div>
+<section class="sheet" id="later" role="dialog" aria-modal="true" aria-labelledby="lTitle">
+  <div class="sgrab"><i></i></div>
+  <div class="shd"><h3 id="lTitle" data-t="laterT"></h3><button class="ib" type="button" id="lClose" aria-label="Close"><span data-i="x"></span></button></div>
+  <div class="sbody" style="padding-bottom:calc(16px + var(--sb))">
+    <div class="lname" id="lName"></div>
+    <div class="lopts" id="lOpts"></div>
+    <div class="picker" id="lPicker">
+      <div class="wheel"><div class="col" id="lH"></div><div class="colon">:</div><div class="col" id="lM"></div></div>
+      <p class="hint" id="lWarn" style="display:none;color:var(--red)"></p>
+      <div class="line" style="margin-top:8px"><button class="btn" type="button" id="lpCancel" style="flex:1" data-t="cancel"></button><button class="btn y" type="button" id="lpSet"><span data-i="check"></span><span data-t="setTime"></span></button></div>
+    </div>
   </div>
 </section>
 <div class="toast" id="toast" role="status"><span id="toastTx"></span><button type="button" id="extraBtn" style="display:none"><span data-i="clock"></span><span id="extraTx"></span></button><button type="button" id="undoBtn"><span data-i="undo"></span><span data-t="undo"></span></button></div>
@@ -456,7 +496,7 @@ var T = {
   laterN:["Later · {n}","Plus tard · {n}","لاحقًا · {n}"], onLbl:["On","Le","في"], onDayLbl:["On day","Le jour","في يوم"], startsNow:["starting when you save","à partir de l’enregistrement","يبدأ عند الحفظ"],
   catchT:["While you were away","Pendant votre absence","أثناء غيابك"], catchN:["{a} of {b}","{a} sur {b}","{a} من {b}"],
   onTimeAt:["Did it at {t}","Fait à {t}","أنجزته في {t}"], didIt:["Did it","Fait","أنجزته"], justNow:["Just now","À l’instant","الآن"], missedB:["Missed it","Raté","فاتني"],
-  plus30:["Remind in 30 min","Dans 30 min","بعد 30 د"], tomorrowB:["Move to tomorrow","Reporter à demain","انقل للغد"],
+  plus30:["Later…","Plus tard…","لاحقًا…"], tomorrowB:["Move to tomorrow","Reporter à demain","انقل للغد"],
   caught:["All caught up","Tout est à jour","كل شيء محدّث"], caughtS:["Nice — your day is honest again.","Parfait — votre journée est à jour.","رائع — يومك محدّث."],
   catchBtn:["Catch up","Rattraper","استدراك"], swipeHint:["Swipe right: did it · left: missed","Glissez à droite : fait · à gauche : raté","اسحب يمينًا: أنجزت · يسارًا: فاتني"],
   onTimeBtn:["On time","À l’heure","في وقته"], markedOT:["Saved as done at {t}","Enregistré à {t}","حُفظ كمنجز في {t}"],
@@ -483,6 +523,14 @@ var T = {
   onDay:["on the {n}","le {n}","يوم {n}"], afterDone:["after done","après coup","بعد الإنجاز"], winSub:["{q} a {p}","{q} par {p}","{q} في {p}"],
   lastDone:["done {x}","fait {x}","أُنجز {x}"], ago:["{n}d ago","il y a {n} j","منذ {n} ي"], agoToday:["today","aujourd’hui","اليوم"],
   today:["Today","Aujourd’hui","اليوم"], nextWeek:["In a week","Dans 1 sem.","بعد أسبوع"],
+  mAb:["m","min","د"], eOne:["Every {u}","Chaque {u}","كل {u}"], movedFrom:["moved from {t}","décalé de {t}","نُقل من {t}"],
+  laterT:["Do it later","Plus tard","لاحقًا"], laterB:["Later…","Plus tard…","لاحقًا…"], laterChip:["Later","Plus tard","لاحقًا"],
+  pickTime:["Pick a time","Choisir l’heure","اختر وقتًا"], nextFree:["Next free time","Prochain créneau libre","أقرب وقت فارغ"],
+  withX:["same time as {n}","en même temps que {n}","نفس وقت {n}"], setTime:["Set","Valider","تأكيد"],
+  inDays:["In {n} days","Dans {n} jours","بعد {n} أيام"], movedDay:["Moved to {d}","Reporté au {d}","نُقل إلى {d}"],
+  allNow:["Did all just now","Tout fait à l’instant","أنجزتها كلها الآن"], allMissed:["Missed all","Tout raté","فاتتني كلها"],
+  bulkDone:["Updated {n} tasks","{n} tâches mises à jour","حُدّثت {n} مهام"], pastTime:["Pick a time later than now","Choisissez une heure plus tard","اختر وقتًا بعد الآن"],
+  midnight:["after midnight — use tomorrow","après minuit","بعد منتصف الليل"], plusX:["+{x}","+{x}","+{x}"],
 };
 var LANGS = ["en","fr","ar"];
 var lang = get("r.lang") || (navigator.language || "en").slice(0,2);
@@ -518,7 +566,7 @@ function ft(x){ var m = typeof x === "number" ? x : mins(x); if(m === null || m 
 function ftH(x){ var m = typeof x === "number" ? x : mins(x); if(!h12()) return hm(m); var h = Math.floor(m/60); return ((h % 12) || 12)+":"+("0"+(m%60)).slice(-2)+'<i class="ap">'+ap(h)+'</i>'; }
 function mins(s){ var p = /^(\d{1,2}):(\d{2})$/.exec(s || ""); return p ? (+p[1])*60 + (+p[2]) : null; }
 function nowMin(){ var d = new Date(); return d.getHours()*60 + d.getMinutes(); }
-function dur(m){ m = Math.abs(m); var h = Math.floor(m/60), r = m % 60; return h ? h+" "+t("hAbbr")+(r ? " "+r+" "+t("min") : "") : r+" "+t("min"); }
+function dur(m){ m = Math.abs(m); var h = Math.floor(m/60), r = m % 60; return h ? h+t("hAbbr")+(r ? " "+r+t("mAb") : "") : r+" "+t("min"); }
 function weekStart(d){ return addDays(d, -((d.getDay()+6) % 7)); }
 function period(p, d){ if(p === "d") return [d, d]; if(p === "m") return [new Date(d.getFullYear(), d.getMonth(), 1, 12), new Date(d.getFullYear(), d.getMonth()+1, 0, 12)]; var w = weekStart(d); return [w, addDays(w, 6)]; }
 function dt(d, h){ var x = parse(d) || today(), m = mins(h) || 0; return new Date(x.getFullYear(), x.getMonth(), x.getDate(), Math.floor(m/60), m % 60, 0, 0); }
@@ -627,20 +675,21 @@ function describe(it){
   if(it.unit === "d" && it.n === 1) s = t("eDay");
   else if(it.unit === "w" && it.n === 1 && it.kind === "fixed") s = t("eWeekOn", {w:fmt(a, {weekday:"long"})});
   else if(it.unit === "m" && it.n === 1) s = t("eMonth");
-  else s = t("eN", {n:it.n, u:t("u"+it.unit)});
+  else s = it.n === 1 ? t("eOne", {u:t("u1"+it.unit)}) : t("eN", {n:it.n, u:t("u"+it.unit)});
   if(it.kind === "fixed" && it.unit === "m") s += " · " + t("onDay", {n:ord(a.getDate())});
   if(it.kind === "flex" || it.shift) s += " · " + t("afterDone");
   if(it.last && !it.times.length){ var g = diff(parse(it.last), today()); s += " · " + t("lastDone", {x: g <= 0 ? t("agoToday") : t("ago", {n:g})}); }
   return s;
 }
-function rel(s){ if(s.state === "missed") return t("missedTag"); if(s.snoozed && s.state !== "done") return t("movedTo", {t:ft(s.eff)}) + (s.state === "late" ? " · " + t("lateX", {x:dur(s.delta)}) : ""); return s.state === "done" ? (s.at ? t("doneAt", {t:ft(s.at)}) : "") : s.state === "now" ? t("nowTag") : s.state === "late" ? t("lateX", {x:dur(s.delta)}) : t("inX", {x:dur(s.delta)}); }
+function rel(s){ if(s.state === "missed") return t("missedTag"); return s.state === "done" ? (s.at ? t("doneAt", {t:ft(s.at)}) : "") : s.state === "now" ? t("nowTag") : s.state === "late" ? t("lateX", {x:dur(s.delta)}) : t("inX", {x:dur(s.delta)}); }
 
 /* ---------- render ---------- */
 var expanded = false, lastHTML = "";
 function row(cls, act, id, extra, left, name, sub, right, ckOn){
+  var tin = /^<span class="tag/.test(right || "") ? '<div>' + right.replace('class="tag', 'class="tagin tag') + '</div>' : "";
   return '<div class="row '+cls+'" data-id="'+id+'"'+extra+'>'+
     '<button class="ck'+(ckOn ? " on" : "")+'" type="button" data-act="'+act+'" aria-label="'+esc(name)+'">'+TICK+'</button>'+left+
-    '<button class="bd" type="button" data-act="edit"><div class="nm">'+esc(name)+'</div>'+(sub ? '<div class="sb">'+esc(sub)+'</div>' : '')+'</button>'+right+'</div>';
+    '<button class="bd" type="button" data-act="edit"><div class="nm">'+esc(name)+'</div>'+(sub ? '<div class="sb">'+esc(sub)+'</div>' : '')+tin+'</button>'+right+'</div>';
 }
 function sec(title, count, right, body){
   return '<section class="sec"><div class="sh2"><h2>'+esc(title)+'</h2>'+(count ? '<span>'+count+'</span>' : '')+(right || "")+'</div><div class="box">'+body+'</div></section>';
@@ -698,8 +747,8 @@ function render(){
       var placed = false;
       m.slots.forEach(function(s){
         if(!placed && s.min > nm){ placed = true; fx += '<div class="nowline"><b>'+ft(nm)+'</b></div>'; }
-        var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" ? "now" : s.state === "late" || s.state === "missed" ? "late" : "")+'">'+esc(r)+'</span>' : '';
-        fx += row("timed " + s.state, "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, describe(s.it), tag);
+        var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" ? "tnow" : s.state === "late" || s.state === "missed" ? "late" : "")+'">'+esc(r)+'</span>' : '';
+        fx += row("timed " + s.state, "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(s.time)}) + " · " : "") + describe(s.it), tag);
       });
       if(!placed) fx += '<div class="nowline"><b>'+ft(nm)+'</b></div>';
     }
@@ -740,7 +789,7 @@ function nowCard(m){
   else { act = "item"; r = s.over ? t("lateD", {n:-s.over}) : describe(s.it); }
   var owed = late.length + m.overdue.length;
   return '<div class="now" data-id="'+s.it.id+'"'+attr+'><div class="now-tx"><div class="now-k">'+(s.time ? '<span class="tab">'+ft(s.eff || s.time)+'</span> · ' : '')+esc(t(kind))+'</div>'+
-    '<div class="now-n">'+esc(s.it.name)+'</div><div class="now-r">'+esc(r)+'</div>'+(owed > 1 || (owed && kind !== "kLate") ? '<button class="cchip" type="button" data-act="catch">'+ico("undo", 16)+esc(t("catchBtn"))+' · '+owed+'</button>' : '')+'</div>'+
+    '<div class="now-n">'+esc(s.it.name)+'</div><div class="now-r">'+esc(r)+'</div>'+'<div class="now-acts">'+(owed > 1 || (owed && kind !== "kLate") ? '<button class="cchip" type="button" data-act="catch">'+ico("undo", 16)+esc(t("catchBtn"))+' · '+owed+'</button>' : '')+(act !== "win" ? '<button class="cchip ghost" type="button" data-act="later">'+ico("clock", 16)+esc(t("laterChip"))+'</button>' : '')+'</div></div>'+
     '<button class="bigck" type="button" data-act="'+act+'" aria-label="'+esc(s.it.name)+'">'+ico("check", 28, 3)+'</button></div>';
 }
 
@@ -783,7 +832,7 @@ function apply(kind, id, time, o){
     if(!it.slots.snz) it.slots.snz = {};
     var cur = it.slots.done[time], has = cur && cur !== "×";
     if(o.later){
-      var nv = Math.min(1439, nowMin() + 30);
+      var nv = o.to && mins(o.to) !== null ? mins(o.to) : Math.min(1435, nowMin() + 30);
       if(it.unit === "h") setOcc(it, dt(T0, hm(nv))); else it.slots.snz[time] = hm(nv);
       res.later = hm(nv); return res;
     }
@@ -810,7 +859,7 @@ function apply(kind, id, time, o){
     if(k > -1){ it.log.splice(k, 1); res.on = false; if(it.prev && it.prev.date === T0) it.last = it.prev.last; }
     else { it.prev = {last:it.last, date:T0}; it.log.push(T0); it.last = T0; }
   } else {
-    if(o.later){ it.next = iso(addDays(today(), 1)); res.later = "tomorrow"; return res; }
+    if(o.later){ it.next = iso(addDays(today(), o.days || 1)); res.later = (o.days || 1) === 1 ? "tomorrow" : "d:" + it.next; return res; }
     if(o.missed){ skipItem(it); res.on = false; return res; }
     if(it.last === T0 && it.prev && it.prev.date === T0 && parse(it.next) > today()){ restore(it); res.on = false; }
     else advance(it);
@@ -829,13 +878,13 @@ function act(kind, id, time, el, o){
     var n = document.querySelector('.row[data-id="'+id+'"]'+(res.time ? '[data-time="'+res.time+'"]' : ''));
     if(n) n.classList.add("pop");
   }, res.on ? 260 : 0);
-  if(res.later) return toast(res.later === "tomorrow" ? t("toTomorrow") : t("moved", {t:ft(res.later)}), before);
+  if(res.later) return toast(res.later === "tomorrow" ? t("toTomorrow") : res.later.indexOf("d:") === 0 ? t("movedDay", {d:fmt(parse(res.later.slice(2)), {weekday:"short", day:"numeric", month:"short"})}) : t("moved", {t:ft(res.later)}), before);
   var extra = null;
   if(res.on && info && info.state === "late" && !(o && o.at)){
     extra = {label:t("onTimeBtn"), fn:function(){
       items = JSON.parse(before).map(norm).filter(Boolean);
-      apply(kind, id, time, {at:time}); save(); lastHTML = ""; render(); buzz(10);
-      toast(t("markedOT", {t:ft(time)}), before);
+      apply(kind, id, time, {at:info.eff}); save(); lastHTML = ""; render(); buzz(10);
+      toast(t("markedOT", {t:ft(info.eff)}), before);
     }};
   }
   toast(res.on ? t("checked", {n:res.it.name}) : (o && o.missed ? t("missedTag") : t("unchecked")), before, extra);
@@ -848,7 +897,9 @@ document.addEventListener("click", function(e){
   if(a === "more"){ expanded = !expanded; render(); return; }
   var host = b.closest("[data-id]"); if(!host) return;
   var id = host.getAttribute("data-id");
-  if(a === "edit") openSheet(find(id)); else act(a, id, host.getAttribute("data-time"), b);
+  if(a === "edit") openSheet(find(id));
+  else if(a === "later"){ var kb = host.querySelector(".bigck"); openLater(kb ? kb.getAttribute("data-act") : "item", id, host.getAttribute("data-time")); }
+  else act(a, id, host.getAttribute("data-time"), b);
 });
 
 /* ---------- toast ---------- */
@@ -889,7 +940,7 @@ $("extraBtn").addEventListener("click", function(){ var x = toastExtra; toastExt
     if(!go) return;
     var b = r.querySelector(".ck"), a = b && b.getAttribute("data-act"); if(!a) return;
     if(go === "do"){ if(!r.classList.contains("done")) act(a, r.getAttribute("data-id"), r.getAttribute("data-time"), b); }
-    else if(a !== "win" && !r.classList.contains("done")) act(a, r.getAttribute("data-id"), r.getAttribute("data-time"), null, {later:true});
+    else if(a !== "win" && !r.classList.contains("done")) openLater(a, r.getAttribute("data-id"), r.getAttribute("data-time"));
   }
   app.addEventListener("touchend", end); app.addEventListener("touchcancel", end);
 })();
@@ -922,14 +973,23 @@ function paintCatch(dir){
   c.innerHTML = '<div class="ccard'+(dir ? " in" : "")+'">'+(q.time ? '<div class="ctime tab">'+ftH(q.eff)+'</div>' : '<div class="ctime">'+ico("cal", 30)+'</div>')+'<div class="cname">'+esc(q.name)+'</div><div class="clate">'+esc(q.lab)+'</div><div class="csub">'+esc(q.sub)+'</div><div class="chint">'+esc(t("swipeHint"))+'</div></div>';
   $("cOnTime").innerHTML = ico("check", 20, 2.6) + '<span>' + esc(q.time ? t("onTimeAt", {t:ft(q.eff)}) : t("didIt")) + '</span>';
   $("cNow").style.display = q.time ? "" : "none";
-  $("cLater").innerHTML = ico("clock", 18) + '<span>' + esc(q.time ? t("plus30") : t("tomorrowB")) + '</span>';
+  $("cLater").innerHTML = ico("clock", 18) + '<span>' + esc(t("laterB")) + '</span>';
+  $("cBulk").style.display = cq.length - ci >= 2 ? "" : "none";
 }
-function answer(how){
+function answer(how, ox){
   var q = cq[ci]; if(!q) return;
-  var o = how === "ontime" ? (q.time ? {at:q.eff} : {}) : how === "now" ? {} : how === "missed" ? {missed:true} : {later:true};
+  if(how === "allnow" || how === "allmissed") return answerAll(how === "allmissed");
+  if(how === "later" && !ox){ openLater(q.kind, q.id, q.time, function(o){ answer("later", o); }); return; }
+  var o = how === "ontime" ? (q.time ? {at:q.eff} : {}) : how === "now" ? {} : how === "missed" ? {missed:true} : ox;
   var card = $("cCard").firstChild; if(card) card.classList.add(how === "missed" ? "out-l" : "out-r");
   apply(q.kind, q.id, q.time, o); save(); buzz(how === "missed" ? [8, 40, 8] : 14);
   setTimeout(function(){ ci++; paintCatch(true); lastHTML = ""; render(); }, 220);
+}
+function answerAll(missed){
+  var before = snap(), n = 0;
+  for(; ci < cq.length; ci++){ var q = cq[ci]; if(apply(q.kind, q.id, q.time, missed ? {missed:true} : {})) n++; }
+  save(); buzz(missed ? [8, 40, 8] : 14); paintCatch(true); lastHTML = ""; render();
+  toast(t("bulkDone", {n:n}), before);
 }
 $("cBtns").addEventListener("click", function(e){ var b = e.target.closest("[data-c]"); if(b) answer(b.getAttribute("data-c")); });
 $("cScrim").addEventListener("click", closeCatch); $("cClose").addEventListener("click", closeCatch);
@@ -942,11 +1002,12 @@ $("cScrim").addEventListener("click", closeCatch); $("cClose").addEventListener(
     if(r > 90) answer("ontime"); else if(r < -90) answer("missed"); else c.classList.remove("lean-r", "lean-l"); });
 })();
 function maybeCatch(){
-  if($("sheet").classList.contains("on") || $("catch").classList.contains("on")) return;
+  if($("later").classList.contains("on") || $("sheet").classList.contains("on") || $("catch").classList.contains("on")) return;
   if(Date.now() - (+get("r.catchAt") || 0) < 25*60e3) return;
   if(lateQueue().length) setTimeout(openCatch, 450);
 }
 document.addEventListener("keydown", function(e){
+  if($("later").classList.contains("on")){ if(e.key === "Escape") closeLater(); return; }
   if(!$("catch").classList.contains("on")) return;
   if(e.key === "ArrowRight") answer("ontime"); else if(e.key === "ArrowLeft") answer("missed"); else if(e.key === "Escape") closeCatch();
 });
@@ -1060,13 +1121,13 @@ document.addEventListener("keydown", function(e){ if(e.key === "Escape"){ if($("
 /* time: own scroll wheels, never the system picker */
 var wheelBuilt = false;
 function wheelLabels(){
-  var h = '<div class="pad"></div>', i; for(i = 0; i < 24; i++) h += '<div data-v="'+i+'">'+(h12() ? ((i % 12) || 12)+'<i class="ap">'+ap(i)+'</i>' : ("0"+i).slice(-2))+'</div>'; $("wH").innerHTML = h + '<div class="pad"></div>';
+  var h = '<div class="pad"></div>', i; for(i = 0; i < 24; i++) h += '<div data-v="'+i+'">'+(h12() ? ((i % 12) || 12)+'<i class="ap">'+ap(i)+'</i>' : ("0"+i).slice(-2))+'</div>'; $("wH").innerHTML = $("lH").innerHTML = h + '<div class="pad"></div>';
   $("presets").innerHTML = [["morning","08:00"],["noon","13:00"],["evening","20:00"],["night","23:00"]].map(function(p){ return '<button type="button" class="chip" data-pre="'+p[1]+'">'+esc(t(p[0]))+' <small class="tab">'+ft(p[1])+'</small></button>'; }).join("");
 }
 function buildWheels(){
   var h, i; wheelLabels();
-  h = '<div class="pad"></div>'; for(i = 0; i < 60; i += 5) h += '<div data-v="'+i+'">'+("0"+i).slice(-2)+'</div>'; $("wM").innerHTML = h + '<div class="pad"></div>';
-  ["wH","wM"].forEach(function(id){
+  h = '<div class="pad"></div>'; for(i = 0; i < 60; i += 5) h += '<div data-v="'+i+'">'+("0"+i).slice(-2)+'</div>'; $("wM").innerHTML = $("lM").innerHTML = h + '<div class="pad"></div>';
+  ["wH","wM","lH","lM"].forEach(function(id){
     var c = $(id), tm = null;
     c.addEventListener("scroll", function(){ clearTimeout(tm); tm = setTimeout(function(){ var k = Math.round(c.scrollTop / 40); if(c._k !== k){ c._k = k; buzz(3); } }, 60); }, {passive:true});
     c.addEventListener("click", function(e){ var d = e.target.closest("[data-v]"); if(d){ var k = [].indexOf.call(c.children, d) - 1; c.scrollTo({top:k*40, behavior:"smooth"}); } });
@@ -1074,11 +1135,55 @@ function buildWheels(){
   $("presets").addEventListener("click", function(e){ var b = e.target.closest("[data-pre]"); if(b) setWheels(mins(b.getAttribute("data-pre")), true); });
   wheelBuilt = true;
 }
-function setWheels(m, smooth){
-  var bh = smooth ? "smooth" : "auto";
-  $("wH").scrollTo({top:Math.floor(m/60)*40, behavior:bh});
-  $("wM").scrollTo({top:Math.min(11, Math.round((m % 60)/5))*40, behavior:bh});
+function setWheels(m, smooth, p){
+  var bh = smooth ? "smooth" : "auto"; p = p || "w";
+  $(p+"H").scrollTo({top:Math.floor(m/60)*40, behavior:bh});
+  $(p+"M").scrollTo({top:Math.min(11, Math.round((m % 60)/5))*40, behavior:bh});
 }
+function readWheels(p){ var h = Math.min(23, Math.max(0, Math.round($(p+"H").scrollTop/40))), m = Math.min(55, Math.max(0, Math.round($(p+"M").scrollTop/40)*5)); return h*60 + m; }
+
+/* ---------- later: choose when, see what's already there ---------- */
+var LT = null;
+function openLater(kind, id, time, cb){
+  var it = find(id); if(!it) return;
+  var info = kind === "slot" ? slotInfo(id, time) : null;
+  LT = {kind:kind, id:id, time:time, cb:cb || function(o){ act(kind, id, time, null, o); }};
+  $("lName").innerHTML = '<b>'+esc(it.name)+'</b>' + (info ? ' · ' + esc(ft(info.eff)) : '');
+  var o = "";
+  if(kind === "slot"){
+    var nm = nowMin(), busy = model().slots.filter(function(s){ return !s.done && !s.missed && !(s.it.id === id && s.time === time); });
+    var near = function(v){ for(var i = 0; i < busy.length; i++) if(Math.abs(busy[i].min - v) < 20) return busy[i].it.name; return null; };
+    var r5 = function(v){ return Math.ceil(v/5)*5; };
+    var free = r5(nm + 15); while(free <= 1435 && near(free)) free += 5;
+    if(free <= 1435) o += '<button type="button" class="lopt best wide" data-to="'+hm(free)+'"><b>'+esc(t("nextFree"))+'</b><span>'+ft(free)+' · '+esc(t("inX", {x:dur(free - nm)}))+'</span></button>';
+    [15, 30, 60, 120, 180, 240].forEach(function(x){
+      var v = r5(nm + x), c = v <= 1435 ? near(v) : null;
+      o += '<button type="button" class="lopt" data-to="'+hm(Math.min(v, 1435))+'"'+(v > 1435 ? ' disabled' : '')+'><b>'+esc(t("plusX", {x:dur(x)}))+'</b><span>'+(v > 1435 ? esc(t("midnight")) : ft(v))+'</span>'+(c ? '<em>'+esc(t("withX", {n:c}))+'</em>' : '')+'</button>';
+    });
+    o += '<button type="button" class="lopt wide" data-pick="1"><b>'+esc(t("pickTime"))+'</b><span>'+ico("clock", 16).replace("<svg", '<svg style="display:inline-block;vertical-align:-3px"')+'</span></button>';
+  } else {
+    [[1, t("tomorrow")], [2, t("inDays", {n:2})], [3, t("inDays", {n:3})], [7, t("nextWeek")]].forEach(function(d){
+      o += '<button type="button" class="lopt'+(d[0] === 1 ? " best" : "")+'" data-days="'+d[0]+'"><b>'+esc(d[1])+'</b><span>'+esc(fmt(addDays(today(), d[0]), {weekday:"short", day:"numeric", month:"short"}))+'</span></button>';
+    });
+  }
+  $("lOpts").innerHTML = o; $("lPicker").classList.remove("on"); $("lWarn").style.display = "none";
+  $("lScrim").classList.add("on"); $("later").classList.add("on"); document.documentElement.classList.add("lock");
+}
+function closeLater(){ $("lScrim").classList.remove("on"); $("later").classList.remove("on"); if(!$("catch").classList.contains("on") && !$("sheet").classList.contains("on")) document.documentElement.classList.remove("lock"); LT = null; }
+function pickLater(o){ var x = LT; closeLater(); if(x){ o.later = true; x.cb(o); } }
+$("lOpts").addEventListener("click", function(e){
+  var b = e.target.closest(".lopt"); if(!b || b.disabled) return;
+  if(b.getAttribute("data-pick")){ if(!wheelBuilt) buildWheels(); $("lPicker").classList.add("on"); var v = Math.min(1435, Math.ceil((nowMin() + 60)/5)*5); requestAnimationFrame(function(){ setWheels(v, false, "l"); $("lPicker").scrollIntoView({block:"nearest", behavior:"smooth"}); }); return; }
+  buzz(8);
+  if(b.getAttribute("data-days")) pickLater({days:+b.getAttribute("data-days")}); else pickLater({to:b.getAttribute("data-to")});
+});
+$("lpCancel").addEventListener("click", function(){ $("lPicker").classList.remove("on"); });
+$("lpSet").addEventListener("click", function(){
+  var v = readWheels("l");
+  if(v <= nowMin()){ $("lWarn").textContent = t("pastTime"); $("lWarn").style.display = ""; buzz([10, 40, 10]); return; }
+  pickLater({to:hm(v)});
+});
+$("lScrim").addEventListener("click", closeLater); $("lClose").addEventListener("click", closeLater);
 function openPicker(){
   if(!wheelBuilt) buildWheels();
   $("picker").classList.add("on");
@@ -1088,8 +1193,7 @@ function openPicker(){
 }
 $("pCancel").addEventListener("click", function(){ $("picker").classList.remove("on"); });
 $("pAdd").addEventListener("click", function(){
-  var h = Math.min(23, Math.max(0, Math.round($("wH").scrollTop/40))), m = Math.min(55, Math.max(0, Math.round($("wM").scrollTop/40)*5));
-  var v = hm(h*60 + m); if(F.unit === "h") F.times = [v]; else if(F.times.indexOf(v) < 0) F.times.push(v); F.times.sort();
+  var v = hm(readWheels("w")); if(F.unit === "h") F.times = [v]; else if(F.times.indexOf(v) < 0) F.times.push(v); F.times.sort();
   $("picker").classList.remove("on"); paintSheet(); buzz(10);
 });
 
