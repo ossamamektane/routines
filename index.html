@@ -11,7 +11,7 @@
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
 <meta name="application-name" content="Routines">
 <meta name="format-detection" content="telephone=no, date=no, address=no, email=no">
-<meta name="theme-color" id="themeColor" content="#ffffff">
+<meta name="theme-color" id="themeColor" content="#f2f2f7">
 <link rel="manifest" href="manifest.json">
 <script>
 /* no zoom, no double-tap zoom, no pinch — same rules as a native app */
@@ -344,6 +344,114 @@ html[data-theme="dark"] .toast{background:#333}
 .cbulk{grid-column:1/-1;display:flex;gap:8px}
 .cbulk button{flex:1;height:38px;border-radius:10px;font-size:13px;font-weight:500;color:var(--ink2);text-align:center;box-shadow:inset 0 0 0 1px var(--line2)}
 .cbulk button.r{color:var(--red)}
+
+/* ================= Design system v2 — calm, trustworthy, native =================
+   Blue = action & trust · Green = done (reward) · Orange = late (attention, not alarm)
+   Red = only for missed / destructive · Neutral greys carry everything else.          */
+:root{
+  --font:-apple-system,BlinkMacSystemFont,"SF Pro Text","SF Pro","Inter","Segoe UI",Roboto,"Helvetica Neue",Arial,"Noto Sans Arabic",sans-serif;
+  --bg:#f2f2f7; --bg2:#ffffff; --bg3:#e5e5ea; --line:rgba(60,60,67,.14); --line2:rgba(60,60,67,.29);
+  --ink:#000; --ink2:rgba(60,60,67,.62); --ink3:rgba(60,60,67,.34);
+  --y:#007aff; --yh:#0062cc; --ysoft:rgba(0,122,255,.09); --on:#fff;
+  --ok:#34c759; --oksoft:rgba(52,199,89,.13);
+  --late:#e8590c; --latesoft:rgba(255,149,0,.13);
+  --red:#ff3b30; --redsoft:rgba(255,59,48,.10);
+  --menu:#fff; --seg:#fff; --card-sh:0 1px 2px rgba(0,0,0,.04);
+}
+html[data-theme="dark"]{
+  --bg:#000; --bg2:#1c1c1e; --bg3:#2c2c2e; --line:rgba(84,84,88,.5); --line2:rgba(235,235,245,.3);
+  --ink:#fff; --ink2:rgba(235,235,245,.62); --ink3:rgba(235,235,245,.32);
+  --y:#0a84ff; --yh:#3395ff; --ysoft:rgba(10,132,255,.16);
+  --ok:#30d158; --oksoft:rgba(48,209,88,.16);
+  --late:#ff9f0a; --latesoft:rgba(255,159,10,.15);
+  --red:#ff453a; --redsoft:rgba(255,69,58,.15);
+  --menu:#2c2c2e; --seg:#636366; --card-sh:none;
+}
+html[data-theme="dark"] .sheet{background:#1c1c1e}
+html[data-theme="dark"] .sheet .in,html[data-theme="dark"] .sheet .kind,html[data-theme="dark"] .sheet .seg,html[data-theme="dark"] .sheet .step,
+html[data-theme="dark"] .sheet .tgl,html[data-theme="dark"] .sheet .tadd,html[data-theme="dark"] .sheet .picker,html[data-theme="dark"] .sheet .wdays button,
+html[data-theme="dark"] .sheet .mdays button,html[data-theme="dark"] .sheet .btn:not(.y):not(.armed),html[data-theme="dark"] .sheet .lopt,
+html[data-theme="dark"] .sheet .box,html[data-theme="dark"] .sheet .ccard{background:#2c2c2e}
+html[data-theme="dark"] .sheet .wheel::before{background:#3a3a3c}
+body{font-size:16px;letter-spacing:-.011em}
+.tab,.tm,.clock,.ctime{font-variant-numeric:tabular-nums}
+
+/* header */
+.logo{font-size:17px;font-weight:600;letter-spacing:-.02em}
+.logo i{background:var(--y);color:#fff;width:26px;height:26px;border-radius:8px}
+.ib{background:var(--bg2);box-shadow:var(--card-sh);font-weight:500}
+.ib.pri{background:var(--y);color:#fff}
+.day h1{font-size:30px;font-weight:700;letter-spacing:-.025em}
+.day p{font-size:15px}
+.clock{font-size:22px;font-weight:600;color:var(--ink2)}
+.h12 .clock{font-size:21px}
+.meter{height:4px;gap:2px}.meter i{border-radius:2px}
+.meter i.on{background:var(--ok)}.meter i.late{background:var(--late)}
+
+/* hero */
+.now,.now.calm{background:var(--bg2);color:var(--ink);border-radius:18px;padding:16px 16px 16px 18px;box-shadow:var(--card-sh);position:relative;overflow:hidden}
+.now::before{content:"";position:absolute;inset-inline-start:0;top:0;bottom:0;width:4px;background:var(--y)}
+.now.calm::before{background:var(--ok)}
+.now.k-kLate::before{background:var(--late)}
+.now.k-kNext::before{background:var(--ink3)}
+.now-k{opacity:1;color:var(--ink2);font-size:13px;font-weight:600;letter-spacing:.01em}
+.now.k-kNow .now-k{color:var(--y)} .now.k-kLate .now-k{color:var(--late)}
+.now-n{font-size:22px;font-weight:700;letter-spacing:-.02em}
+.now-r{opacity:1;color:var(--ink2);font-size:15px}
+.bigck{width:54px;height:54px;background:var(--ok);color:#fff;box-shadow:0 4px 14px rgba(52,199,89,.32)}
+.now.calm .bigck{background:var(--y);color:#fff;box-shadow:0 4px 14px rgba(0,122,255,.28)}
+.cchip{background:var(--ysoft);color:var(--y);font-weight:600;border-radius:10px;height:34px}
+.cchip.ghost,.now.calm .cchip.ghost{background:var(--bg3);color:var(--ink)}
+.now.calm .cchip{background:var(--ysoft);color:var(--y)}
+
+/* sections & rows */
+.sh2 h2{font-size:21px;font-weight:700;letter-spacing:-.02em}
+.sh2 span{font-weight:500}
+.sh2 em{font-weight:500}.sh2 em.red{color:var(--late)}
+.mini{font-size:12.5px;font-weight:500;text-transform:uppercase;letter-spacing:.04em;color:var(--ink2);margin:12px 16px 6px}
+.box{border-radius:14px;box-shadow:var(--card-sh)}
+.nm{font-size:17px;font-weight:400;letter-spacing:-.015em}
+.sb{font-size:14px}
+.tm{font-weight:600}
+.ck{width:28px;height:28px;border:1.75px solid var(--line2);color:#fff}
+.row.late .ck{border-color:var(--late)} .row.late .tm{color:var(--late)}
+.row.done .ck,.ck.on{background:var(--ok);border-color:var(--ok)}
+.row.done .nm{text-decoration-color:var(--ink3)}
+.row.missed .ck{border-color:var(--red)} .row.missed .nm{text-decoration-color:var(--red)}
+.row.pop{animation:pop2 .5s ease}
+@keyframes pop2{30%{background:var(--oksoft)}}
+.ck.on{animation:ckpop .35s cubic-bezier(.3,1.6,.5,1)}
+@keyframes ckpop{40%{transform:scale(1.18)}}
+.tag{font-weight:500;border-radius:7px;background:var(--bg3);color:var(--ink2)}
+.tag.tnow{background:var(--y);color:#fff}
+.tag.late{background:var(--latesoft);color:var(--late)}
+.row.missed .tag.late{background:var(--redsoft);color:var(--red)}
+.dots i{background:var(--bg3)}.dots i.on{background:var(--ok)}
+.nowline{color:var(--red)}
+.more{color:var(--y);font-weight:500}
+.row.sw-do{background:var(--oksoft)}
+
+/* controls */
+.btn{font-weight:600;border-radius:13px}
+.btn.y,.tchip,.kind.on .ki,.calg button.sel,.wdays button.on,.mdays button.on{background:var(--y);color:#fff}
+.btn.y:hover{background:var(--yh)}
+.in{border-radius:12px}
+.tgl.on .sw{background:var(--ok)}
+.seg button.on{font-weight:600}
+.sum{background:var(--ysoft);color:var(--ink)}
+.sum svg{color:var(--y)}
+.lopt.best{background:var(--ysoft);box-shadow:inset 0 0 0 1.5px var(--y)}
+.lopt em{color:var(--late)}
+.toast{background:rgba(28,28,30,.96);-webkit-backdrop-filter:blur(20px);backdrop-filter:blur(20px);border-radius:14px}
+.toast button{color:#4da3ff}
+.cdots i.on{background:var(--ok)}
+.ccard.lean-r{background:var(--oksoft)}
+.clate{background:var(--latesoft);color:var(--late)}
+.cbig{background:var(--ok);color:#fff}
+.cbtns .cmiss{color:var(--red)}
+.empty{border-radius:18px;box-shadow:var(--card-sh)}
+.day h1{font-size:clamp(23px,6.6vw,30px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.day>div:first-child{min-width:0}
 </style>
 </head>
 <body>
@@ -550,6 +658,8 @@ var T = {
   pauseT:["Pause this task","Mettre en pause","إيقاف المهمة مؤقتًا"], pauseS:["Hidden from your day until you turn this off","Masquée jusqu’à la reprise","مخفية حتى تعيد تشغيلها"],
   paused1:["Paused","En pause","موقوفة"], resumed:["Resumed “{n}”","« {n} » reprise","استُؤنفت «{n}»"], pausedMsg:["Paused “{n}”","« {n} » en pause","أُوقفت «{n}»"],
   noneYet:["No tasks yet","Aucune tâche","لا توجد مهام"], dueToday:["Today","Aujourd’hui","اليوم"], thisP:["this {p}","ce/cette {p}","هذا {p}"],
+  noneDue:["Nothing due right now","Rien de prévu maintenant","لا شيء مستحق الآن"], openToday:["{n} left today, whenever suits you","{n} à faire aujourd’hui, quand vous voulez","{n} متبقية اليوم، متى شئت"],
+  repairedN:["Fixed {n} tasks moved by a clock change","{n} tâches corrigées après un changement d’heure","صُحّحت {n} مهام بعد تغيير الساعة"],
   midnight:["after midnight — use tomorrow","après minuit","بعد منتصف الليل"], plusX:["+{x}","+{x}","+{x}"],
 };
 var LANGS = ["en","fr","ar"];
@@ -581,7 +691,34 @@ function pushSnap(j){
   }
   set("r.snaps", JSON.stringify(a));
 }
-var warped = null;
+var warped = null, repaired = 0;
+/* A task can be at most ~2 repeats ahead of today (done today + one skip). Anything further
+   can only come from a clock that was set forward — put it back on today's schedule. */
+function repairFuture(){
+  var td = today(), T0 = iso(td), n = 0;
+  items.forEach(function(it){
+    var bad = false;
+    if(it.last && it.last > T0){ it.last = null; bad = true; }
+    var l = it.log.length; it.log = it.log.filter(function(d){ return d <= T0; }); if(l !== it.log.length) bad = true;
+    if(it.slots && it.slots.date > T0){ it.slots = null; bad = true; }
+    if(it.prev && it.prev.date > T0) it.prev = null;
+    if(it.kind !== "window" && !it.paused){
+      var nx = parse(it.next), lim;
+      if(it.unit === "h") lim = addDays(td, 1);
+      else { var a = it.kind === "fixed" && !it.shift ? nextFixed(it, td) : step(it, td, 1); lim = step(it, a, 1); }
+      if(nx > lim){
+        if(it.unit === "h"){ var nw = new Date(); nw.setSeconds(0, 0); setOcc(it, nw); if(it.shift || it.kind === "flex"){ it.anchor = it.next; it.at0 = it.times[0]; } }
+        else it.next = iso(it.kind === "fixed" && !it.shift ? firstOnOrAfter(it, td) : td);
+        if(it.shift && it.unit !== "h") it.anchor = it.next;
+        it.slots = null; it.prev = null; bad = true;
+      }
+    }
+    if(bad) n++;
+  });
+  var hk = Object.keys(hist).filter(function(k){ return k > T0; });
+  if(hk.length){ hk.forEach(function(k){ delete hist[k]; }); set("r.hist", JSON.stringify(hist)); }
+  if(n){ set("r.items", JSON.stringify(items)); repaired += n; }
+}
 function guardClock(){
   var now = Date.now(), seen = +get("r.seen") || 0;
   if(seen && now < seen - 5*60e3){
@@ -602,7 +739,8 @@ function guardClock(){
     set("r.items", JSON.stringify(items));
     warped = before;
   }
-  else pushSnap(JSON.stringify(items));   /* baseline: the state as it is right now */
+  repairFuture();
+  if(!warped) pushSnap(JSON.stringify(items));   /* baseline: the state as it is right now */
   set("r.seen", String(now));
 }
 
@@ -810,7 +948,7 @@ function render(){
       m.slots.forEach(function(s){
         if(!placed && s.min > nm){ placed = true; fx += '<div class="nowline"><b>'+ft(nm)+'</b></div>'; }
         var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" ? "tnow" : s.state === "late" || s.state === "missed" ? "late" : "")+'">'+esc(r)+'</span>' : '';
-        fx += row("timed " + s.state, "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(s.time)}) + " · " : "") + describe(s.it), tag);
+        fx += row("timed " + (s.state === "now" ? "due" : s.state), "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(s.time)}) + " · " : "") + describe(s.it), tag);
       });
       if(!placed) fx += '<div class="nowline"><b>'+ft(nm)+'</b></div>';
     }
@@ -830,7 +968,8 @@ function render(){
     out += '<button class="more alltasks" type="button" data-act="all">'+ico("dots", 16)+esc(t("allT"))+' · '+items.length+(np ? ' · '+esc(t("pausedN", {n:np})) : '')+'</button>';
   }
   if(out !== lastHTML){ $("app").innerHTML = out; lastHTML = out; }
-  if(warped){ var wb = warped; warped = null; setTimeout(function(){ toast(t("clockBack"), wb); }, 300); }
+  if(warped){ var wb = warped; warped = null; repaired = 0; setTimeout(function(){ toast(t("clockBack"), wb); }, 300); }
+  else if(repaired){ var rn = repaired; repaired = 0; setTimeout(function(){ toast(t("repairedN", {n:rn})); }, 300); }
   $("allCount").textContent = items.length || "";
   document.title = (m.pending ? "(" + m.pending + ") " : "") + "Routines";
   try{ if(navigator.setAppBadge){ if(m.pending) navigator.setAppBadge(m.pending); else navigator.clearAppBadge(); } }catch(e){}
@@ -843,10 +982,10 @@ function nowCard(m){
   else if(soon.length && soon[0].delta <= 15){ s = soon[0]; kind = "kNext"; }
   else if(late.length){ s = late[late.length - 1]; kind = "kLate"; }
   else if(m.overdue.length){ s = {it:m.overdue[0].it, over:m.overdue[0].d}; kind = "kLate"; }
-  else if(anyOpen.length && (!soon.length || soon[0].delta > 90)){ s = {it:anyOpen[0].it}; kind = "kAny"; }
   else if(soon.length){ s = soon[0]; kind = "kNext"; }
-  else { var g = m.week.concat(m.month).filter(function(o){ return !o.met && !o.today; })[0]; if(g){ s = {it:g.it, win:g}; kind = "kGoal"; } }
   if(!s){
+    var openT = anyOpen.length + m.dayWin.filter(function(o){ return !o.met; }).length;
+    if(openT) return '<div class="now calm"><div class="now-tx"><div class="now-k">'+esc(t("schedule"))+'</div><div class="now-n">'+esc(t("noneDue"))+'</div><div class="now-r">'+esc(t("openToday", {n:openT}))+'</div></div></div>';
     var nx = m.coming[0], sub = nx ? t("allDoneSub", {n:nx.it.name, w:(nx.d === 1 ? t("tomorrow") : fmt(parse(nx.it.next), {weekday:"long"})) + (nx.it.times[0] ? " " + ft(nx.it.times[0]) : "")}) : t("allDoneNone");
     return '<div class="now calm"><div class="now-tx"><div class="now-k">'+esc(t("schedule"))+'</div><div class="now-n">'+esc(t("allDone"))+'</div><div class="now-r">'+esc(sub)+'</div></div><button class="bigck" type="button" data-act="add" aria-label="Add">'+ico("plus", 26)+'</button></div>';
   }
@@ -855,7 +994,7 @@ function nowCard(m){
   else if(s.win){ act = "win"; r = describe(s.it) + " · " + s.win.count + "/" + s.it.quota; }
   else { act = "item"; r = s.over ? t("lateD", {n:-s.over}) : describe(s.it); }
   var owed = late.length + m.overdue.length;
-  return '<div class="now" data-id="'+s.it.id+'"'+attr+'><div class="now-tx"><div class="now-k">'+(s.time ? '<span class="tab">'+ft(s.eff || s.time)+'</span> · ' : '')+esc(t(kind))+'</div>'+
+  return '<div class="now k-'+kind+'" data-id="'+s.it.id+'"'+attr+'><div class="now-tx"><div class="now-k">'+(s.time ? '<span class="tab">'+ft(s.eff || s.time)+'</span> · ' : '')+esc(t(kind))+'</div>'+
     '<div class="now-n">'+esc(s.it.name)+'</div><div class="now-r">'+esc(r)+'</div>'+'<div class="now-acts">'+(owed > 1 || (owed && kind !== "kLate") ? '<button class="cchip" type="button" data-act="catch">'+ico("undo", 16)+esc(t("catchBtn"))+' · '+owed+'</button>' : '')+(act !== "win" ? '<button class="cchip ghost" type="button" data-act="later">'+ico("clock", 16)+esc(t("laterChip"))+'</button>' : '')+'</div></div>'+
     '<button class="bigck" type="button" data-act="'+act+'" aria-label="'+esc(s.it.name)+'">'+ico("check", 28, 3)+'</button></div>';
 }
@@ -1082,8 +1221,9 @@ document.addEventListener("keydown", function(e){
 
 /* ---------- sheet ---------- */
 var editing = null, F = {};
+function hideToast(){ $("toast").classList.remove("on"); }
 function openSheet(it){
-  editing = it || null;
+  editing = it || null; hideToast();
   var td = today();
   F = {name:"", nBy:{h:1, d:1, w:1, m:1}, unit:"d", mode:"fixed", shift:false, quota:1, times:[], wd:(td.getDay()+6)%7, md:td.getDate(), paused:!!(it && it.paused)};
   if(it && it.kind === "window"){ F.name = it.name; F.unit = it.period; F.mode = "flex"; F.quota = it.quota; }
@@ -1217,7 +1357,7 @@ var LT = null;
 function openLater(kind, id, time, cb){
   var it = find(id); if(!it) return;
   var info = kind === "slot" ? slotInfo(id, time) : null;
-  LT = {kind:kind, id:id, time:time, cb:cb || function(o){ act(kind, id, time, null, o); }};
+  hideToast(); LT = {kind:kind, id:id, time:time, cb:cb || function(o){ act(kind, id, time, null, o); }};
   $("lName").innerHTML = '<b>'+esc(it.name)+'</b>' + (info ? ' · ' + esc(ft(info.eff)) : '');
   var o = "";
   if(kind === "slot"){
@@ -1272,7 +1412,7 @@ function paintAll(){
   if(pz.length) h += '<div class="mini">'+esc(t("pausedT"))+' · '+pz.length+'</div><div class="box">'+list(pz)+'</div>';
   $("aList").innerHTML = h;
 }
-function openAll(){ closeMenus(); paintAll(); $("aList").scrollTop = 0; $("aScrim").classList.add("on"); $("all").classList.add("on"); document.documentElement.classList.add("lock"); }
+function openAll(){ closeMenus(); hideToast(); paintAll(); $("aList").scrollTop = 0; $("aScrim").classList.add("on"); $("all").classList.add("on"); document.documentElement.classList.add("lock"); }
 function closeAll(){ $("aScrim").classList.remove("on"); $("all").classList.remove("on"); document.documentElement.classList.remove("lock"); }
 $("aList").addEventListener("click", function(e){ var b = e.target.closest("[data-aid]"); if(!b) return; var it = find(b.getAttribute("data-aid")); closeAll(); if(it) setTimeout(function(){ openSheet(it); }, 120); });
 $("aScrim").addEventListener("click", closeAll); $("aClose").addEventListener("click", closeAll);
@@ -1363,7 +1503,7 @@ function applyTheme(){
   var th = get("r.theme") || "auto";
   var dark = th === "dark" || (th === "auto" && window.matchMedia && matchMedia("(prefers-color-scheme: dark)").matches);
   document.documentElement.setAttribute("data-theme", dark ? "dark" : "light");
-  $("themeColor").setAttribute("content", dark ? "#121212" : "#ffffff");
+  $("themeColor").setAttribute("content", dark ? "#000000" : "#f2f2f7");
   $("themeIco").innerHTML = ico(th === "auto" ? "auto" : dark ? "moon" : "sun");
   document.querySelectorAll("[data-theme-choice]").forEach(function(b){ b.classList.toggle("sel", b.getAttribute("data-theme-choice") === th); });
 }
