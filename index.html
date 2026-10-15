@@ -395,7 +395,7 @@ body{font-size:16px;letter-spacing:-.011em}
 .now.k-kLate::before{background:var(--late)}
 .now.k-kNext::before{background:var(--ink3)}
 .now-k{opacity:1;color:var(--ink2);font-size:13px;font-weight:600;letter-spacing:.01em}
-.now.k-kNow .now-k{color:var(--y)} .now.k-kLate .now-k{color:var(--late)}
+.now.k-kNow .now-k,.now.k-kDue .now-k{color:var(--y)} .now.k-kLate .now-k{color:var(--late)}
 .now-n{font-size:22px;font-weight:700;letter-spacing:-.02em}
 .now-r{opacity:1;color:var(--ink2);font-size:15px}
 .bigck{width:54px;height:54px;background:var(--ok);color:#fff;box-shadow:0 4px 14px rgba(52,199,89,.32)}
@@ -696,11 +696,13 @@ var T = {
   wokeAt:["Woke up at {t}","Réveil à {t}","استيقظت في {t}"], edit:["Edit","Modifier","تعديل"], wakeSet:["Woke up at {t} · {n} tasks timed","Réveil à {t} · {n} tâches planifiées","استيقظت {t} · جُدولت {n} مهام"],
   wakeClear:["Clear wake time","Effacer l’heure du réveil","مسح وقت الاستيقاظ"], wakeCleared:["Wake time cleared","Heure du réveil effacée","مُسح وقت الاستيقاظ"],
   wakeOff:["{x} after waking","{x} après le réveil","بعد {x} من الاستيقاظ"], wake0:["right after waking","dès le réveil","فور الاستيقاظ"],
+  fromWake:["starts {x} after waking","dès {x} après le réveil","يبدأ بعد {x} من الاستيقاظ"], fromWake0:["starts when you wake up","dès le réveil","يبدأ عند الاستيقاظ"], wakeLbl2:["First one after waking","Premier après le réveil","الأول بعد الاستيقاظ"],
   wakeWait:["waits for your wake-up","attend votre réveil","ينتظر استيقاظك"],
   tmClock:["At a time","À une heure","في وقت محدد"], tmWake:["After waking","Après le réveil","بعد الاستيقاظ"], wakeLbl:["How long after you wake up","Combien de temps après le réveil","كم بعد الاستيقاظ"],
   agoX:["{x} ago","il y a {x}","قبل {x}"], asSched:["As scheduled","Comme prévu","كما هو مقرر"], didWhen:["When did you do it?","Quand l’avez-vous fait ?","متى أنجزتها؟"],
   setTimeB:["Set time","Heure…","الوقت…"], didAt:["Done at {t}","Fait à {t}","أُنجز في {t}"], futureNo:["That time hasn’t happened yet","Cette heure n’est pas encore passée","هذا الوقت لم يأتِ بعد"],
   otherTime:["I did it at another time…","Fait à une autre heure…","أنجزتها في وقت آخر…"],
+  dueAgo:["due {x} ago","prévu il y a {x}","مستحق منذ {x}"], kDue:["Due","À faire","مستحق"],
   midnight:["after midnight — use tomorrow","après minuit","بعد منتصف الليل"], plusX:["+{x}","+{x}","+{x}"],
 };
 var LANGS = ["en","fr","ar"];
@@ -832,7 +834,8 @@ function norm(i){
   it.log = Array.isArray(i.log) ? i.log.filter(parse) : [];
   it.prev = i.prev || null; it.paused = !!i.paused;
   it.wake = typeof i.wake === "number" && i.wake >= 0 && i.wake <= 1080 ? Math.round(i.wake) : null;
-  if(it.wake !== null && (it.kind === "window" || it.unit !== "d" || it.n !== 1)) it.wake = null;
+  if(it.wake !== null && (it.kind === "window" || !((it.unit === "d" && it.n === 1) || it.unit === "h"))) it.wake = null;
+  it.wakeAt = it.wake !== null && typeof i.wakeAt === "string" ? i.wakeAt : null;
   if(it.kind === "window") it.times = [];
   if(it.unit === "h"){ if(it.kind === "window") it.kind = "flex"; if(!it.times.length){ var _n = new Date(); it.times = [hm(_n.getHours()*60 + _n.getMinutes())]; } it.times = [it.times[0]]; it.n = Math.min(23, it.n); }
   it.at0 = mins(i.at0) !== null ? hm(mins(i.at0)) : (it.times[0] || null);
@@ -846,7 +849,17 @@ function roll(){
   var wk = getWake();
   items.forEach(function(it){
     if(it.paused) return;
-    if(it.wake !== null){
+    if(it.wake !== null && it.unit === "h"){   /* hourly, first one X after waking */
+      var key = wk === null ? null : T0 + "|" + hm(wk), on1 = it.slots && it.slots.date === T0;
+      var doneT = on1 && Object.keys(it.slots.done).length > 0;
+      if(it.slots && it.slots.date < T0){ it.slots = null; ch = true; }
+      if(key && it.wakeAt !== key){
+        if(!doneT){ var st = Math.min(1435, wk + it.wake); setOcc(it, dt(T0, hm(st))); it.anchor = T0; it.at0 = hm(st); }
+        it.wakeAt = key; ch = true;
+      }
+      if(!key || it.wakeAt !== key) return;
+    }
+    else if(it.wake !== null){
       if(parse(it.next) < td){ it.next = T0; ch = true; }
       var on = it.slots && it.slots.date === T0, did = it.last === T0 || (on && Object.keys(it.slots.done).length);
       if(!did && it.next === T0){
@@ -893,6 +906,10 @@ function model(){
       return;
     }
     var on = it.slots && it.slots.date === T0, sd = on ? it.slots.done : {}, snz = on ? it.slots.snz : null;
+    if(it.unit === "h" && it.wake !== null){
+      var wk0 = getWake();
+      if(wk0 === null || it.wakeAt !== T0 + "|" + hm(wk0)){ m.any.push({it:it, done:false, wh:true}); m.total++; m.pending++; return; }
+    }
     if(it.unit === "h"){
       var dh = diff(td, parse(it.next));
       Object.keys(sd).forEach(function(tm){ if(!(dh === 0 && tm === it.times[0])) slot(it, tm, sd, null, false); });
@@ -925,6 +942,7 @@ function ord(n){ if(lang !== "en") return lang === "fr" && n === 1 ? "1er" : n; 
 function every(it){ return it.n === 1 ? t("u1"+it.unit) : it.n + " " + t("u"+it.unit); }
 function qtxt(q){ return q === 1 ? t("once") : t("timesN", {n:q}); }
 function describe(it){
+  if(it.wake !== null && it.unit === "h") return (it.n === 1 ? t("eHour") : t("eN", {n:it.n, u:t("uh")})) + " · " + (it.wake ? t("fromWake", {x:dur(it.wake)}) : t("fromWake0"));
   if(it.wake !== null && it.kind !== "window") return t("eDay") + " · " + (it.wake ? t("wakeOff", {x:dur(it.wake)}) : t("wake0"));
   if(it.kind === "window"){ var sp = t("some" + it.period); return it.quota > 1 ? t("timesN", {n:it.quota}) + " · " + sp.charAt(0).toLowerCase() + sp.slice(1) : sp; }
   var s, a = parse(it.anchor) || parse(it.next);
@@ -938,7 +956,7 @@ function describe(it){
   if(it.last && !it.times.length){ var g = diff(parse(it.last), today()); s += " · " + t("lastDone", {x: g <= 0 ? t("agoToday") : t("ago", {n:g})}); }
   return s;
 }
-function rel(s){ if(s.state === "missed") return t("missedTag"); return s.state === "done" ? (s.at ? t("doneAt", {t:ft(s.at)}) : "") : s.state === "now" ? t("nowTag") : s.state === "late" ? t("lateX", {x:dur(s.delta)}) : t("inX", {x:dur(s.delta)}); }
+function rel(s){ if(s.state === "missed") return t("missedTag"); return s.state === "done" ? (s.at ? t("doneAt", {t:ft(s.at)}) : "") : s.state === "now" ? (s.delta >= -2 ? t("nowTag") : t("dueAgo", {x:dur(s.delta)})) : s.state === "late" ? t("lateX", {x:dur(s.delta)}) : t("inX", {x:dur(s.delta)}); }
 
 /* ---------- render ---------- */
 var expanded = false, lastHTML = "";
@@ -1010,7 +1028,7 @@ function render(){
       });
       if(!placed) fx += '<div class="nowline"><b>'+ft(nm)+'</b></div>';
     }
-    m.any.forEach(function(a){ var ww = a.it.wake !== null && !a.done; fx += row(a.done ? "done" : ww ? "wwait" : "", "item", a.it.id, "", ww && m.slots.length ? '<div class="tm">'+ico("sun", 18)+'</div>' : gap, a.it.name, describe(a.it), ww ? '<span class="tag">'+esc(t("wakeWait"))+'</span>' : ""); });
+    m.any.forEach(function(a){ var ww = a.it.wake !== null && !a.done; fx += row(a.done ? "done" : ww ? "wwait" : "", a.wh ? "wakeEdit" : "item", a.it.id, "", ww && m.slots.length ? '<div class="tm">'+ico("sun", 18)+'</div>' : gap, a.it.name, describe(a.it), ww ? '<span class="tag">'+esc(t("wakeWait"))+'</span>' : ""); });
     var todayLeft = m.overdue.length + m.slots.filter(function(s){ return !s.done && !s.missed; }).length + m.any.filter(function(a){ return !a.done; }).length + m.dayWin.filter(function(o){ return !o.met; }).length;
     var tl = 1440 - nm, dueLeft = todayLeft > 0;
     out += sec3(t("schedule"), todayLeft, '<em class="tab'+(tl <= 120 && dueLeft ? " red" : "")+'">'+esc(t("leftX", {x:dur(tl)}))+'</em>', fx, m.dayWin.map(winRow).join(""));
@@ -1054,7 +1072,7 @@ function nowCard(m){
   var s = null, kind = "";
   var late = m.slots.filter(function(x){ return x.state === "late"; }), cur = m.slots.filter(function(x){ return x.state === "now"; }), soon = m.slots.filter(function(x){ return x.state === "soon"; });
   var anyOpen = m.any.filter(function(a){ return !a.done; });
-  if(cur.length){ s = cur[0]; kind = "kNow"; }
+  if(cur.length){ s = cur[0]; kind = cur[0].delta >= -2 ? "kNow" : "kDue"; }
   else if(soon.length && soon[0].delta <= 15){ s = soon[0]; kind = "kNext"; }
   else if(late.length){ s = late[late.length - 1]; kind = "kLate"; }
   else if(m.overdue.length){ s = {it:m.overdue[0].it, over:m.overdue[0].d}; kind = "kLate"; }
@@ -1339,7 +1357,7 @@ function closeSheet(){
   document.documentElement.classList.remove("lock"); if(document.activeElement) document.activeElement.blur();
 }
 function N(){ return F.nBy[F.unit]; }
-function canWake(){ return F.unit === "d" && N() === 1 && F.mode !== "flex"; }
+function canWake(){ return F.mode !== "flex" && ((F.unit === "d" && N() === 1) || F.unit === "h"); }
 function canNoFix(){ return F.unit !== "h" && N() === 1; }
 /* first date on/after today that matches the chosen weekday / day of month */
 function startDate(){
@@ -1354,6 +1372,7 @@ function joinTimes(a){ a = a.map(ft); return a.length < 2 ? a.join("") : a.slice
 function gridPreview(){ if(!F.times[0]) return ""; var st = mins(F.times[0]), out = []; for(var k = 0; k < 3; k++){ var v = st + k*N()*60; if(v >= 1440) break; out.push(ft(v)); } return out.join(", ") + (out.length === 3 ? "…" : ""); }
 function summary(){
   var d = startDate(), s, n = N();
+  if(F.mode !== "flex" && F.wake !== null && canWake() && F.unit === "h") return describe({kind:"fixed", unit:"h", n:n, wake:F.wake});
   if(F.mode !== "flex" && F.wake !== null && canWake()) return t("eDay") + " · " + (F.wake ? t("wakeOff", {x:dur(F.wake)}) : t("wake0"));
   if(F.mode === "flex") return describe({kind:"window", quota:F.quota, period:F.unit});
   if(F.unit === "h"){
@@ -1402,7 +1421,7 @@ function paintSheet(){
   $("tMode").innerHTML = '<button type="button" data-tmode="clock" class="'+(!WK ? "on" : "")+'">'+esc(t("tmClock"))+'</button><button type="button" data-tmode="wake" class="'+(WK ? "on" : "")+'">'+ico("sun", 16).replace("<svg", '<svg style="display:inline-block;vertical-align:-3px;margin-inline-end:5px"')+esc(t("tmWake"))+'</button>';
   $("timeList").style.display = WK ? "none" : ""; if(WK) $("picker").classList.remove("on");
   $("wakeBox").style.display = WK ? "" : "none";
-  if(WK) $("wakeBox").innerHTML = '<div class="tgl on"><div class="optx" style="padding-top:12px"><span class="ol">'+esc(t("wakeLbl"))+'</span><div class="step"><button type="button" data-stp="wo" data-d="-15" aria-label="−"'+(F.wake <= 0 ? ' class="dim"' : '')+'>'+ico("minus")+'</button><output class="tab" style="min-width:64px">'+(F.wake ? "+" + dur(F.wake) : "0")+'</output><button type="button" data-stp="wo" data-d="15" aria-label="+">'+ico("plus")+'</button></div></div></div>'+
+  if(WK) $("wakeBox").innerHTML = '<div class="tgl on"><div class="optx" style="padding-top:12px"><span class="ol">'+esc(t(H ? "wakeLbl2" : "wakeLbl"))+'</span><div class="step"><button type="button" data-stp="wo" data-d="-15" aria-label="−"'+(F.wake <= 0 ? ' class="dim"' : '')+'>'+ico("minus")+'</button><output class="tab" style="min-width:64px">'+(F.wake ? "+" + dur(F.wake) : "0")+'</output><button type="button" data-stp="wo" data-d="15" aria-label="+">'+ico("plus")+'</button></div></div></div>'+
     '<div class="sugg">'+[0, 15, 30, 45, 60, 90, 120, 180, 240, 360].map(function(v){ return '<button type="button" class="chip'+(F.wake === v ? " on" : "")+'" data-wo="'+v+'">'+(v ? "+" + dur(v) : esc(t("wake0")))+'</button>'; }).join("")+'</div>';
   $("timeList").innerHTML = F.times.map(function(x){ return '<span class="tchip">'+ft(x)+'<button type="button" data-rm="'+x+'" aria-label="Remove">'+ico("x", 16)+'</button></span>'; }).join("") +
     (H && F.times.length ? '' : '<button type="button" class="tadd" id="tAdd">'+ico("plus", 18)+esc(t("addTime"))+'</button>');
@@ -1577,13 +1596,17 @@ $("saveBtn").addEventListener("click", function(){
   var before = snap(), it = editing ? JSON.parse(JSON.stringify(editing)) : {id:uid(), last:null, log:[]};
   var flex = F.mode === "flex", kind = flex ? "window" : "fixed", n = flex ? 1 : N();
   var wakeOff = !flex && canWake() && F.wake !== null ? F.wake : null, times = flex || wakeOff !== null ? [] : F.times.slice().sort();
+  if(!flex && F.unit === "h" && wakeOff !== null && editing && editing.unit === "h" && editing.wake !== null) times = editing.times.slice();
   if(!flex && F.unit === "h" && !times.length) times = [stamp()];
   var a0 = editing && (parse(editing.anchor) || parse(editing.next));
   var changed = !editing || editing.kind !== kind || editing.n !== n || editing.unit !== F.unit || editing.period !== (flex ? F.unit : editing.period)
-    || (F.unit === "w" && a0 && (a0.getDay()+6)%7 !== F.wd) || (F.unit === "m" && a0 && a0.getDate() !== F.md) || (F.unit === "h" && editing.times[0] !== times[0]) || (editing.wake === null) !== (wakeOff === null);
+    || (F.unit === "w" && a0 && (a0.getDay()+6)%7 !== F.wd) || (F.unit === "m" && a0 && a0.getDate() !== F.md) || (F.unit === "h" && wakeOff === null && editing.times[0] !== times[0]) || (editing.wake === null) !== (wakeOff === null);
   it.name = name; it.kind = kind; it.n = n; it.unit = flex ? "d" : F.unit; it.quota = F.quota; it.period = flex ? F.unit : "w"; it.times = times; it.shift = !flex && F.shift && wakeOff === null; it.wake = wakeOff;
-  if(editing && editing.wake !== null && wakeOff !== null && editing.wake !== wakeOff && it.last !== iso(today())){ it.times = []; it.slots = null; }
-  if(changed){ var sd = iso(startDate()); it.next = sd; it.anchor = sd; it.at0 = times[0] || null; it.prev = null; it.slots = null; }
+  if(editing && editing.wake !== null && wakeOff !== null && editing.wake !== wakeOff){
+    if(F.unit === "h") it.wakeAt = null;
+    else if(it.last !== iso(today())){ it.times = []; it.slots = null; }
+  }
+  if(changed){ it.wakeAt = null; var sd = iso(startDate()); it.next = sd; it.anchor = sd; it.at0 = times[0] || null; it.prev = null; it.slots = null; }
   var wasPaused = !!(editing && editing.paused); it.paused = !!F.paused;
   if(wasPaused && !it.paused && !changed && kind !== "window"){   /* resume from today, not from the past */
     var td0 = today(), ni = norm(it);
