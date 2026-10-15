@@ -415,6 +415,7 @@ body{font-size:16px;letter-spacing:-.011em}
 .tm{font-weight:600}
 .ck{width:28px;height:28px;border:1.75px solid var(--line2);color:#fff}
 .row.late .ck{border-color:var(--late)} .row.late .tm{color:var(--late)}
+.row.lt .ck{border-color:var(--late)} .row.lt .tm{color:var(--late)}
 .row.done .ck,.ck.on{background:var(--ok);border-color:var(--ok)}
 .row.done .nm{text-decoration-color:var(--ink3)}
 .row.missed .ck{border-color:var(--red)} .row.missed .nm{text-decoration-color:var(--red)}
@@ -956,7 +957,7 @@ function describe(it){
   if(it.last && !it.times.length){ var g = diff(parse(it.last), today()); s += " · " + t("lastDone", {x: g <= 0 ? t("agoToday") : t("ago", {n:g})}); }
   return s;
 }
-function rel(s){ if(s.state === "missed") return t("missedTag"); return s.state === "done" ? (s.at ? t("doneAt", {t:ft(s.at)}) : "") : s.state === "now" ? (s.delta >= -2 ? t("nowTag") : t("dueAgo", {x:dur(s.delta)})) : s.state === "late" ? t("lateX", {x:dur(s.delta)}) : t("inX", {x:dur(s.delta)}); }
+function rel(s){ if(s.state === "missed") return t("missedTag"); return s.state === "done" ? (s.at ? t("doneAt", {t:ft(s.at)}) : "") : s.state === "now" ? (s.delta >= -2 ? t("nowTag") : t("lateX", {x:dur(s.delta)})) : s.state === "late" ? t("lateX", {x:dur(s.delta)}) : t("inX", {x:dur(s.delta)}); }
 
 /* ---------- render ---------- */
 var expanded = false, lastHTML = "";
@@ -1023,8 +1024,8 @@ function render(){
       var placed = false;
       m.slots.forEach(function(s){
         if(!placed && s.min > nm){ placed = true; fx += '<div class="nowline"><b>'+ft(nm)+'</b></div>'; }
-        var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" ? "tnow" : s.state === "late" || s.state === "missed" ? "late" : "")+'">'+esc(r)+'</span>' : '';
-        fx += row("timed " + (s.state === "now" ? "due" : s.state), "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(s.time)}) + " · " : "") + describe(s.it), tag);
+        var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" && s.delta >= -2 ? "tnow" : s.state === "now" || s.state === "late" || s.state === "missed" ? "late" : "")+'">'+esc(r)+'</span>' : '';
+        fx += row("timed " + (s.state === "now" ? (s.delta >= -2 ? "due" : "due lt") : s.state), "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(s.time)}) + " · " : "") + describe(s.it), tag);
       });
       if(!placed) fx += '<div class="nowline"><b>'+ft(nm)+'</b></div>';
     }
@@ -1072,7 +1073,7 @@ function nowCard(m){
   var s = null, kind = "";
   var late = m.slots.filter(function(x){ return x.state === "late"; }), cur = m.slots.filter(function(x){ return x.state === "now"; }), soon = m.slots.filter(function(x){ return x.state === "soon"; });
   var anyOpen = m.any.filter(function(a){ return !a.done; });
-  if(cur.length){ s = cur[0]; kind = cur[0].delta >= -2 ? "kNow" : "kDue"; }
+  if(cur.length){ s = cur.filter(function(x){ return x.delta >= -2; })[0] || cur[0]; kind = s.delta >= -2 ? "kNow" : "kLate"; }
   else if(soon.length && soon[0].delta <= 15){ s = soon[0]; kind = "kNext"; }
   else if(late.length){ s = late[late.length - 1]; kind = "kLate"; }
   else if(m.overdue.length){ s = {it:m.overdue[0].it, over:m.overdue[0].d}; kind = "kLate"; }
