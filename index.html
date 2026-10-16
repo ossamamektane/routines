@@ -463,7 +463,13 @@ html[data-theme="dark"] .wk-k{color:#ffb340}
 .wk-s{color:var(--ink2);font-size:14px;margin-top:3px}
 .wk-b{display:flex;gap:8px;margin-top:14px}.wk-b .btn{height:46px;flex:1}.wk-b .btn:not(.y){background:var(--bg3)}
 .wakebar{display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:14px;padding:0 6px 0 14px;height:48px;margin:0 0 12px;box-shadow:var(--card-sh)}
-.wk-i{color:#e08a00}.wk-t{flex:1;font-size:15px;font-weight:500}
+.wk-i{color:#e08a00}.wk-t{flex:1;font-size:15px;font-weight:500;line-height:1.2;min-width:0}
+button.wk-t{text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 0}
+.wk-t small b{color:var(--y);font-weight:600}
+.wk-t small{display:block;font-size:12.5px;font-weight:400;color:var(--ink2);margin-top:2px}
+.wakebar{height:auto;min-height:52px;padding-top:6px;padding-bottom:6px}
+.wk-n{height:34px;padding:0 12px;border-radius:999px;background:var(--ysoft);color:var(--y);font-weight:600;font-size:14px;white-space:nowrap;flex:none}
+.wk-n:active{opacity:.7}
 .wk-e{height:36px;padding:0 14px;border-radius:10px;color:var(--y);font-weight:600;font-size:15px}.wk-e:active{background:var(--ysoft)}
 .row.wwait .tm{color:#e08a00}
 .tchips{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
@@ -697,9 +703,11 @@ var T = {
   noneYet:["No tasks yet","Aucune tâche","لا توجد مهام"], dueToday:["Today","Aujourd’hui","اليوم"], thisP:["this {p}","ce/cette {p}","هذا {p}"],
   noneDue:["Nothing due right now","Rien de prévu maintenant","لا شيء مستحق الآن"], openToday:["{n} left today, whenever suits you","{n} à faire aujourd’hui, quand vous voulez","{n} متبقية اليوم، متى شئت"],
   repairedN:["Fixed {n} tasks moved by a clock change","{n} tâches corrigées après un changement d’heure","صُحّحت {n} مهام بعد تغيير الساعة"],
-  wakeQ:["When did you wake up?","À quelle heure vous êtes-vous levé ?","متى استيقظت؟"], wakeHi:["Good morning","Bonjour","صباح الخير"],
-  wakeStarts:["Starts {list}","Lance {list}","يبدأ {list}"], wakeNow:["Just now","À l’instant","الآن"], wakeEarlier:["Earlier…","Plus tôt…","قبل ذلك…"],
-  wokeAt:["Woke up at {t}","Réveil à {t}","استيقظت في {t}"], edit:["Edit","Modifier","تعديل"], wakeSet:["Woke up at {t} · {n} tasks timed","Réveil à {t} · {n} tâches planifiées","استيقظت {t} · جُدولت {n} مهام"],
+  wakeQ:["When did you wake up?","À quelle heure vous êtes-vous levé ?","متى استيقظت؟"], wakeHi:["Start your day","Commencer la journée","ابدأ يومك"],
+  wakeStarts:["Used for {list}","Utilisé pour {list}","يُستخدم لـ {list}"], wakeNow:["Now","Maintenant","الآن"], wakeEarlier:["Set Time","Choisir…","تحديد الوقت"],
+  justNow:["Just now","À l’instant","الآن"], newWake:["New Day","Nouvelle journée","يوم جديد"], yest:["Yesterday","Hier","أمس"],
+  newDayQ:["New Day","Nouvelle journée","يوم جديد"], newDaySub:["When did you wake up? Today’s tasks restart from this time.","À quelle heure vous êtes-vous levé ? Les tâches repartent de cette heure.","متى استيقظت؟ تبدأ مهام اليوم من هذا الوقت."],
+  wokeAt:["Woke up at {t}","Réveil à {t}","استيقظت في {t}"], edit:["Edit","Modifier","تعديل"], wakeSet:["Woke up at {t} · {n} tasks scheduled","Réveil à {t} · {n} tâches planifiées","استيقظت {t} · جُدولت {n} مهام"],
   wakeClear:["Clear wake time","Effacer l’heure du réveil","مسح وقت الاستيقاظ"], wakeCleared:["Wake time cleared","Heure du réveil effacée","مُسح وقت الاستيقاظ"],
   wakeOff:["{x} after waking","{x} après le réveil","بعد {x} من الاستيقاظ"], wake0:["right after waking","dès le réveil","فور الاستيقاظ"],
   fromWake:["starts {x} after waking","dès {x} après le réveil","يبدأ بعد {x} من الاستيقاظ"], fromWake0:["starts when you wake up","dès le réveil","يبدأ عند الاستيقاظ"], wakeLbl2:["First one after waking","Premier après le réveil","الأول بعد الاستيقاظ"],
@@ -709,7 +717,7 @@ var T = {
   setTimeB:["Set time","Heure…","الوقت…"], didAt:["Done at {t}","Fait à {t}","أُنجز في {t}"], futureNo:["That time hasn’t happened yet","Cette heure n’est pas encore passée","هذا الوقت لم يأتِ بعد"],
   otherTime:["I did it at another time…","Fait à une autre heure…","أنجزتها في وقت آخر…"],
   dueAgo:["due {x} ago","prévu il y a {x}","مستحق منذ {x}"], kDue:["Due","À faire","مستحق"],
-  midnight:["after midnight — use tomorrow","après minuit","بعد منتصف الليل"], plusX:["+{x}","+{x}","+{x}"],
+  midnight:["past the end of your day","après la fin de votre journée","بعد نهاية يومك"], plusX:["+{x}","+{x}","+{x}"],
 };
 var LANGS = ["en","fr","ar"];
 var lang = get("r.lang") || (navigator.language || "en").slice(0,2);
@@ -740,8 +748,8 @@ function pushSnap(j){
   }
   set("r.snaps", JSON.stringify(a));
 }
-function getWake(){ try{ var w = JSON.parse(get("r.wake") || "null"); return w && w.date === iso(today()) && mins(w.t) !== null ? mins(w.t) : null; }catch(e){ return null; } }
-function setWake(m){ if(m === null) set("r.wake", "null"); else set("r.wake", JSON.stringify({date:iso(today()), t:hm(m)})); }
+function getWake(){ var d = dayInfo(); return d.wake === null ? null : Math.round((d.wake - d.mid) / 6e4); }
+function setWake(m){ if(m === null) set("r.wake", "null"); else { var at = dayInfo().mid + m*6e4; set("r.wake", JSON.stringify({at:at, date:iso(new Date(at)), t:hm(m)})); } DI = null; }
 function wakeTasks(){ return items.filter(function(i){ return i.wake !== null && !i.paused; }); }
 var warped = null, repaired = 0;
 /* A task can be at most ~2 repeats ahead of today (done today + one skip). Anything further
@@ -797,7 +805,30 @@ function guardClock(){
 }
 
 /* ---------- dates ---------- */
-function today(){ var d = new Date(); d.setHours(12,0,0,0); return d; }
+/* A day runs from the wake-up you log until you start a new day — nothing is guessed. With no wake-up
+   logged, days follow the calendar. While a day runs, clock times between midnight and the wake-up
+   (at most 6 AM) belong to that night, not to the next day. */
+var DI = null;
+function wakeRec(){ try{ var w = JSON.parse(get("r.wake") || "null"); if(!w) return null;
+  if(typeof w.at === "number") return w;   /* {at, up?} — up = "I haven't slept yet" */
+  if(w.date && /^\d\d:\d\d$/.test(w.t || "")){ var p = w.date.split("-"); return {at:new Date(+p[0], p[1]-1, +p[2], +w.t.slice(0,2), +w.t.slice(3)).getTime()}; }
+  }catch(e){} return null; }
+function dayInfo(){
+  var now = Date.now(), raw = get("r.wake") || "";
+  if(DI && DI.raw === raw && Math.abs(now - DI.t) < 1000) return DI;
+  var w = wakeRec(), cur = !!(w && w.at <= now + 6e5), D, cut = 0;
+  if(cur){ var wd = new Date(w.at); D = new Date(wd); D.setHours(12,0,0,0); cut = Math.min(360, wd.getHours()*60 + wd.getMinutes()); }
+  else { D = new Date(now); D.setHours(12,0,0,0); }
+  var mid = new Date(D); mid.setHours(0,0,0,0);
+  DI = {raw:raw, t:now, D:D, mid:mid.getTime(), cut:cut, wake:cur ? w.at : null,
+};
+  return DI;
+}
+function today(){ return new Date(dayInfo().D); }
+function CUT(){ return dayInfo().cut; }
+function DE(){ return CUT() + 1440; }
+function lm(x){ var m = typeof x === "number" ? x : mins(x); if(m === null) return null; return m < CUT() ? m + 1440 : m; }
+function ldate(X){ return iso(new Date(X.getTime() - CUT()*6e4)); }
 function iso(d){ return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
 function parse(s){ var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ""); return p ? new Date(+p[1], p[2]-1, +p[3], 12) : null; }
 function addDays(d, n){ var x = new Date(d); x.setDate(x.getDate()+n); return x; }
@@ -807,19 +838,19 @@ function step(it, d, k){ if(it.unit === "m") return addMonths(d, it.n*k, parse(i
 function nextFixed(it, after){ var a = parse(it.anchor) || parse(it.next), d = a, k = 0; while(d <= after && k < 5000){ k++; d = step(it, a, k); } return d; }
 function firstOnOrAfter(it, day){ return nextFixed(it, addDays(day, -1)); }
 function fmt(d, o){ try{ return new Intl.DateTimeFormat(lang === "ar" ? "ar-MA" : lang, o).format(d); }catch(e){ return iso(d); } }
-function hm(m){ return ("0"+Math.floor(m/60)).slice(-2)+":"+("0"+(m%60)).slice(-2); }
+function hm(m){ m = ((m % 1440) + 1440) % 1440; return ("0"+Math.floor(m/60)).slice(-2)+":"+("0"+(m%60)).slice(-2); }
 /* display only: data always stays HH:MM */
 function h12(){ return get("r.clock") === "12"; }
 function ap(h){ return lang === "ar" ? (h < 12 ? "ص" : "م") : (h < 12 ? "AM" : "PM"); }
-function ft(x){ var m = typeof x === "number" ? x : mins(x); if(m === null || m === undefined) return x || ""; if(!h12()) return hm(m); var h = Math.floor(m/60); return ((h % 12) || 12)+":"+("0"+(m%60)).slice(-2)+" "+ap(h); }
-function ftH(x){ var m = typeof x === "number" ? x : mins(x); if(!h12()) return hm(m); var h = Math.floor(m/60); return ((h % 12) || 12)+":"+("0"+(m%60)).slice(-2)+'<i class="ap">'+ap(h)+'</i>'; }
+function ft(x){ var m = typeof x === "number" ? x : mins(x); if(m === null || m === undefined) return x || ""; m = ((m % 1440) + 1440) % 1440; if(!h12()) return hm(m); var h = Math.floor(m/60); return ((h % 12) || 12)+":"+("0"+(m%60)).slice(-2)+" "+ap(h); }
+function ftH(x){ var m = typeof x === "number" ? x : mins(x); m = ((m % 1440) + 1440) % 1440; if(!h12()) return hm(m); var h = Math.floor(m/60); return ((h % 12) || 12)+":"+("0"+(m%60)).slice(-2)+'<i class="ap">'+ap(h)+'</i>'; }
 function mins(s){ var p = /^(\d{1,2}):(\d{2})$/.exec(s || ""); return p ? (+p[1])*60 + (+p[2]) : null; }
-function nowMin(){ var d = new Date(); return d.getHours()*60 + d.getMinutes(); }
+function nowMin(){ return Math.floor((Date.now() - dayInfo().mid) / 6e4); }
 function dur(m){ m = Math.abs(m); var h = Math.floor(m/60), r = m % 60; return h ? h+t("hAbbr")+(r ? " "+r+t("mAb") : "") : r+" "+t("min"); }
 function weekStart(d){ return addDays(d, -((d.getDay()+6) % 7)); }
 function period(p, d){ if(p === "d") return [d, d]; if(p === "m") return [new Date(d.getFullYear(), d.getMonth(), 1, 12), new Date(d.getFullYear(), d.getMonth()+1, 0, 12)]; var w = weekStart(d); return [w, addDays(w, 6)]; }
-function dt(d, h){ var x = parse(d) || today(), m = mins(h) || 0; return new Date(x.getFullYear(), x.getMonth(), x.getDate(), Math.floor(m/60), m % 60, 0, 0); }
-function setOcc(it, D){ it.next = iso(D); it.times = [hm(D.getHours()*60 + D.getMinutes())]; }
+function dt(d, h){ var x = parse(d) || today(), m = lm(h) || 0; return new Date(x.getFullYear(), x.getMonth(), x.getDate(), Math.floor(m/60), m % 60, 0, 0); }
+function setOcc(it, D){ it.next = ldate(D); it.times = [hm(D.getHours()*60 + D.getMinutes())]; }
 function gridA(it){ return dt(it.anchor, it.at0); }
 function gridAfter(it, x){ var A = gridA(it), s = it.n*36e5; if(x < A) return A; return new Date(A.getTime() + (Math.floor((x - A)/s) + 1)*s); }
 function gridLE(it, x){ var A = gridA(it), s = it.n*36e5; if(x < A) return A; return new Date(A.getTime() + Math.floor((x - A)/s)*s); }
@@ -860,7 +891,7 @@ function roll(){
       var doneT = on1 && Object.keys(it.slots.done).length > 0;
       if(it.slots && it.slots.date < T0){ it.slots = null; ch = true; }
       if(key && it.wakeAt !== key){
-        if(!doneT){ var st = Math.min(1435, wk + it.wake); setOcc(it, dt(T0, hm(st))); it.anchor = T0; it.at0 = hm(st); }
+        if(!doneT){ var st = Math.min(DE() - 5, wk + it.wake); setOcc(it, dt(T0, hm(st))); it.anchor = T0; it.at0 = hm(st); }
         it.wakeAt = key; ch = true;
       }
       if(!key || it.wakeAt !== key) return;
@@ -869,7 +900,7 @@ function roll(){
       if(parse(it.next) < td){ it.next = T0; ch = true; }
       var on = it.slots && it.slots.date === T0, did = it.last === T0 || (on && Object.keys(it.slots.done).length);
       if(!did && it.next === T0){
-        var want = wk === null ? [] : [hm(Math.min(1435, wk + it.wake))];
+        var want = wk === null ? [] : [hm(Math.min(DE() - 5, wk + it.wake))];
         if(want.join() !== it.times.join()){ it.times = want; it.at0 = want[0] || null; if(on) it.slots.snz = {}; ch = true; }
       }
       if(it.slots && it.slots.date < T0){ it.slots = null; ch = true; }
@@ -892,10 +923,10 @@ function model(){
   var td = today(), T0 = iso(td), nm = nowMin();
   var m = {overdue:[], slots:[], any:[], dayWin:[], week:[], month:[], coming:[], done:0, total:0, pending:0, ontime:0};
   function slot(it, tm, sd, snz, forceDone){
-    var v = sd[tm], eff = (snz && snz[tm]) || tm, mm = mins(eff);
+    var v = sd[tm], eff = (snz && snz[tm]) || tm, mm = lm(eff);
     var s = {it:it, time:tm, eff:eff, snoozed:eff !== tm, min:mm, delta:mm - nm, at:null, done:false, missed:false};
     if(v === "×"){ s.missed = true; s.state = "missed"; }
-    else if(v || forceDone){ s.done = true; s.at = v || null; s.state = "done"; if(!v || mins(v) <= mins(tm) + 30) m.ontime++; }
+    else if(v || forceDone){ s.done = true; s.at = v || null; s.state = "done"; if(!v || lm(v) <= lm(tm) + 30) m.ontime++; }
     else s.state = s.delta < -30 ? "late" : s.delta <= 0 ? "now" : "soon";
     m.slots.push(s); m.total++;
     if(s.done) m.done++; else if(s.state === "late" || s.state === "now") m.pending++;
@@ -988,7 +1019,7 @@ function sec3(title, count, right, fixed, free){
   return '<section class="sec"><div class="sh2"><h2>'+esc(title)+'</h2>'+(count ? '<span>'+count+'</span>' : '')+(right || "")+'</div>'+
     mini("fixedD", fixed) + mini("flexD", free) + '</section>';
 }
-function left(l, list){ var open = list.filter(function(o){ return !o.met; }).length; if(l === 0) return '<em class="tab'+(open ? " red" : "")+'">'+esc(t("leftX", {x:dur(1440 - nowMin())}))+'</em>'; return '<em class="'+(l <= 1 && open ? "red" : "")+'">'+esc(l === 0 ? t("lastDay") : t("daysLeft", {n:l + 1}))+'</em>'; }
+function left(l, list){ var open = list.filter(function(o){ return !o.met; }).length; if(l === 0) return '<em class="tab'+(open ? " red" : "")+'">'+esc(t("leftX", {x:dur(Math.max(0, DE() - nowMin()))}))+'</em>'; return '<em class="'+(l <= 1 && open ? "red" : "")+'">'+esc(l === 0 ? t("lastDay") : t("daysLeft", {n:l + 1}))+'</em>'; }
 function render(){
   guardClock(); roll();
   var td = today(), m = model(), nm = nowMin(), out = "";
@@ -1038,14 +1069,14 @@ function render(){
     /* nothing ahead on the clock: point "now" at what's still open, or drop it when the day is finished */
     if(m.slots.length && !placed){
       if(freeOpen && !m.any.some(function(a){ return !a.done; })) freeHTML = nl + freeHTML;
-      else if(openFix) fx += nl.replace('class="nowline"', 'class="nowline end"');
+      else if(openFix && !m.any.some(function(a){ return !a.done; })) fx += nl.replace('class="nowline"', 'class="nowline end"');
     }
     if(m.slots.length && !placed && m.any.some(function(a){ return !a.done; })) placed = "any";
     var anyNl = placed === "any";
     m.any.forEach(function(a){ if(anyNl && !a.done){ anyNl = false; fx += nl; } var ww = a.it.wake !== null && !a.done; fx += row(a.done ? "done" : ww ? "wwait" : "", a.wh ? "wakeEdit" : "item", a.it.id, "", ww && m.slots.length ? '<div class="tm">'+ico("sun", 18)+'</div>' : gap, a.it.name, describe(a.it), ww ? '<span class="tag">'+esc(t("wakeWait"))+'</span>' : ""); });
     var todayLeft = m.overdue.length + m.slots.filter(function(s){ return !s.done && !s.missed; }).length + m.any.filter(function(a){ return !a.done; }).length + m.dayWin.filter(function(o){ return !o.met; }).length;
-    var tl = 1440 - nm, dueLeft = todayLeft > 0;
-    out += sec3(t("schedule"), todayLeft, '<em class="tab'+(tl <= 120 && dueLeft ? " red" : "")+'">'+esc(t("leftX", {x:dur(tl)}))+'</em>', fx, freeHTML);
+    var tl = getWake() !== null ? 0 : Math.max(0, DE() - nm), dueLeft = todayLeft > 0;
+    out += sec3(t("schedule"), todayLeft, tl <= 0 ? "" : '<em class="tab'+(tl <= 120 && dueLeft ? " red" : "")+'">'+esc(t("leftX", {x:dur(tl)}))+'</em>', fx, freeHTML);
     // THIS WEEK / THIS MONTH
     var wl = diff(td, parse(we)), ml = diff(td, parse(me));
     out += sec3(t("week"), cw.length + m.week.filter(function(o){ return !o.met; }).length, left(wl, m.week), cw.map(function(c){ return comingRow(c, false); }).join(""), m.week.map(winRow).join(""));
@@ -1065,9 +1096,16 @@ function render(){
   try{ if(navigator.setAppBadge){ if(m.pending) navigator.setAppBadge(m.pending); else navigator.clearAppBadge(); } }catch(e){}
 }
 function wakeCard(){
-  var wt = wakeTasks(); if(!wt.length) return "";
+  var wt = wakeTasks(); if(!wt.length && getWake() === null) return "";
   var w = getWake();
-  if(w !== null) return '<div class="wakebar"><span class="wk-i">'+ico("sun", 18)+'</span><span class="wk-t">'+esc(t("wokeAt", {t:ft(w)}))+'</span><button type="button" class="wk-e" data-act="wakeEdit">'+esc(t("edit"))+'</button></div>';
+  var DIx = dayInfo();
+  if(w !== null){
+    var ago = Math.max(0, Math.round((Date.now() - DIx.wake) / 6e4)), when = new Date(DIx.wake).toDateString() !== new Date().toDateString();
+    var sm = (when ? t("yest") + " · " : "") + (ago < 2 ? t("justNow") : t("agoX", {x:dur(ago >= 60 ? Math.floor(ago/60)*60 : ago)}));
+    var nb = true;
+    return '<div class="wakebar"><span class="wk-i">'+ico("sun", 18)+'</span><button type="button" class="wk-t" data-act="wakeEdit">'+esc(t("wokeAt", {t:ft(w)}))+'<small>'+esc(sm)+(nb ? ' · <b>'+esc(t("edit"))+'</b>' : '')+'</small></button>'+
+      (nb ? '<button type="button" class="wk-n" data-act="wakeNew">'+esc(t("newWake"))+'</button>' : '<button type="button" class="wk-e" data-act="wakeEdit">'+esc(t("edit"))+'</button>')+'</div>';
+  }
   var list = wt.slice().sort(function(a, b){ return a.wake - b.wake; }).slice(0, 3).map(function(i){ return i.name + " +" + dur(i.wake); }).join(", ") + (wt.length > 3 ? " …" : "");
   return '<div class="wake"><div class="wk-k">'+ico("sun", 16)+esc(t("wakeHi"))+'</div><div class="wk-q">'+esc(t("wakeQ"))+'</div><div class="wk-s">'+esc(t("wakeStarts", {list:list}))+'</div>'+
     '<div class="wk-b"><button type="button" class="btn y" data-act="wakeNow">'+ico("check", 18, 2.6)+esc(t("wakeNow"))+'</button><button type="button" class="btn" data-act="wakeEdit">'+ico("clock", 18)+esc(t("wakeEarlier"))+'</button></div></div>';
@@ -1076,6 +1114,11 @@ function wakeIs(m, how){
   var before = snap(); setWake(m); lastHTML = ""; render(); buzz(14);
   var n = items.filter(function(i){ return i.wake !== null && !i.paused && i.next === iso(today()) && i.times.length && !(i.last === iso(today())); }).length;
   toast(m === null ? t("wakeCleared") : t("wakeSet", {t:ft(m), n:n}));
+}
+function newWake(){
+  var nm = nowMin();
+  openTime({title:t("newDayQ"), sub:t("newDaySub"), init:nm, chips:[[t("wakeNow"), nm]].concat([15, 30, 60, 120, 180, 240].map(function(x){ return [t("agoX", {x:dur(x)}), nm - x]; })),
+    clear:null, cb:function(m){ wakeIs(m); }});
 }
 function editWake(){
   var w = getWake(), nm = nowMin();
@@ -1121,7 +1164,7 @@ function advance(it, o){
     var occ = dt(it.next, it.times[0]), now = new Date(), base, N; now.setSeconds(0, 0);
     base = o.at ? dt(T0, o.at) : now;
     if(it.kind === "fixed" && !it.shift) N = gridAfter(it, now > occ ? now : occ);
-    else { N = new Date(base.getTime() + it.n*36e5); if(it.shift && !o.missed){ it.anchor = iso(base); it.at0 = hm(base.getHours()*60 + base.getMinutes()); } }
+    else { N = new Date(base.getTime() + it.n*36e5); if(it.shift && !o.missed){ it.anchor = ldate(base); it.at0 = hm(base.getHours()*60 + base.getMinutes()); } }
     setOcc(it, N); return;
   }
   if(it.kind === "fixed" && !it.shift) it.next = iso(nextFixed(it, parse(it.next) > td ? parse(it.next) : td));
@@ -1146,7 +1189,7 @@ function apply(kind, id, time, o){
     if(!it.slots.snz) it.slots.snz = {};
     var cur = it.slots.done[time], has = cur && cur !== "×";
     if(o.later){
-      var nv = o.to && mins(o.to) !== null ? mins(o.to) : Math.min(1435, nowMin() + 30);
+      var nv = o.to && mins(o.to) !== null ? lm(o.to) : Math.min(DE() - 5, nowMin() + 30);
       if(it.unit === "h") setOcc(it, dt(T0, hm(nv))); else it.slots.snz[time] = hm(nv);
       res.later = hm(nv); return res;
     }
@@ -1196,7 +1239,7 @@ function act(kind, id, time, el, o){
   var extra = null;
   if(res.on && kind === "slot" && !(o && o.at)){
     extra = {label:t("setTimeB"), fn:function(){
-      didAt(res.it.name, info ? mins(info.eff) : mins(time), function(mm){
+      didAt(res.it.name, info ? lm(info.eff) : lm(time), function(mm){
         items = JSON.parse(before).map(norm).filter(Boolean);
         apply(kind, id, time, {at:hm(mm)}); save(); lastHTML = ""; render(); buzz(10);
         toast(t("didAt", {t:ft(mm)}), before);
@@ -1214,6 +1257,7 @@ document.addEventListener("click", function(e){
   if(a === "all"){ openAll(); return; }
   if(a === "wakeNow"){ wakeIs(nowMin()); return; }
   if(a === "wakeEdit"){ editWake(); return; }
+  if(a === "wakeNew"){ newWake(); return; }
   var host = b.closest("[data-id]"); if(!host) return;
   var id = host.getAttribute("data-id");
   if(a === "edit") openSheet(find(id));
@@ -1241,7 +1285,7 @@ $("extraBtn").addEventListener("click", function(){ var x = toastExtra; toastExt
     var host = c.closest("[data-id]"); if(!host || host.classList.contains("done")) return;
     tmr = setTimeout(function(){ fired = true; buzz(18);
       var id = host.getAttribute("data-id"), time = host.getAttribute("data-time"), info = slotInfo(id, time), it = find(id); if(!it) return;
-      didAt(it.name, info ? mins(info.eff) : mins(time), function(mm){ act("slot", id, time, null, {at:hm(mm)}); });
+      didAt(it.name, info ? lm(info.eff) : lm(time), function(mm){ act("slot", id, time, null, {at:hm(mm)}); });
     }, 520);
   }, {passive:true});
   function stop(){ clearTimeout(tmr); }
@@ -1314,7 +1358,7 @@ function paintCatch(dir){
 function answer(how, ox){
   var q = cq[ci]; if(!q) return;
   if(how === "allnow" || how === "allmissed") return answerAll(how === "allmissed");
-  if(how === "other" && !ox){ didAt(q.name, q.time ? mins(q.eff) : null, function(mm){ answer("other", {at:hm(mm)}); }); return; }
+  if(how === "other" && !ox){ didAt(q.name, q.time ? lm(q.eff) : null, function(mm){ answer("other", {at:hm(mm)}); }); return; }
   if(how === "later" && !ox){ openLater(q.kind, q.id, q.time, function(o){ answer("later", o); }); return; }
   var o = how === "ontime" ? (q.time ? {at:q.eff} : {}) : how === "now" ? {} : how === "missed" ? {missed:true} : ox;
   var card = $("cCard").firstChild; if(card) card.classList.add(how === "missed" || how === "later" ? "out-l" : "out-r");
@@ -1489,7 +1533,7 @@ function buildWheels(){
   wheelBuilt = true;
 }
 function setWheels(m, smooth, p){
-  var bh = smooth ? "smooth" : "auto"; p = p || "w";
+  m = ((m % 1440) + 1440) % 1440; var bh = smooth ? "smooth" : "auto"; p = p || "w";
   $(p+"H").scrollTo({top:Math.floor(m/60)*40, behavior:bh});
   $(p+"M").scrollTo({top:Math.min(11, Math.round((m % 60)/5))*40, behavior:bh});
 }
@@ -1507,11 +1551,10 @@ function openLater(kind, id, time, cb){
     var nm = nowMin(), busy = model().slots.filter(function(s){ return !s.done && !s.missed && !(s.it.id === id && s.time === time); });
     var near = function(v){ for(var i = 0; i < busy.length; i++) if(Math.abs(busy[i].min - v) < 20) return busy[i].it.name; return null; };
     var r5 = function(v){ return Math.ceil(v/5)*5; };
-    var free = r5(nm + 15); while(free <= 1435 && near(free)) free += 5;
-    if(free <= 1435) o += '<button type="button" class="lopt best wide" data-to="'+hm(free)+'"><b>'+esc(t("nextFree"))+'</b><span>'+ft(free)+' · '+esc(t("inX", {x:dur(free - nm)}))+'</span></button>';
+    var free = r5(nm + 15), END = DE() - 5; while(free <= END && near(free)) free += 5;
     [15, 30, 60, 120, 180, 240].forEach(function(x){
-      var v = r5(nm + x), c = v <= 1435 ? near(v) : null;
-      o += '<button type="button" class="lopt" data-to="'+hm(Math.min(v, 1435))+'"'+(v > 1435 ? ' disabled' : '')+'><b>'+esc(t("plusX", {x:dur(x)}))+'</b><span>'+(v > 1435 ? esc(t("midnight")) : ft(v))+'</span>'+(c ? '<em>'+esc(t("withX", {n:c}))+'</em>' : '')+'</button>';
+      var v = r5(nm + x), c = v <= END ? near(v) : null;
+      o += '<button type="button" class="lopt" data-to="'+hm(Math.min(v, END))+'"'+(v > END ? ' disabled' : '')+'><b>'+esc(t("plusX", {x:dur(x)}))+'</b><span>'+(v > END ? esc(t("midnight")) : ft(v))+'</span>'+(c ? '<em>'+esc(t("withX", {n:c}))+'</em>' : '')+'</button>';
     });
     o += '<button type="button" class="lopt wide" data-pick="1"><b>'+esc(t("pickTime"))+'</b><span>'+ico("clock", 16).replace("<svg", '<svg style="display:inline-block;vertical-align:-3px"')+'</span></button>';
   } else {
@@ -1526,13 +1569,13 @@ function closeLater(){ $("lScrim").classList.remove("on"); $("later").classList.
 function pickLater(o){ var x = LT; closeLater(); if(x){ o.later = true; x.cb(o); } }
 $("lOpts").addEventListener("click", function(e){
   var b = e.target.closest(".lopt"); if(!b || b.disabled) return;
-  if(b.getAttribute("data-pick")){ if(!wheelBuilt) buildWheels(); $("lPicker").classList.add("on"); var v = Math.min(1435, Math.ceil((nowMin() + 60)/5)*5); requestAnimationFrame(function(){ setWheels(v, false, "l"); $("lPicker").scrollIntoView({block:"nearest", behavior:"smooth"}); }); return; }
+  if(b.getAttribute("data-pick")){ if(!wheelBuilt) buildWheels(); $("lPicker").classList.add("on"); var v = Math.min(DE() - 5, Math.ceil((nowMin() + 60)/5)*5); requestAnimationFrame(function(){ setWheels(v, false, "l"); $("lPicker").scrollIntoView({block:"nearest", behavior:"smooth"}); }); return; }
   buzz(8);
   if(b.getAttribute("data-days")) pickLater({days:+b.getAttribute("data-days")}); else pickLater({to:b.getAttribute("data-to")});
 });
 $("lpCancel").addEventListener("click", function(){ $("lPicker").classList.remove("on"); });
 $("lpSet").addEventListener("click", function(){
-  var v = readWheels("l");
+  var v = lm(readWheels("l"));
   if(v <= nowMin()){ $("lWarn").textContent = t("pastTime"); $("lWarn").style.display = ""; buzz([10, 40, 10]); return; }
   pickLater({to:hm(v)});
 });
@@ -1581,7 +1624,7 @@ function pickTime(m){
   var x = TS; closeTime(); if(x) x.cb(m);
 }
 $("tChips").addEventListener("click", function(e){ var b = e.target.closest("[data-tm]"); if(b){ buzz(8); pickTime(+b.getAttribute("data-tm")); } });
-$("tSet").addEventListener("click", function(){ pickTime(readWheels("t")); });
+$("tSet").addEventListener("click", function(){ var c = readWheels("t"), nm = nowMin(), v = c; while(v + 1440 <= nm) v += 1440; pickTime(v); });
 $("tClear").addEventListener("click", function(){ var x = TS; closeTime(); if(x && x.onClear) x.onClear(); });
 $("tScrim").addEventListener("click", closeTime); $("tClose").addEventListener("click", closeTime);
 /* "I did it at…" for a timed check */
@@ -1596,7 +1639,7 @@ function openPicker(){
   if(!wheelBuilt) buildWheels();
   $("picker").classList.add("on");
   var v = F.unit === "h" && F.times.length ? mins(F.times[0]) : F.times.length ? mins(F.times[F.times.length-1]) + 60 : Math.ceil((nowMin() + 1)/60)*60;
-  if(v >= 1440) v = 1380;
+  if(v >= DE()) v = DE() - 60; v = v % 1440;
   requestAnimationFrame(function(){ setWheels(v, false); $("picker").scrollIntoView({block:"nearest", behavior:"smooth"}); });
 }
 $("pCancel").addEventListener("click", function(){ $("picker").classList.remove("on"); });
