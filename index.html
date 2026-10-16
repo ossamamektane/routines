@@ -505,6 +505,21 @@ html[data-theme="dark"] .sw{background:rgba(120,120,128,.5)}
 .day h1{white-space:normal;overflow:visible;text-overflow:clip}
 @media (max-width:360px){.hdr-in{padding:0 12px;gap:6px}.logo{font-size:0;gap:0}.ib{min-width:38px;height:38px;padding:0 8px}.day h1{font-size:23px}}
 @media (max-width:360px){#fKind .line{flex-wrap:wrap}#fKind .line .seg{flex:1 1 100%}}
+.in.desc{display:block;margin-top:8px;height:auto;min-height:50px;padding:13px 14px;resize:none;line-height:1.4;font:inherit;font-size:16px;color:inherit;overflow-y:auto}
+.ds{font-size:13px;color:var(--ink2);margin-top:2px;line-height:1.35;white-space:pre-line;overflow-wrap:anywhere}
+.row.done .ds,#all .row.paused .ds{color:var(--ink3)}
+.now-d{font-size:14px;opacity:.75;margin-bottom:2px;line-height:1.35;white-space:pre-line;overflow-wrap:anywhere}
+.nm,.sb,.now-n,.now-r{unicode-bidi:plaintext}
+html[dir=rtl] .nm,html[dir=rtl] .sb,html[dir=rtl] .now-n,html[dir=rtl] .now-r{text-align:right}
+html[dir=rtl] .ds,html[dir=rtl] .now-d{width:fit-content;max-width:100%;margin-left:auto;margin-right:0}
+/* motion: one curve everywhere (iOS sheet curve), quicker on the way out */
+.sheet{transition:transform .28s cubic-bezier(.32,.72,0,1),visibility 0s linear .28s;will-change:transform}
+.sheet.on{transition:transform .44s cubic-bezier(.32,.72,0,1),visibility 0s}
+.sheet.drag{transition:none}
+.scrim{transition:opacity .28s ease}
+.scrim.on{transition:opacity .36s ease}
+@media (min-width:700px){.sheet{transition:transform .22s cubic-bezier(.32,.72,0,1),opacity .18s,visibility 0s linear .22s}.sheet.on{transition:transform .32s cubic-bezier(.32,.72,0,1),opacity .2s,visibility 0s}}
+html.lock .sbody,html.lock #aList{overscroll-behavior:contain}
 </style>
 </head>
 <body>
@@ -553,7 +568,8 @@ html[data-theme="dark"] .sw{background:rgba(120,120,128,.5)}
   <div class="sbody" id="sbody">
     <div class="fl">
       <div class="lb"><span data-t="fName"></span></div>
-      <input class="in" id="fName" type="text" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="120" enterkeyhint="done">
+      <input class="in" id="fName" dir="auto" type="text" autocomplete="off" autocorrect="off" spellcheck="false" maxlength="120" enterkeyhint="done">
+      <textarea class="in desc" id="fDesc" dir="auto" rows="1" maxlength="500" autocomplete="off"></textarea>
     </div>
     <div class="fl"><div class="lb"><span data-t="fKind"></span></div><div class="kinds" id="fKind"></div></div>
 
@@ -674,7 +690,7 @@ var T = {
   lateD:["{n}d late","{n} j de retard","متأخر {n} ي"], tomorrow:["Tomorrow","Demain","غدًا"],
   showMore:["Show {n} more","Afficher {n} de plus","عرض {n} أخرى"], showLess:["Show less","Moins","أقل"],
   emptyT:["No tasks yet","Aucune tâche","لا توجد مهام بعد"], emptyP:["Add what you do regularly. Check it off.","Ajoutez ce que vous faites souvent. Cochez.","أضف ما تفعله بانتظام. ثم أنجزه."], addFirst:["Add your first task","Ajouter une tâche","أضف أول مهمة"],
-  newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["Name","Nom","الاسم"], ph:["Task name","Nom de la tâche","اسم المهمة"],
+  newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["Name","Nom","الاسم"], descPh:["Description (optional)","Description (facultatif)","الوصف (اختياري)"], ph:["Task name","Nom de la tâche","اسم المهمة"],
   fKind:["Every","Tous les","كل"],
   fixedD:["Fixed date","Date fixe","تاريخ ثابت"], fixedT:["Fixed time","Heure fixe","وقت ثابت"],
   fixedS:["On the calendar","Au calendrier","في التقويم"], fixedSH:["On the clock: {x}","Sur l’horloge : {x}","على الساعة: {x}"],
@@ -756,7 +772,17 @@ function esc(s){ return String(s).replace(/[&<>"]/g, function(c){ return {"&":"&
 
 /* ---------- storage ---------- */
 function get(k){ try{ return localStorage.getItem(k); }catch(e){ return null; } }
-function set(k, v){ try{ localStorage.setItem(k, v); }catch(e){} }
+function set(k, v){   /* storage full: give up old safety snapshots before ever losing real data */
+  for(var i = 0; i < 6; i++){
+    try{ localStorage.setItem(k, v); return true; }catch(e){
+      var a; try{ a = JSON.parse(localStorage.getItem("r.snaps") || "[]"); }catch(x){ a = []; }
+      if(k === "r.snaps"){ try{ var b = JSON.parse(v); if(b.length < 2) return false; v = JSON.stringify(b.slice(Math.floor(b.length / 2))); }catch(x){ return false; } continue; }
+      if(!a.length) return false;
+      try{ localStorage.setItem("r.snaps", JSON.stringify(a.slice(Math.ceil(a.length / 2)))); if(a.length === 1) localStorage.removeItem("r.snaps"); }catch(x){ try{ localStorage.removeItem("r.snaps"); }catch(y){} }
+    }
+  }
+  return false;
+}
 var items = [], hist = {};
 try{ items = JSON.parse(get("r.items") || "[]"); if(!Array.isArray(items)) items = []; }catch(e){ items = []; }
 try{ hist = JSON.parse(get("r.hist") || "{}") || {}; }catch(e){ hist = {}; }
@@ -922,7 +948,7 @@ function norm(i){
   it.last = parse(i.last) ? i.last : null;
   it.slots = i.slots && i.slots.date ? {date:i.slots.date, done:i.slots.done || {}, snz:i.slots.snz || {}} : null;
   it.log = Array.isArray(i.log) ? i.log.filter(parse) : [];
-  it.prev = i.prev || null; it.paused = !!i.paused;
+  it.prev = i.prev || null; it.paused = !!i.paused; it.desc = typeof i.desc === "string" ? i.desc.trim().slice(0,500) : "";
   it.wake = typeof i.wake === "number" && i.wake >= 0 && i.wake <= 1080 ? Math.round(i.wake) : null;
   if(it.wake !== null && (it.kind === "window" || !((it.unit === "d" && it.n === 1) || it.unit === "h"))) it.wake = null;
   it.wakeAt = it.wake !== null && typeof i.wakeAt === "string" ? i.wakeAt : null;
@@ -1052,11 +1078,12 @@ function rel(s){ if(s.state === "missed") return t("missedTag"); return s.state 
 
 /* ---------- render ---------- */
 var expanded = false, lastHTML = "";
+function descH(it){ return it && it.desc ? '<div class="ds" dir="auto">'+esc(it.desc)+'</div>' : ""; }
 function row(cls, act, id, extra, left, name, sub, right, ckOn){
   var tin = /^<span class="tag/.test(right || "") ? '<div>' + right.replace('class="tag', 'class="tagin tag') + '</div>' : "";
   return '<div class="row '+cls+'" data-id="'+id+'"'+extra+'>'+
     '<button class="ck'+(ckOn ? " on" : "")+'" type="button" data-act="'+act+'" aria-label="'+esc(name)+'">'+TICK+'</button>'+left+
-    '<button class="bd" type="button" data-act="edit"><div class="nm">'+esc(name)+'</div>'+(sub ? '<div class="sb">'+esc(sub)+'</div>' : '')+tin+'</button>'+right+'</div>';
+    '<button class="bd" type="button" data-act="edit"><div class="nm">'+esc(name)+'</div>'+descH(find(id))+(sub ? '<div class="sb">'+esc(sub)+'</div>' : '')+tin+'</button>'+right+'</div>';
 }
 function sec(title, count, right, body){
   return '<section class="sec"><div class="sh2"><h2>'+esc(title)+'</h2>'+(count ? '<span>'+count+'</span>' : '')+(right || "")+'</div><div class="box">'+body+'</div></section>';
@@ -1075,6 +1102,24 @@ function sec3(title, count, right, fixed, free){
     mini("fixedD", fixed) + mini("flexD", free) + '</section>';
 }
 function left(l, list){ var open = list.filter(function(o){ return !o.met; }).length; if(l === 0) return '<em class="tab'+(open ? " red" : "")+'">'+esc(t("leftX", {x:dur(Math.max(0, DE() - nowMin()))}))+'</em>'; return '<em class="'+(l <= 1 && open ? "red" : "")+'">'+esc(l === 0 ? t("lastDay") : t("daysLeft", {n:l + 1}))+'</em>'; }
+/* smooth list changes: rows glide to their new place, new rows fade in */
+var RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches, flipOn = false;
+function flipKey(e){ if(e.classList.contains("row")) return "r" + e.getAttribute("data-id") + "|" + (e.getAttribute("data-time") || ""); if(e.classList.contains("nowline")) return "nl"; if(e.classList.contains("sec")){ var h = e.querySelector("h2"); return "s" + (h ? h.textContent : ""); } if(e.classList.contains("more")) return "m" + e.className; return null; }
+function flipEls(){ return [].slice.call($("app").querySelectorAll(".sec,.row,.nowline,.more")); }
+function flipFirst(){ if(RM || !flipOn || document.hidden) return null; var f = {}; flipEls().forEach(function(e){ var k = flipKey(e); if(k) f[k] = e.getBoundingClientRect().top; }); return f; }
+function flipPlay(f){
+  flipOn = true; if(!f || !Element.prototype.animate) return;
+  var secD = new Map(), ease = "cubic-bezier(.32,.72,0,1)";
+  flipEls().forEach(function(e){
+    var k = flipKey(e); if(!k) return;
+    var r = e.getBoundingClientRect(); if(r.bottom < -200 || r.top > window.innerHeight + 200) return;
+    var sec = e.classList.contains("sec") ? null : e.closest(".sec"), base = sec && secD.has(sec) ? secD.get(sec) : 0;
+    if(f[k] === undefined){ if(!e.classList.contains("sec")) e.animate([{opacity:0, transform:"translateY(6px)"}, {opacity:1, transform:"none"}], {duration:260, easing:"ease-out", delay:80}); else secD.set(e, 0); return; }
+    var d = f[k] - r.top; if(e.classList.contains("sec")) secD.set(e, d);
+    d -= base; if(Math.abs(d) < 1) return;
+    e.animate([{transform:"translateY(" + d + "px)"}, {transform:"none"}], {duration:380, easing:ease});
+  });
+}
 function render(){
   guardClock(); roll();
   var td = today(), m = model(), nm = nowMin(), out = "";
@@ -1143,7 +1188,7 @@ function render(){
     var np = items.filter(function(i){ return i.paused; }).length;
     out += '<button class="more alltasks" type="button" data-act="all">'+ico("dots", 16)+esc(t("allT"))+' · '+items.length+(np ? ' · '+esc(t("pausedN", {n:np})) : '')+'</button>';
   }
-  if(out !== lastHTML){ $("app").innerHTML = out; lastHTML = out; }
+  if(out !== lastHTML){ var fp = flipFirst(); $("app").innerHTML = out; lastHTML = out; flipPlay(fp); }
   if(warped){ var wb = warped; warped = null; repaired = 0; setTimeout(function(){ toast(t("clockBack"), wb); }, 300); }
   else if(repaired){ var rn = repaired; repaired = 0; setTimeout(function(){ toast(t("repairedN", {n:rn})); }, 300); }
   $("allCount").textContent = items.length || "";
@@ -1201,11 +1246,37 @@ function nowCard(m){
   else { act = "item"; r = s.over ? t("lateD", {n:-s.over}) : describe(s.it); }
   var owed = late.length + m.overdue.length;
   return '<div class="now k-'+kind+'" data-id="'+s.it.id+'"'+attr+'><div class="now-tx"><div class="now-k">'+(s.time ? '<span class="tab">'+ft(s.eff || s.time)+'</span> · ' : '')+esc(t(kind))+'</div>'+
-    '<div class="now-n">'+esc(s.it.name)+'</div><div class="now-r">'+esc(r)+'</div>'+'<div class="now-acts">'+(owed > 1 || (owed && kind !== "kLate") ? '<button class="cchip" type="button" data-act="catch">'+ico("undo", 16)+esc(t("catchBtn"))+' · '+owed+'</button>' : '')+(act !== "win" ? '<button class="cchip ghost" type="button" data-act="later">'+ico("clock", 16)+esc(t("laterChip"))+'</button>' : '')+'</div></div>'+
+    '<div class="now-n">'+esc(s.it.name)+'</div>'+(s.it.desc ? '<div class="now-d" dir="auto">'+esc(s.it.desc)+'</div>' : '')+'<div class="now-r">'+esc(r)+'</div>'+'<div class="now-acts">'+(owed > 1 || (owed && kind !== "kLate") ? '<button class="cchip" type="button" data-act="catch">'+ico("undo", 16)+esc(t("catchBtn"))+' · '+owed+'</button>' : '')+(act !== "win" ? '<button class="cchip ghost" type="button" data-act="later">'+ico("clock", 16)+esc(t("laterChip"))+'</button>' : '')+'</div></div>'+
     '<button class="bigck" type="button" data-act="'+act+'" aria-label="'+esc(s.it.name)+'">'+ico("check", 28, 3)+'</button></div>';
 }
 
 /* ---------- actions ---------- */
+/* while any sheet is open the page behind it does not move: no scroll, no rubber-band, no drift after typing */
+var LK = {on:false, y:0, ly:0, lx:0};
+function lockSync(){
+  var o = !!document.querySelector(".sheet.on");
+  if(o && !LK.on){ LK.on = true; LK.y = window.pageYOffset; document.documentElement.classList.add("lock"); }
+  else if(!o && LK.on){ LK.on = false; document.documentElement.classList.remove("lock"); if(window.pageYOffset !== LK.y) window.scrollTo(0, LK.y); }
+}
+document.addEventListener("touchstart", function(e){ if(LK.on && e.touches.length === 1){ LK.ly = e.touches[0].clientY; LK.lx = e.touches[0].clientX; } }, {passive:true});
+document.addEventListener("touchmove", function(e){
+  if(!LK.on || e.touches.length !== 1 || !e.cancelable) return;
+  var y = e.touches[0].clientY, x = e.touches[0].clientX, dy = y - LK.ly, dx = x - LK.lx; LK.ly = y; LK.lx = x;
+  var sh = e.target.closest && e.target.closest(".sheet.on, .menu");
+  if(!sh){ e.preventDefault(); return; }
+  for(var el = e.target; el && el !== sh.parentNode; el = el.parentElement){
+    var cs = getComputedStyle(el);
+    if(Math.abs(dx) > Math.abs(dy)){ if(/auto|scroll/.test(cs.overflowX) && el.scrollWidth > el.clientWidth + 1) return; continue; }
+    if(/auto|scroll/.test(cs.overflowY) && el.scrollHeight > el.clientHeight + 1){
+      if(dy > 0 && el.scrollTop <= 0) continue;
+      if(dy < 0 && el.scrollTop + el.clientHeight >= el.scrollHeight - 1) continue;
+      return;
+    }
+  }
+  e.preventDefault();
+}, {passive:false});
+window.addEventListener("scroll", function(){ if(LK.on && !document.querySelector("input:focus,textarea:focus") && window.pageYOffset !== LK.y) window.scrollTo(0, LK.y); }, {passive:true});
+document.addEventListener("focusout", function(){ if(LK.on) setTimeout(function(){ if(LK.on && !document.querySelector("input:focus,textarea:focus")) window.scrollTo(0, LK.y); }, 80); }, true);
 function find(id){ for(var i = 0; i < items.length; i++) if(items[i].id === id) return items[i]; return null; }
 function snap(){ return JSON.stringify(items); }
 function buzz(p){ try{ if(navigator.vibrate) navigator.vibrate(p || 12); }catch(e){} }
@@ -1390,9 +1461,9 @@ function lateQueue(){
 function openCatch(){
   cq = lateQueue(); ci = 0; if(!cq.length) return;
   set("r.catchAt", String(Date.now()));
-  paintCatch(); $("cScrim").classList.add("on"); $("catch").classList.add("on"); document.documentElement.classList.add("lock");
+  paintCatch(); $("cScrim").classList.add("on"); $("catch").classList.add("on"); lockSync();
 }
-function closeCatch(){ $("cScrim").classList.remove("on"); $("catch").classList.remove("on"); document.documentElement.classList.remove("lock"); lastHTML = ""; render(); }
+function closeCatch(){ $("cScrim").classList.remove("on"); $("catch").classList.remove("on"); lockSync(); lastHTML = ""; render(); }
 function paintCatch(dir){
   var c = $("cCard");
   if(ci >= cq.length){
@@ -1462,14 +1533,15 @@ function openSheet(it){
   }
   $("shTitle").textContent = t(it ? "editT" : "newT");
   $("fName").value = F.name; $("fName").placeholder = t("ph");
+  $("fDesc").value = it && it.desc || ""; $("fDesc").placeholder = t("descPh"); requestAnimationFrame(growDesc);
   $("delBtn").style.display = it ? "" : "none"; $("skipBtn").style.display = it && it.kind !== "window" ? "" : "none";
   disarm(); $("picker").classList.remove("on");
   paintSheet(); $("sbody").scrollTop = 0;
-  $("scrim").classList.add("on"); $("sheet").classList.add("on"); document.documentElement.classList.add("lock");
+  $("scrim").classList.add("on"); $("sheet").classList.add("on"); lockSync();
 }
 function closeSheet(){
   $("scrim").classList.remove("on"); $("sheet").classList.remove("on"); $("sheet").style.transform = "";
-  document.documentElement.classList.remove("lock"); if(document.activeElement) document.activeElement.blur();
+  lockSync(); if(document.activeElement) document.activeElement.blur();
 }
 function N(){ return F.nBy[F.unit]; }
 function canWake(){ return F.mode !== "flex" && ((F.unit === "d" && N() === 1) || F.unit === "h"); }
@@ -1564,6 +1636,8 @@ $("sheet").addEventListener("click", function(e){
   else if(e.target.closest("#tAdd")){ openPicker(); }
 });
 $("fName").addEventListener("input", function(){ F.name = this.value; });
+function growDesc(){ var e = $("fDesc"); e.style.height = "auto"; e.style.height = Math.min(e.scrollHeight + 4, 180) + "px"; }
+$("fDesc").addEventListener("input", growDesc);
 $("fName").addEventListener("keydown", function(e){ if(e.key === "Enter"){ e.preventDefault(); this.blur(); } });
 $("addBtn").addEventListener("click", function(){ closeMenus(); openSheet(null); });
 $("scrim").addEventListener("click", closeSheet);
@@ -1619,9 +1693,9 @@ function openLater(kind, id, time, cb){
     });
   }
   $("lOpts").innerHTML = o; $("lPicker").classList.remove("on"); $("lWarn").style.display = "none";
-  $("lScrim").classList.add("on"); $("later").classList.add("on"); document.documentElement.classList.add("lock");
+  $("lScrim").classList.add("on"); $("later").classList.add("on"); lockSync();
 }
-function closeLater(){ $("lScrim").classList.remove("on"); $("later").classList.remove("on"); if(!$("catch").classList.contains("on") && !$("sheet").classList.contains("on")) document.documentElement.classList.remove("lock"); LT = null; }
+function closeLater(){ $("lScrim").classList.remove("on"); $("later").classList.remove("on"); if(!$("catch").classList.contains("on") && !$("sheet").classList.contains("on")) lockSync(); LT = null; }
 function pickLater(o){ var x = LT; closeLater(); if(x){ o.later = true; x.cb(o); } }
 $("lOpts").addEventListener("click", function(e){
   var b = e.target.closest(".lopt"); if(!b || b.disabled) return;
@@ -1647,15 +1721,15 @@ function allTag(it){
 function allSort(a, b){ var ka = a.kind === "window" ? "9" : a.next + (a.times[0] || "99"), kb = b.kind === "window" ? "9" : b.next + (b.times[0] || "99"); return ka < kb ? -1 : ka > kb ? 1 : a.name.localeCompare(b.name); }
 function paintAll(){
   var act = items.filter(function(i){ return !i.paused; }).sort(allSort), pz = items.filter(function(i){ return i.paused; }).sort(allSort);
-  function list(arr){ return arr.map(function(it){ return '<button type="button" class="row'+(it.paused ? " paused" : "")+'" data-aid="'+it.id+'" style="width:100%"><span class="bd"><span class="nm" style="display:block">'+esc(it.name)+'</span><span class="sb" style="display:block">'+esc(describe(it))+'</span></span>'+allTag(it)+'</button>'; }).join(""); }
+  function list(arr){ return arr.map(function(it){ return '<button type="button" class="row'+(it.paused ? " paused" : "")+'" data-aid="'+it.id+'" style="width:100%"><span class="bd"><span class="nm" style="display:block">'+esc(it.name)+'</span>'+(it.desc ? '<span class="ds" dir="auto" style="display:block">'+esc(it.desc)+'</span>' : '')+'<span class="sb" style="display:block">'+esc(describe(it))+'</span></span>'+allTag(it)+'</button>'; }).join(""); }
   var h = "";
   if(!items.length) h = '<p class="hint">'+esc(t("noneYet"))+'</p>';
   if(act.length) h += '<div class="mini">'+esc(t("activeT"))+' · '+act.length+'</div><div class="box">'+list(act)+'</div>';
   if(pz.length) h += '<div class="mini">'+esc(t("pausedT"))+' · '+pz.length+'</div><div class="box">'+list(pz)+'</div>';
   $("aList").innerHTML = h;
 }
-function openAll(){ closeMenus(); hideToast(); paintAll(); $("aList").scrollTop = 0; $("aScrim").classList.add("on"); $("all").classList.add("on"); document.documentElement.classList.add("lock"); }
-function closeAll(){ $("aScrim").classList.remove("on"); $("all").classList.remove("on"); document.documentElement.classList.remove("lock"); }
+function openAll(){ closeMenus(); hideToast(); paintAll(); $("aList").scrollTop = 0; $("aScrim").classList.add("on"); $("all").classList.add("on"); lockSync(); }
+function closeAll(){ $("aScrim").classList.remove("on"); $("all").classList.remove("on"); lockSync(); }
 $("aList").addEventListener("click", function(e){ var b = e.target.closest("[data-aid]"); if(!b) return; var it = find(b.getAttribute("data-aid")); closeAll(); if(it) setTimeout(function(){ openSheet(it); }, 120); });
 $("aScrim").addEventListener("click", closeAll); $("aClose").addEventListener("click", closeAll);
 $("aAdd").addEventListener("click", function(){ closeAll(); setTimeout(function(){ openSheet(null); }, 120); });
@@ -1683,11 +1757,11 @@ function openTime(o){
   TDD = ts < d0.getTime() ? -1 : 0; var dd = new Date(ts);
   $("tWarn").style.display = "none";
   $("tClear").style.display = o.clear ? "" : "none"; $("tClear").textContent = o.clear || "";
-  $("tScrim").classList.add("on"); $("tsheet").classList.add("on"); document.documentElement.classList.add("lock");
+  $("tScrim").classList.add("on"); $("tsheet").classList.add("on"); lockSync();
   requestAnimationFrame(function(){ setWheels(dd.getHours()*60 + dd.getMinutes(), false, "t"); setTimeout(tPaint, 30); });
 }
 function closeTime(){ $("tScrim").classList.remove("on"); $("tsheet").classList.remove("on"); TS = null;
-  if(!["sheet","catch","later","all"].some(function(id){ return $(id).classList.contains("on"); })) document.documentElement.classList.remove("lock"); }
+  if(!["sheet","catch","later","all"].some(function(id){ return $(id).classList.contains("on"); })) lockSync(); }
 function pickTime(m){
   if(m > nowMin()){ $("tWarn").textContent = t("futureNo"); $("tWarn").style.display = ""; buzz([10, 40, 10]); return; }
   var x = TS; closeTime(); if(x) x.cb(m);
@@ -1733,7 +1807,7 @@ $("saveBtn").addEventListener("click", function(){
   var a0 = editing && (parse(editing.anchor) || parse(editing.next));
   var changed = !editing || editing.kind !== kind || editing.n !== n || editing.unit !== F.unit || editing.period !== (flex ? F.unit : editing.period)
     || (F.unit === "w" && a0 && (a0.getDay()+6)%7 !== F.wd) || (F.unit === "m" && a0 && a0.getDate() !== F.md) || (F.unit === "h" && wakeOff === null && editing.times[0] !== times[0]) || (editing.wake === null) !== (wakeOff === null);
-  it.name = name; it.kind = kind; it.n = n; it.unit = flex ? "d" : F.unit; it.quota = F.quota; it.period = flex ? F.unit : "w"; it.times = times; it.shift = !flex && F.shift && wakeOff === null; it.wake = wakeOff;
+  it.name = name; it.desc = $("fDesc").value.trim().slice(0,500); it.kind = kind; it.n = n; it.unit = flex ? "d" : F.unit; it.quota = F.quota; it.period = flex ? F.unit : "w"; it.times = times; it.shift = !flex && F.shift && wakeOff === null; it.wake = wakeOff;
   if(editing && editing.wake !== null && wakeOff !== null && editing.wake !== wakeOff){
     if(F.unit === "h") it.wakeAt = null;
     else if(it.last !== iso(today())){ it.times = []; it.slots = null; }
@@ -1768,12 +1842,19 @@ $("delBtn").addEventListener("click", function(){
   save(); closeSheet(); lastHTML = ""; render(); toast(t("removed"), before);
 });
 
-/* swipe the sheet down to close */
+/* swipe any sheet down to close */
+[["catch", function(){ closeCatch(); }], ["all", function(){ closeAll(); }], ["tsheet", function(){ closeTime(); }], ["later", function(){ closeLater(); }]].forEach(function(x){
+  var sh = $(x[0]), y0 = null, dy = 0;
+  function start(e){ if(window.innerWidth >= 700 || e.target.closest("button")) return; y0 = e.touches[0].clientY; dy = 0; sh.classList.add("drag"); }
+  function move(e){ if(y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); sh.style.transform = "translateY(" + dy + "px)"; if(e.cancelable) e.preventDefault(); }
+  function end(){ if(y0 === null) return; sh.classList.remove("drag"); y0 = null; sh.style.transform = ""; if(dy > 90) x[1](); }
+  [sh.querySelector(".sgrab"), sh.querySelector(".shd")].forEach(function(el){ if(!el) return; el.addEventListener("touchstart", start, {passive:true}); el.addEventListener("touchmove", move, {passive:false}); el.addEventListener("touchend", end); el.addEventListener("touchcancel", end); });
+});
 (function(){
   var y0 = null, dy = 0, sh = $("sheet");
   function start(e){ if(window.innerWidth >= 700) return; y0 = e.touches[0].clientY; dy = 0; sh.classList.add("drag"); }
   function move(e){ if(y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); sh.style.transform = "translateY(" + dy + "px)"; if(e.cancelable) e.preventDefault(); }
-  function end(){ if(y0 === null) return; sh.classList.remove("drag"); y0 = null; if(dy > 90) closeSheet(); else sh.style.transform = ""; }
+  function end(){ if(y0 === null) return; sh.classList.remove("drag"); y0 = null; sh.style.transform = ""; if(dy > 90) closeSheet(); }
   [$("grab"), $("shHead")].forEach(function(el){ el.addEventListener("touchstart", start, {passive:true}); el.addEventListener("touchmove", move, {passive:false}); el.addEventListener("touchend", end); el.addEventListener("touchcancel", end); });
 })();
 
