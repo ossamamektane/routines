@@ -485,6 +485,26 @@ button.wk-t{text-align:start;white-space:nowrap;overflow:hidden;text-overflow:el
 html[data-theme="dark"] .sheet .sugg .chip:not(.on){background:#2c2c2e}
 .day h1{font-size:clamp(23px,6.6vw,30px);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .day>div:first-child{min-width:0}
+
+/* UI polish v3 */
+.sum{margin:10px 16px 14px;align-items:center}
+.sfoot{border-top:0;padding-top:0}
+.sw{background:rgba(120,120,128,.2)}
+html[data-theme="dark"] .sw{background:rgba(120,120,128,.36)}
+.tgl.on .sw{background:var(--ok)}
+.tgl > .optx:first-child{padding:10px 14px;min-height:56px}
+.line .step button{width:40px}
+.line .seg{min-width:0}
+.line .seg button{min-width:0;padding:0 2px;font-size:13.5px;white-space:nowrap;overflow:hidden;text-overflow:clip}
+.seg button{min-width:0}
+.seg{background:rgba(118,118,128,.12);gap:2px}
+html[data-theme="dark"] .seg{background:rgba(118,118,128,.24)}
+.seg button.on{background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04)}
+html[data-theme="dark"] .seg button.on{background:#636366;box-shadow:none}
+html[data-theme="dark"] .sw{background:rgba(120,120,128,.5)}
+.day h1{white-space:normal;overflow:visible;text-overflow:clip}
+@media (max-width:360px){.hdr-in{padding:0 12px;gap:6px}.logo{font-size:0;gap:0}.ib{min-width:38px;height:38px;padding:0 8px}.day h1{font-size:23px}}
+@media (max-width:360px){#fKind .line{flex-wrap:wrap}#fKind .line .seg{flex:1 1 100%}}
 </style>
 </head>
 <body>
@@ -1742,10 +1762,14 @@ $("delBtn").addEventListener("click", function(){
 })();
 
 /* ---------- menus ---------- */
+/* keep dropdowns fully on screen on narrow phones */
+function fitMenu(m){ if(!m) return; m.style.transform = ""; m.style.marginInlineEnd = "0px"; var r = m.getBoundingClientRect(), W = document.documentElement.clientWidth, dx = 0;
+  if(r.left < 12) dx = 12 - r.left; else if(r.right > W - 12) dx = (W - 12) - r.right;
+  if(dx) m.style.translate = dx + "px 0"; else m.style.translate = ""; }
 function closeMenus(){ document.querySelectorAll(".dd.open").forEach(function(d){ d.classList.remove("open"); d.querySelector("[data-dd]").setAttribute("aria-expanded", "false"); }); }
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-dd]");
-  if(b){ var p = b.parentNode, was = p.classList.contains("open"); closeMenus(); if(!was){ p.classList.add("open"); b.setAttribute("aria-expanded", "true"); buzz(4); } return; }
+  if(b){ var p = b.parentNode, was = p.classList.contains("open"); closeMenus(); if(!was){ p.classList.add("open"); b.setAttribute("aria-expanded", "true"); buzz(4); fitMenu(p.querySelector(".menu")); } return; }
   if(!e.target.closest(".menu")) closeMenus();
 });
 document.querySelectorAll("[data-theme-choice]").forEach(function(b){ b.addEventListener("click", function(){ set("r.theme", b.getAttribute("data-theme-choice")); applyTheme(); closeMenus(); }); });
