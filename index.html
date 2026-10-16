@@ -778,9 +778,9 @@ function pushSnap(j){
 }
 function getWake(){ var d = dayInfo(); return d.wake === null ? null : Math.round((d.wake - d.mid) / 6e4); }
 function setWake(m){
-  var d0 = iso(today());
+  var d0 = iso(today()), c0 = CUT();
   if(m === null) set("r.wake", "null"); else { var at = dayInfo().mid + m*6e4; set("r.wake", JSON.stringify({at:at, date:iso(new Date(at)), t:hm(m)})); }
-  DI = null; var d1 = iso(today());
+  DI = null; var d1 = iso(today()); reencode(c0);
   if(d1 < d0){   /* the day moved back (e.g. "I woke up yesterday at 6:40 PM" after midnight): return to that day's last saved state */
     var a = snaps(), pick = null;
     for(var i = a.length - 1; i >= 0; i--){ var sd = a[i].d || iso(new Date(a[i].ts)); if(sd === d1){ pick = a[i]; break; } }
@@ -856,7 +856,7 @@ function dayInfo(){
   var now = Date.now(), raw = get("r.wake") || "";
   if(DI && DI.raw === raw && Math.abs(now - DI.t) < 1000) return DI;
   var w = wakeRec(), cur = !!(w && w.at <= now + 6e5), D, cut = 0;
-  if(cur){ var wd = new Date(w.at); D = new Date(wd); D.setHours(12,0,0,0); cut = Math.min(360, wd.getHours()*60 + wd.getMinutes()); }
+  if(cur){ var wd = new Date(w.at); D = new Date(wd); D.setHours(12,0,0,0); cut = wd.getHours()*60 + wd.getMinutes(); }
   else { D = new Date(now); D.setHours(12,0,0,0); }
   var mid = new Date(D); mid.setHours(0,0,0,0);
   DI = {raw:raw, t:now, D:D, mid:mid.getTime(), cut:cut, wake:cur ? w.at : null,
@@ -868,6 +868,20 @@ function CUT(){ return dayInfo().cut; }
 function DE(){ return CUT() + 1440; }
 function lm(x){ var m = typeof x === "number" ? x : mins(x); if(m === null) return null; return m < CUT() ? m + 1440 : m; }
 function ldate(X){ return iso(new Date(X.getTime() - CUT()*6e4)); }
+/* Hourly tasks are stored as (day, clock time). The day boundary is the wake-up time, so when it changes
+   re-encode every hourly occurrence so the real moment stays exactly the same. */
+function dtC(d, h, cut){ var x = parse(d), m = mins(h); if(!x || m === null) return null; m = m < cut ? m + 1440 : m; return new Date(x.getFullYear(), x.getMonth(), x.getDate(), Math.floor(m/60), m % 60, 0, 0); }
+function reencode(cut0){
+  var cut1 = CUT(); if(cut0 === cut1) return;
+  items.forEach(function(it){
+    if(it.unit !== "h" || it.kind === "window") return;
+    var r = it.times[0] && dtC(it.next, it.times[0], cut0); if(r) it.next = ldate(r);
+    var a = it.at0 && dtC(it.anchor, it.at0, cut0); if(a) it.anchor = ldate(a);
+    if(it.prev && it.prev.times && it.prev.times[0] && it.prev.next){ var p = dtC(it.prev.next, it.prev.times[0], cut0); if(p) it.prev.next = ldate(p); }
+    if(it.prev && it.prev.anchor && it.prev.at0){ var q = dtC(it.prev.anchor, it.prev.at0, cut0); if(q) it.prev.anchor = ldate(q); }
+  });
+  set("r.items", JSON.stringify(items));
+}
 function iso(d){ return d.getFullYear()+"-"+("0"+(d.getMonth()+1)).slice(-2)+"-"+("0"+d.getDate()).slice(-2); }
 function parse(s){ var p = /^(\d{4})-(\d{2})-(\d{2})$/.exec(s || ""); return p ? new Date(+p[1], p[2]-1, +p[3], 12) : null; }
 function addDays(d, n){ var x = new Date(d); x.setDate(x.getDate()+n); return x; }
@@ -918,6 +932,8 @@ function norm(i){
   return it;
 }
 items = items.map(norm).filter(Boolean);
+/* one-time: the day boundary used to be capped at 6 AM — move stored hourly times to the new boundary */
+if(get("r.cutv") !== "2"){ (function(){ var d = dayInfo(), old = d.wake === null ? 0 : Math.min(360, d.cut); reencode(old); set("r.cutv", "2"); })(); }
 
 /* timed tasks belong to the clock: missed hours roll to today instead of piling up */
 function roll(){
@@ -1201,7 +1217,7 @@ function advance(it, o){
   if(!o.missed) it.last = T0;
   if(it.unit === "h"){
     var occ = dt(it.next, it.times[0]), now = new Date(), base, N; now.setSeconds(0, 0);
-    base = o.at ? dt(T0, o.at) : now;
+    base = o.at ? dt(T0, o.at) : now; if(base > now) base = new Date(base.getTime() - 864e5); /* a done time is never in the future: before wake-up = earlier, not tomorrow */
     if(it.kind === "fixed" && !it.shift) N = gridAfter(it, now > occ ? now : occ);
     else { N = new Date(base.getTime() + it.n*36e5); if(it.shift && !o.missed){ it.anchor = ldate(base); it.at0 = hm(base.getHours()*60 + base.getMinutes()); } }
     setOcc(it, N); return;
