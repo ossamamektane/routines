@@ -530,6 +530,9 @@ html[dir=rtl] .dsm{margin-left:auto;padding:4px 0 4px 10px}
 #all .ds{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
 .unset{font-size:15px;font-weight:500;color:var(--ink3);white-space:nowrap}
 .need{margin:8px 2px 0;font-size:13px;font-weight:600;color:var(--red);width:100%}
+.tm.day{display:block;width:56px;font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tm.day small{margin-top:2px;font-size:11px;white-space:nowrap}
+.h12 .tm.day{width:62px}
 </style>
 </head>
 <body>
@@ -739,7 +742,7 @@ var T = {
   notSet:["Not set","Non défini","غير محدد"], needWake:["Choose how long after waking","Choisissez combien de temps après le réveil","اختر كم بعد الاستيقاظ"], needStart:["Choose a start time","Choisissez une heure de début","اختر وقت البدء"], needName:["Give it a name first","Donnez-lui un nom","أعطها اسمًا"],
   eDay:["Every day","Tous les jours","كل يوم"], eWeekOn:["Every {w}","Chaque {w}","كل {w}"], eMonth:["Every month","Tous les mois","كل شهر"], eN:["Every {n} {u}","Tous les {n} {u}","كل {n} {u}"],
   uh:["hours","heures","ساعات"], u1h:["hour","heure","ساعة"], ud:["days","jours","أيام"], uw:["weeks","semaines","أسابيع"], um:["months","mois","أشهر"], u1d:["day","jour","يوم"], u1w:["week","semaine","أسبوع"], u1m:["month","mois","شهر"],
-  onDay:["on the {n}","le {n}","يوم {n}"], afterDone:["after done","après coup","بعد الإنجاز"], winSub:["{q} a {p}","{q} par {p}","{q} في {p}"],
+  onDay:["on the {n}","le {n}","يوم {n}"], afterDone:["restarts when checked","repart quand c’est coché","يُعاد من وقت الإنجاز"], onW:["on {w}","le {w}","يوم {w}"], atT:["at {t}","à {t}","في {t}"], stAt:["starts at {t}","dès {t}","يبدأ في {t}"], stFrom:["starts {d}","début : {d}","يبدأ {d}"], stonLbl:["Starts on","Commence le","يبدأ يوم"], stonDayLbl:["Starts on day","Commence le jour","يبدأ في يوم"], winSub:["{q} a {p}","{q} par {p}","{q} في {p}"],
   lastDone:["done {x}","fait {x}","أُنجز {x}"], ago:["{n}d ago","il y a {n} j","منذ {n} ي"], agoToday:["today","aujourd’hui","اليوم"],
   today:["Today","Aujourd’hui","اليوم"], nextWeek:["In a week","Dans 1 sem.","بعد أسبوع"],
   mAb:["m","min","د"], eOne:["Every {u}","Chaque {u}","كل {u}"], movedFrom:["moved from {t}","décalé de {t}","نُقل من {t}"],
@@ -836,6 +839,7 @@ function repairFuture(){
     if(it.last && it.last > T0){ it.last = null; bad = true; }
     var l = it.log.length; it.log = it.log.filter(function(d){ return d <= T0; }); if(l !== it.log.length) bad = true;
     if(it.slots && it.slots.date > T0){ it.slots = null; bad = true; }
+    if(it.dl && it.dl.date > T0){ it.dl = null; bad = true; }
     if(it.prev && it.prev.date > T0) it.prev = null;
     if(it.kind !== "window" && !it.paused){
       var nx = parse(it.next), lim;
@@ -865,6 +869,7 @@ function guardClock(){
       if(it.last && it.last > T0) it.last = null;
       it.log = it.log.filter(function(d){ return d <= T0; });
       if(it.slots && it.slots.date > T0) it.slots = null;
+      if(it.dl && it.dl.date > T0) it.dl = null;
       if(it.prev && it.prev.date > T0) it.prev = null;
     });
     Object.keys(hist).forEach(function(k){ if(k > T0) delete hist[k]; });
@@ -946,6 +951,10 @@ function gridLE(it, x){ var A = gridA(it), s = it.n*36e5; if(x < A) return A; re
 function uid(){ return Date.now().toString(36) + Math.random().toString(36).slice(2,6); }
 
 /* ---------- normalise (old exports still load) ---------- */
+/* what was checked today, per task. Scheduling (edits, skips, re-timing) never touches it,
+   so everything checked today stays visible until New Day. key: slot time, or "*" for untimed. */
+function dlGet(it){ return it.dl && it.dl.date === iso(today()) ? it.dl.k : {}; }
+function dlSet(it, k, v){ var T0 = iso(today()); if(!it.dl || it.dl.date !== T0) it.dl = {date:T0, k:{}}; if(v === null) delete it.dl.k[k]; else it.dl.k[k] = v; }
 function norm(i){
   if(!i || !i.name) return null;
   var it = {id:String(i.id || uid()), name:String(i.name).slice(0,120)};
@@ -958,7 +967,7 @@ function norm(i){
   it.last = parse(i.last) ? i.last : null;
   it.slots = i.slots && i.slots.date ? {date:i.slots.date, done:i.slots.done || {}, snz:i.slots.snz || {}} : null;
   it.log = Array.isArray(i.log) ? i.log.filter(parse) : [];
-  it.prev = i.prev || null; it.paused = !!i.paused; it.desc = typeof i.desc === "string" ? i.desc.trim().slice(0,500) : "";
+  it.prev = i.prev || null; it.paused = !!i.paused; it.dl = i.dl && parse(i.dl.date) && i.dl.k && typeof i.dl.k === "object" ? {date:i.dl.date, k:i.dl.k} : null; it.desc = typeof i.desc === "string" ? i.desc.trim().slice(0,500) : "";
   it.wake = typeof i.wake === "number" && i.wake >= 0 && i.wake <= 1080 ? Math.round(i.wake) : null;
   if(it.wake !== null && (it.kind === "window" || !((it.unit === "d" && it.n === 1) || it.unit === "h"))) it.wake = null;
   it.wakeAt = it.wake !== null && typeof i.wakeAt === "string" ? i.wakeAt : null;
@@ -968,6 +977,7 @@ function norm(i){
   return it;
 }
 items = items.map(norm).filter(Boolean);
+if(get("r.test") === "1") window.__R = {get items(){ return items; }, set items(v){ items = v; }, model:function(){ return model(); }, apply:function(a,b,c,d){ return apply(a,b,c,d); }, describe:function(i,f){ return describe(i,f); }, render:function(){ lastHTML = ""; render(); }, save:function(){ save(); }, today:function(){ return iso(today()); }, find:function(id){ return find(id); }, setWake:function(m){ setWake(m); }, nowMin:function(){ return nowMin(); }};
 /* one-time: the day boundary used to be capped at 6 AM — move stored hourly times to the new boundary */
 if(get("r.cutv") !== "2"){ (function(){ var d = dayInfo(), old = d.wake === null ? 0 : Math.min(360, d.cut); reencode(old); set("r.cutv", "2"); })(); }
 
@@ -976,6 +986,7 @@ function roll(){
   var td = today(), T0 = iso(td), ch = false, cut = iso(addDays(td, -70));
   var wk = getWake();
   items.forEach(function(it){
+    if(it.dl && it.dl.date < T0){ it.dl = null; ch = true; }
     if(it.paused) return;
     if(it.wake !== null && it.unit === "h"){   /* hourly, first one X after waking */
       var key = wk === null ? null : T0 + "|" + hm(wk), on1 = it.slots && it.slots.date === T0;
@@ -1019,10 +1030,19 @@ function model(){
     if(v === "×"){ s.missed = true; s.state = "missed"; }
     else if(v || forceDone){ s.done = true; s.at = v || null; s.state = "done"; if(!v || lm(v) <= lm(tm) + 30) m.ontime++; }
     else s.state = s.delta < -30 ? "late" : s.delta <= 0 ? "now" : "soon";
-    m.slots.push(s); m.total++;
+    m.slots.push(s); m.total++; if(it === CUR) SHOWN[tm] = 1;
     if(s.done) m.done++; else if(s.state === "late" || s.state === "now") m.pending++;
   }
+  var CUR = null, SHOWN = {}, ANYDONE = false;
+  function anyDone(it){ m.any.push({it:it, done:true}); m.total++; m.done++; ANYDONE = true; }
   items.forEach(function(it){
+    CUR = it; SHOWN = {}; ANYDONE = false;
+    var DL = dlGet(it);
+    one(it);
+    /* anything checked today that the schedule no longer shows (edited, skipped, paused…) */
+    Object.keys(DL).forEach(function(k){ if(k === "*"){ if(!ANYDONE) anyDone(it); } else if(!SHOWN[k] && mins(k) !== null) slot(it, k, DL, null, false); });
+  });
+  function one(it){
     if(it.paused) return;
     if(it.kind === "window"){
       var pr = period(it.period, td), a = iso(pr[0]), b = iso(pr[1]);
@@ -1033,7 +1053,7 @@ function model(){
       else (it.period === "m" ? m.month : m.week).push(o);
       return;
     }
-    var on = it.slots && it.slots.date === T0, sd = on ? it.slots.done : {}, snz = on ? it.slots.snz : null;
+    var on = it.slots && it.slots.date === T0, sd = on ? it.slots.done : {}, snz = on ? it.slots.snz : null, DL = dlGet(it), hasDL = Object.keys(DL).length > 0;
     if(it.unit === "h" && it.wake !== null){
       var wk0 = getWake();
       if(wk0 === null || it.wakeAt !== T0 + "|" + hm(wk0)){ m.any.push({it:it, done:false, wh:true}); m.total++; m.pending++; return; }
@@ -1047,15 +1067,15 @@ function model(){
     }
     var d = diff(td, parse(it.next)), doneToday = it.last === T0;
     if(it.times.length && (d === 0 || doneToday || (on && it.times.every(function(x){ return sd[x]; })))){
-      it.times.forEach(function(tm){ slot(it, tm, sd, snz, doneToday && d !== 0); });
+      if(!(d !== 0 && doneToday && hasDL)) it.times.forEach(function(tm){ slot(it, tm, sd, snz, doneToday && d !== 0); });   /* finished today: the done list says exactly what was done */
       if(d > 0) m.coming.push({it:it, d:d});
       return;
     }
     if(d < 0){ m.overdue.push({it:it, d:d}); m.total++; m.pending++; return; }
     if(d === 0){ m.any.push({it:it, done:false}); m.total++; m.pending++; return; }
-    if(doneToday){ m.any.push({it:it, done:true}); m.total++; m.done++; }
+    if(doneToday && !hasDL) anyDone(it);
     m.coming.push({it:it, d:d});
-  });
+  }
   m.slots.sort(function(a, b){ return a.min - b.min || a.it.name.localeCompare(b.it.name); });
   m.coming.sort(function(a, b){ return a.d - b.d || (a.it.times[0] || "99").localeCompare(b.it.times[0] || "99"); });
   m.overdue.sort(function(a, b){ return a.d - b.d; });
@@ -1069,20 +1089,43 @@ function model(){
 function ord(n){ if(lang !== "en") return lang === "fr" && n === 1 ? "1er" : n; var v = n % 100; return n + (v >= 11 && v <= 13 ? "th" : ["th","st","nd","rd"][n % 10] || "th"); }
 function every(it){ return it.n === 1 ? t("u1"+it.unit) : it.n + " " + t("u"+it.unit); }
 function qtxt(q){ return q === 1 ? t("once") : t("timesN", {n:q}); }
-function describe(it){
-  if(it.wake !== null && it.unit === "h") return (it.n === 1 ? t("eHour") : t("eN", {n:it.n, u:t("uh")})) + " · " + (it.wake ? t("fromWake", {x:dur(it.wake)}) : t("fromWake0")) + (it.shift ? " · " + t("afterDone") : "");
-  if(it.wake !== null && it.kind !== "window") return t("eDay") + " · " + (it.wake ? t("wakeOff", {x:dur(it.wake)}) : t("wake0")) + (it.shift ? " · " + t("afterDone") : "");
+/* One pattern everywhere: How often · When · Restart rule (· last done)
+   rows:   describe(it)        → "Every Monday · restarts when checked"
+   editor: describe(it, true)  → adds the clock time and the first date when it floats */
+function floats(it){ return it.kind === "flex" || !!it.shift; }
+/* "Every 3 days" — with French gender and Arabic number agreement */
+function inDays(d){
+  if(d === 1) return t("tomorrow");
+  if(d > 60){ var mo = Math.round(d / 30.4); return lang === "ar" ? "بعد " + (mo === 2 ? "شهرين" : mo <= 10 ? mo + " أشهر" : mo + " شهرًا") : t("inX", {x:mo + " " + t(mo === 1 ? "u1m" : "um")}); }
+  return lang === "ar" ? "بعد " + (d === 2 ? "يومين" : d <= 10 ? d + " أيام" : d + " يومًا") : t("inX", {x:d + " " + t("ud")});
+}
+function everyN(n, u){
+  if(lang === "ar"){ var du = {h:"ساعتين", d:"يومين", w:"أسبوعين", m:"شهرين"}, sg = {h:"ساعة", d:"يومًا", w:"أسبوعًا", m:"شهرًا"};
+    return n === 2 ? "كل " + du[u] : n <= 10 ? t("eN", {n:n, u:t("u" + u)}) : "كل " + n + " " + sg[u]; }
+  if(lang === "fr" && (u === "h" || u === "w")) return "Toutes les " + n + " " + t("u" + u);
+  return t("eN", {n:n, u:t("u" + u)});
+}
+function freq(it){
   if(it.kind === "window"){ var sp = t("some" + it.period); return it.quota > 1 ? t("timesN", {n:it.quota}) + " · " + sp.charAt(0).toLowerCase() + sp.slice(1) : sp; }
-  var s, a = parse(it.anchor) || parse(it.next);
-  if(it.unit === "h") return (it.n === 1 ? t("eHour") : t("eN", {n:it.n, u:t("uh")})) + (it.kind === "flex" || it.shift ? " · " + t("afterDone") : "");
-  if(it.unit === "d" && it.n === 1) s = t("eDay");
-  else if(it.unit === "w" && it.n === 1 && it.kind === "fixed") s = t("eWeekOn", {w:fmt(a, {weekday:"long"})});
-  else if(it.unit === "m" && it.n === 1) s = t("eMonth");
-  else s = it.n === 1 ? t("eOne", {u:t("u1"+it.unit)}) : t("eN", {n:it.n, u:t("u"+it.unit)});
-  if(it.kind === "fixed" && it.unit === "m") s += " · " + t("onDay", {n:ord(a.getDate())});
-  if(it.kind === "flex" || it.shift) s += " · " + t("afterDone");
-  if(it.last && !it.times.length){ var g = diff(parse(it.last), today()); s += " · " + t("lastDone", {x: g <= 0 ? t("agoToday") : t("ago", {n:g})}); }
-  return s;
+  var a = parse(it.anchor) || parse(it.next) || today(), n = it.n, fl = floats(it);
+  if(it.unit === "h") return n === 1 ? t("eHour") : everyN(n, "h");
+  if(it.unit === "d") return n === 1 ? t("eDay") : everyN(n, "d");
+  if(it.unit === "w"){
+    if(fl) return n === 1 ? t("eOne", {u:t("u1w")}) : everyN(n, "w");
+    var w = fmt(a, {weekday:"long"}); return n === 1 ? t("eWeekOn", {w:w}) : everyN(n, "w") + " " + t("onW", {w:w});
+  }
+  var f = n === 1 ? t("eMonth") : everyN(n, "m");
+  return fl ? f : f + " " + t("onDay", {n:ord(a.getDate())});
+}
+function describe(it, full){
+  var p = [freq(it)];
+  if(it.kind === "window") return p[0];
+  if(it.wake !== null && it.wake !== undefined) p.push(it.unit === "h" ? (it.wake ? t("fromWake", {x:dur(it.wake)}) : t("fromWake0")) : (it.wake ? t("wakeOff", {x:dur(it.wake)}) : t("wake0")));
+  if(full && floats(it) && (it.unit === "w" || it.unit === "m") && parse(it.next) && it.wake === null){ var g0 = diff(today(), parse(it.next)); p.push(t("stFrom", {d:g0 === 0 ? t("todayW").toLowerCase() : g0 === 1 ? t("tomorrow").toLowerCase() : fmt(parse(it.next), {weekday:"short", day:"numeric", month:"short"})})); }
+  if(full && it.times.length && (it.wake === null || it.wake === undefined)) p.push(it.unit === "h" ? t("stAt", {t:ft(it.times[0])}) : t("atT", {t:joinTimes(it.times)}));
+  if(floats(it)) p.push(t("afterDone"));
+  if(!full && it.last && !it.times.length && (it.wake === null || it.wake === undefined) && it.unit !== "h"){ var g = diff(parse(it.last), today()); p.push(t("lastDone", {x: g <= 0 ? t("agoToday") : t("ago", {n:g})})); }
+  return p.join(" · ");
 }
 function rel(s){ if(s.state === "missed") return t("missedTag"); return s.state === "done" ? (s.at ? t("doneAt", {t:ft(s.at)}) : "") : s.state === "now" ? (s.delta >= -2 ? t("nowTag") : t("lateX", {x:dur(s.delta)})) : s.state === "late" ? t("lateX", {x:dur(s.delta)}) : t("inX", {x:dur(s.delta)}); }
 
@@ -1162,10 +1205,11 @@ function render(){
     var we = iso(addDays(weekStart(td), 6)), me = iso(new Date(td.getFullYear(), td.getMonth()+1, 0, 12));
     var cw = [], cm = [], cl = [];
     m.coming.forEach(function(c){ if(c.it.unit === "h" || (c.it.unit === "d" && c.it.n === 1)) return; (c.it.next <= we ? cw : c.it.next <= me ? cm : cl).push(c); });
+    /* same row shape as Today: [check] [when] [name · description · how often] [relative tag] */
     function comingRow(c, long){
-      var nd = parse(c.it.next), lbl = c.d === 1 ? t("tomorrow") : fmt(nd, long ? {day:"numeric", month:"short"} : {weekday:"short"});
-      if(c.it.times.length) lbl += " · " + ft(c.it.times[0]) + (c.it.times.length > 1 ? " +" + (c.it.times.length - 1) : "");
-      return row("", "item", c.it.id, "", "", c.it.name, describe(c.it), '<span class="tag">'+esc(lbl)+'</span>');
+      var nd = parse(c.it.next), day = long ? fmt(nd, {day:"numeric", month:"short"}) : fmt(nd, {weekday:"short"});
+      var when = '<div class="tm day">'+esc(day)+(c.it.times.length ? '<small>'+esc(ft(c.it.times[0]))+(c.it.times.length > 1 ? " +" + (c.it.times.length - 1) : "")+'</small>' : "")+'</div>';
+      return row("coming", "item", c.it.id, "", when, c.it.name, describe(c.it), '<span class="tag">'+esc(inDays(c.d))+'</span>');
     }
     // TODAY · fixed
     var fx = "";
@@ -1328,26 +1372,30 @@ function apply(kind, id, time, o){
   if(kind === "slot"){
     if(!it.slots || it.slots.date !== T0) it.slots = {date:T0, done:{}, snz:{}};
     if(!it.slots.snz) it.slots.snz = {};
-    var cur = it.slots.done[time], has = cur && cur !== "×";
+    var cur = it.slots.done[time] || dlGet(it)[time], has = cur && cur !== "×";
     if(o.later){
       var nv = o.to && mins(o.to) !== null ? lm(o.to) : Math.min(DE() - 5, nowMin() + 30);
       if(it.unit === "h") setOcc(it, dt(T0, hm(nv))); else it.slots.snz[time] = hm(nv);
       res.later = hm(nv); return res;
     }
     if(it.unit === "h"){
-      if(has && !o.at){ delete it.slots.done[time]; res.on = false; restore(it); }
-      else if(o.missed){ it.slots.done[time] = "×"; advance(it, {missed:true}); }
-      else { var st = o.at || stamp(); it.slots.done[time] = st; advance(it, {at:st}); }
+      if(has && !o.at){ delete it.slots.done[time]; dlSet(it, time, null); res.on = false; if(it.prev && (it.prev.slot === undefined || it.prev.slot === time)) restore(it); }   /* only the latest check moved the schedule */
+      else if(o.missed){ it.slots.done[time] = "×"; dlSet(it, time, "×"); advance(it, {missed:true}); it.prev.slot = time; }
+      else if(has){ it.slots.done[time] = o.at; dlSet(it, time, o.at); if(it.prev && it.prev.date === T0 && it.prev.slot === time && (it.shift || it.kind === "flex")){ restore(it); advance(it, {at:o.at}); it.prev.slot = time; } }   /* new time for a done one: never a second step */
+      else { var st = o.at || stamp(); it.slots.done[time] = st; dlSet(it, time, st); advance(it, {at:st}); it.prev.slot = time; }
     } else {
       var allDone = it.last === T0 && it.next !== T0;
-      if((has || (allDone && !cur)) && !o.at){ delete it.slots.done[time]; res.on = false; if(it.next !== T0) restore(it); }
+      if((has || (allDone && !cur)) && !o.at){
+        delete it.slots.done[time]; dlSet(it, time, null); res.on = false; if(it.next !== T0) restore(it);
+        if(it.next !== T0 && it.last === T0 && !Object.keys(dlGet(it)).some(function(k){ return dlGet(it)[k] !== "×"; })){ it.next = T0; it.last = null; it.prev = null; }   /* not done today any more → due today */
+      }
       else {
         var st2 = o.missed ? "×" : (o.at || stamp()), key = time;
         if(!o.missed && it.kind === "fixed" && it.shift && st2 !== time){
           var tt2 = it.times.filter(function(x){ return x !== time; }); if(tt2.indexOf(st2) < 0) tt2.push(st2);
           it.times = tt2.sort(); key = st2; res.time = st2;
         }
-        it.slots.done[key] = st2; delete it.slots.snz[time];
+        it.slots.done[key] = st2; dlSet(it, key, st2); delete it.slots.snz[time];
         if(it.next === T0 && it.times.every(function(x){ return it.slots.done[x]; })) advance(it, {missed:o.missed});
       }
     }
@@ -1359,8 +1407,11 @@ function apply(kind, id, time, o){
   } else {
     if(o.later){ it.next = iso(addDays(today(), o.days || 1)); res.later = (o.days || 1) === 1 ? "tomorrow" : "d:" + it.next; return res; }
     if(o.missed){ skipItem(it); res.on = false; return res; }
-    if(it.last === T0 && it.prev && it.prev.date === T0 && parse(it.next) > today()){ restore(it); res.on = false; }
-    else advance(it);
+    if(it.last === T0 && parse(it.next) > today()){   /* done today → tap again = not done */
+      if(it.prev && it.prev.date === T0) restore(it); else { it.next = T0; it.last = null; }
+      dlSet(it, "*", null); res.on = false;
+    }
+    else { advance(it); dlSet(it, "*", stamp()); }
   }
   return res;
 }
@@ -1573,26 +1624,12 @@ function stepper(f, v){ return '<div class="step"><button type="button" data-stp
 function toggle(id, on, title, sub){ return '<div class="tgl'+(on ? " on" : "")+'"><button type="button" class="tgh" data-tg="'+id+'"><span class="ot"><b>'+esc(title)+'</b><small>'+esc(sub)+'</small></span><span class="sw"><i></i></span></button></div>'; }
 function joinTimes(a){ a = a.map(ft); return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + t("and") + a[a.length-1]; }
 function gridPreview(){ if(!F.times[0]) return ""; var st = mins(F.times[0]), out = []; for(var k = 0; k < 3; k++){ var v = st + k*N()*60; if(v >= 1440) break; out.push(ft(v)); } return out.join(", ") + (out.length === 3 ? "…" : ""); }
-function summary(){
-  var d = startDate(), s, n = N();
-  if(F.mode !== "flex" && F.wake === -1 && canWake()) return (F.unit === "h" ? (n === 1 ? t("eHour") : t("eN", {n:n, u:t("uh")})) : t("eDay")) + " · " + t("tmWake").toLowerCase();
-  if(F.mode !== "flex" && F.wake !== null && canWake() && F.unit === "h") return describe({kind:"fixed", unit:"h", n:n, wake:F.wake, shift:F.shift});
-  if(F.mode !== "flex" && F.wake !== null && canWake()) return describe({kind:"fixed", unit:"d", n:1, wake:F.wake, shift:F.shift});
-  if(F.mode === "flex") return describe({kind:"window", quota:F.quota, period:F.unit});
-  if(F.unit === "h"){
-    s = n === 1 ? t("eHour") : t("eN", {n:n, u:t("uh")});
-    if(F.times[0]) s += ", " + t("fromT", {t:ft(F.times[0])});
-    if(F.shift) s += " · " + t("sumShift");
-    return s;
-  }
-  if(n === 1 && F.unit === "d") s = t("eDay");
-  else if(n === 1 && F.unit === "w") s = t("eWeekOn", {w:fmt(d, {weekday:"long"})});
-  else if(F.unit === "w") s = t("eN", {n:n, u:t("uw")}) + " · " + fmt(d, {weekday:"long"});
-  else if(F.unit === "m") s = (n === 1 ? t("eMonth") : t("eN", {n:n, u:t("um")})) + " · " + t("onDay", {n:ord(F.md)});
-  else s = t("eN", {n:n, u:t("ud")});
-  if(F.times.length) s += t("sumAt", {t:joinTimes(F.times)});
-  if(F.shift) s += " · " + t("sumShift");
-  return s;
+function summary(){   /* the editor speaks the same sentence the task row will show, plus time and start */
+  var flex = F.mode === "flex", sd = iso(startDate()), wk = !flex && canWake() && F.wake !== null;
+  var pv = {kind:flex ? "window" : "fixed", unit:flex ? "d" : F.unit, n:N(), shift:!flex && F.shift, quota:F.quota, period:F.unit,
+    times:wk ? [] : F.times.slice().sort(), wake:wk && F.wake >= 0 ? F.wake : null, anchor:sd, next:sd, last:null};
+  if(wk && F.wake < 0) return freq(pv) + " · " + t("tmWake").toLowerCase();
+  return describe(pv, true);
 }
 function paintSheet(){
   var H = F.unit === "h";
@@ -1612,7 +1649,7 @@ function paintSheet(){
   var showOn = !flex && (F.unit === "w" || F.unit === "m");
   $("gOn").style.display = showOn ? "" : "none";
   if(showOn){
-    $("onLbl").textContent = t(F.unit === "w" ? "onLbl" : "onDayLbl");
+    $("onLbl").textContent = t((F.shift ? "st" : "") + (F.unit === "w" ? "onLbl" : "onDayLbl"));
     var mon = weekStart(today()), o = "";
     if(F.unit === "w"){ for(var i = 0; i < 7; i++) o += '<button type="button" data-wd="'+i+'" class="'+(F.wd === i ? "on" : "")+'">'+esc(fmt(addDays(mon, i), {weekday:"short"}))+'</button>'; $("onPick").className = "wdays"; }
     else { for(var dd = 1; dd <= 31; dd++) o += '<button type="button" data-md="'+dd+'" class="tab'+(F.md === dd ? " on" : "")+'">'+dd+'</button>'; $("onPick").className = "mdays"; }
@@ -1845,6 +1882,9 @@ $("saveBtn").addEventListener("click", function(){
     it.slots = null; it.prev = null;
   }
   var n = norm(it);
+  if(changed && editing && n.kind !== "window" && n.unit !== "h" && n.last === iso(today()) && n.next === iso(today())){   /* already done today: next one is after today */
+    n.next = iso(n.kind === "fixed" && !n.shift ? nextFixed(n, today()) : step(n, today(), 1)); if(n.shift) n.anchor = n.next;
+  }
   if(editing) items[items.indexOf(editing)] = n; else items.push(n);
   save(); closeSheet(); lastHTML = ""; render(); buzz(10);
   if(!editing) toast(t("added", {n:name}), before);

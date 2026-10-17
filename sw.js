@@ -1,5 +1,5 @@
 // Routines
-var CACHE = "routines-v25";
+var CACHE = "routines-v26";
 var SHELL = ["./", "./index.html", "./manifest.json"];
 self.addEventListener("install", function(e){
   self.skipWaiting();
