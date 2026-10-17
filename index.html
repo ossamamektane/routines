@@ -520,6 +520,16 @@ html[dir=rtl] .ds,html[dir=rtl] .now-d{width:fit-content;max-width:100%;margin-l
 .scrim.on{transition:opacity .36s ease}
 @media (min-width:700px){.sheet{transition:transform .22s cubic-bezier(.32,.72,0,1),opacity .18s,visibility 0s linear .22s}.sheet.on{transition:transform .32s cubic-bezier(.32,.72,0,1),opacity .2s,visibility 0s}}
 html.lock .sbody,html.lock #aList{overscroll-behavior:contain}
+.ds:not(.open){display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.now-d:not(.open){display:-webkit-box;-webkit-line-clamp:3;-webkit-box-orient:vertical;overflow:hidden}
+.dsm{display:block;width:fit-content;margin-top:1px;padding:4px 10px 4px 0;margin-bottom:-2px;font-size:13px;font-weight:600;color:var(--y);cursor:pointer;-webkit-tap-highlight-color:transparent}
+.dsm[hidden]{display:none}
+.now .dsm{font-size:14px;margin-top:0;margin-bottom:2px}
+.dsm:active{opacity:.5}
+html[dir=rtl] .dsm{margin-left:auto;padding:4px 0 4px 10px}
+#all .ds{display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.unset{font-size:15px;font-weight:500;color:var(--ink3);white-space:nowrap}
+.need{margin:8px 2px 0;font-size:13px;font-weight:600;color:var(--red);width:100%}
 </style>
 </head>
 <body>
@@ -690,7 +700,7 @@ var T = {
   lateD:["{n}d late","{n} j de retard","متأخر {n} ي"], tomorrow:["Tomorrow","Demain","غدًا"],
   showMore:["Show {n} more","Afficher {n} de plus","عرض {n} أخرى"], showLess:["Show less","Moins","أقل"],
   emptyT:["No tasks yet","Aucune tâche","لا توجد مهام بعد"], emptyP:["Add what you do regularly. Check it off.","Ajoutez ce que vous faites souvent. Cochez.","أضف ما تفعله بانتظام. ثم أنجزه."], addFirst:["Add your first task","Ajouter une tâche","أضف أول مهمة"],
-  newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["Name","Nom","الاسم"], descPh:["Description (optional)","Description (facultatif)","الوصف (اختياري)"], ph:["Task name","Nom de la tâche","اسم المهمة"],
+  newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["Name","Nom","الاسم"], more2:["More","Plus","المزيد"], less:["Less","Moins","أقل"], descPh:["Description (optional)","Description (facultatif)","الوصف (اختياري)"], ph:["Task name","Nom de la tâche","اسم المهمة"],
   fKind:["Every","Tous les","كل"],
   fixedD:["Fixed date","Date fixe","تاريخ ثابت"], fixedT:["Fixed time","Heure fixe","وقت ثابت"],
   fixedS:["On the calendar","Au calendrier","في التقويم"], fixedSH:["On the clock: {x}","Sur l’horloge : {x}","على الساعة: {x}"],
@@ -726,7 +736,7 @@ var T = {
   checked:["Checked “{n}”","« {n} » coché","تم «{n}»"], unchecked:["Unchecked","Décoché","أُلغي"], removed:["Deleted","Supprimé","حُذف"],
   skipped:["Skipped to {d}","Reporté au {d}","أُجّل إلى {d}"], added:["Added “{n}”","« {n} » ajouté","أُضيف «{n}»"],
   imported:["Imported {n} tasks","{n} tâches importées","استيراد {n} مهام"], badFile:["That file isn't a Routines backup","Ce fichier n’est pas une sauvegarde","الملف ليس نسخة صالحة"],
-  needName:["Give it a name first","Donnez-lui un nom","أعطها اسمًا"],
+  notSet:["Not set","Non défini","غير محدد"], needWake:["Choose how long after waking","Choisissez combien de temps après le réveil","اختر كم بعد الاستيقاظ"], needStart:["Choose a start time","Choisissez une heure de début","اختر وقت البدء"], needName:["Give it a name first","Donnez-lui un nom","أعطها اسمًا"],
   eDay:["Every day","Tous les jours","كل يوم"], eWeekOn:["Every {w}","Chaque {w}","كل {w}"], eMonth:["Every month","Tous les mois","كل شهر"], eN:["Every {n} {u}","Tous les {n} {u}","كل {n} {u}"],
   uh:["hours","heures","ساعات"], u1h:["hour","heure","ساعة"], ud:["days","jours","أيام"], uw:["weeks","semaines","أسابيع"], um:["months","mois","أشهر"], u1d:["day","jour","يوم"], u1w:["week","semaine","أسبوع"], u1m:["month","mois","شهر"],
   onDay:["on the {n}","le {n}","يوم {n}"], afterDone:["after done","après coup","بعد الإنجاز"], winSub:["{q} a {p}","{q} par {p}","{q} في {p}"],
@@ -1060,8 +1070,8 @@ function ord(n){ if(lang !== "en") return lang === "fr" && n === 1 ? "1er" : n; 
 function every(it){ return it.n === 1 ? t("u1"+it.unit) : it.n + " " + t("u"+it.unit); }
 function qtxt(q){ return q === 1 ? t("once") : t("timesN", {n:q}); }
 function describe(it){
-  if(it.wake !== null && it.unit === "h") return (it.n === 1 ? t("eHour") : t("eN", {n:it.n, u:t("uh")})) + " · " + (it.wake ? t("fromWake", {x:dur(it.wake)}) : t("fromWake0"));
-  if(it.wake !== null && it.kind !== "window") return t("eDay") + " · " + (it.wake ? t("wakeOff", {x:dur(it.wake)}) : t("wake0"));
+  if(it.wake !== null && it.unit === "h") return (it.n === 1 ? t("eHour") : t("eN", {n:it.n, u:t("uh")})) + " · " + (it.wake ? t("fromWake", {x:dur(it.wake)}) : t("fromWake0")) + (it.shift ? " · " + t("afterDone") : "");
+  if(it.wake !== null && it.kind !== "window") return t("eDay") + " · " + (it.wake ? t("wakeOff", {x:dur(it.wake)}) : t("wake0")) + (it.shift ? " · " + t("afterDone") : "");
   if(it.kind === "window"){ var sp = t("some" + it.period); return it.quota > 1 ? t("timesN", {n:it.quota}) + " · " + sp.charAt(0).toLowerCase() + sp.slice(1) : sp; }
   var s, a = parse(it.anchor) || parse(it.next);
   if(it.unit === "h") return (it.n === 1 ? t("eHour") : t("eN", {n:it.n, u:t("uh")})) + (it.kind === "flex" || it.shift ? " · " + t("afterDone") : "");
@@ -1078,7 +1088,12 @@ function rel(s){ if(s.state === "missed") return t("missedTag"); return s.state 
 
 /* ---------- render ---------- */
 var expanded = false, lastHTML = "";
-function descH(it){ return it && it.desc ? '<div class="ds" dir="auto">'+esc(it.desc)+'</div>' : ""; }
+/* long descriptions stay short (2 lines) until "More" is tapped; rows keep a similar height */
+var DSX = {};
+function descH(it){ return it && it.desc ? '<div class="ds'+(DSX[it.id] ? ' open' : '')+'" dir="auto">'+esc(it.desc)+'</div>'+dsBtn(it.id) : ""; }
+function dsBtn(k){ return '<span class="dsm" role="button" data-act="dsx" data-k="'+esc(k)+'" hidden>'+esc(t(DSX[k] ? "less" : "more2"))+'</span>'; }
+function dsFit(){ [].forEach.call($("app").querySelectorAll(".dsm"), function(m){ var d = m.previousElementSibling; if(!d) return; var open = d.classList.contains("open"); m.hidden = !open && d.scrollHeight <= d.clientHeight + 1; }); }
+window.addEventListener("resize", function(){ requestAnimationFrame(dsFit); });
 function row(cls, act, id, extra, left, name, sub, right, ckOn){
   var tin = /^<span class="tag/.test(right || "") ? '<div>' + right.replace('class="tag', 'class="tagin tag') + '</div>' : "";
   return '<div class="row '+cls+'" data-id="'+id+'"'+extra+'>'+
@@ -1188,7 +1203,7 @@ function render(){
     var np = items.filter(function(i){ return i.paused; }).length;
     out += '<button class="more alltasks" type="button" data-act="all">'+ico("dots", 16)+esc(t("allT"))+' · '+items.length+(np ? ' · '+esc(t("pausedN", {n:np})) : '')+'</button>';
   }
-  if(out !== lastHTML){ var fp = flipFirst(); $("app").innerHTML = out; lastHTML = out; flipPlay(fp); }
+  if(out !== lastHTML){ var fp = flipFirst(); $("app").innerHTML = out; lastHTML = out; dsFit(); flipPlay(fp); }
   if(warped){ var wb = warped; warped = null; repaired = 0; setTimeout(function(){ toast(t("clockBack"), wb); }, 300); }
   else if(repaired){ var rn = repaired; repaired = 0; setTimeout(function(){ toast(t("repairedN", {n:rn})); }, 300); }
   $("allCount").textContent = items.length || "";
@@ -1246,7 +1261,7 @@ function nowCard(m){
   else { act = "item"; r = s.over ? t("lateD", {n:-s.over}) : describe(s.it); }
   var owed = late.length + m.overdue.length;
   return '<div class="now k-'+kind+'" data-id="'+s.it.id+'"'+attr+'><div class="now-tx"><div class="now-k">'+(s.time ? '<span class="tab">'+ft(s.eff || s.time)+'</span> · ' : '')+esc(t(kind))+'</div>'+
-    '<div class="now-n">'+esc(s.it.name)+'</div>'+(s.it.desc ? '<div class="now-d" dir="auto">'+esc(s.it.desc)+'</div>' : '')+'<div class="now-r">'+esc(r)+'</div>'+'<div class="now-acts">'+(owed > 1 || (owed && kind !== "kLate") ? '<button class="cchip" type="button" data-act="catch">'+ico("undo", 16)+esc(t("catchBtn"))+' · '+owed+'</button>' : '')+(act !== "win" ? '<button class="cchip ghost" type="button" data-act="later">'+ico("clock", 16)+esc(t("laterChip"))+'</button>' : '')+'</div></div>'+
+    '<div class="now-n">'+esc(s.it.name)+'</div>'+(s.it.desc ? '<div class="now-d'+(DSX["n:"+s.it.id] ? ' open' : '')+'" dir="auto">'+esc(s.it.desc)+'</div>'+dsBtn("n:"+s.it.id) : '')+'<div class="now-r">'+esc(r)+'</div>'+'<div class="now-acts">'+(owed > 1 || (owed && kind !== "kLate") ? '<button class="cchip" type="button" data-act="catch">'+ico("undo", 16)+esc(t("catchBtn"))+' · '+owed+'</button>' : '')+(act !== "win" ? '<button class="cchip ghost" type="button" data-act="later">'+ico("clock", 16)+esc(t("laterChip"))+'</button>' : '')+'</div></div>'+
     '<button class="bigck" type="button" data-act="'+act+'" aria-label="'+esc(s.it.name)+'">'+ico("check", 28, 3)+'</button></div>';
 }
 
@@ -1380,6 +1395,7 @@ document.addEventListener("click", function(e){
   if(a === "add"){ openSheet(null); return; }
   if(a === "catch"){ openCatch(); return; }
   if(a === "more"){ expanded = !expanded; render(); return; }
+  if(a === "dsx"){ e.preventDefault(); e.stopPropagation(); var k = b.getAttribute("data-k"); if(DSX[k]) delete DSX[k]; else DSX[k] = 1; buzz(6); lastHTML = ""; render(); return; }
   if(a === "all"){ openAll(); return; }
   if(a === "wakeNow"){ wakeIs(nowMin()); return; }
   if(a === "wakeEdit"){ editWake(); return; }
@@ -1528,7 +1544,7 @@ function openSheet(it){
   if(it && it.kind === "window"){ F.name = it.name; F.unit = it.period; F.mode = "flex"; F.quota = it.quota; }
   else if(it){
     var a = parse(it.anchor) || parse(it.next);
-    F.name = it.name; F.unit = it.unit; F.nBy[it.unit] = it.n; F.shift = it.shift || it.kind === "flex"; F.times = it.times.slice();
+    F.name = it.name; F.unit = it.unit; F.nBy[it.unit] = it.n; F.shift = it.shift || it.kind === "flex"; F.times = it.wake !== null ? [] : it.times.slice();
     F.wd = (a.getDay()+6)%7; F.md = a.getDate();
   }
   $("shTitle").textContent = t(it ? "editT" : "newT");
@@ -1559,12 +1575,13 @@ function joinTimes(a){ a = a.map(ft); return a.length < 2 ? a.join("") : a.slice
 function gridPreview(){ if(!F.times[0]) return ""; var st = mins(F.times[0]), out = []; for(var k = 0; k < 3; k++){ var v = st + k*N()*60; if(v >= 1440) break; out.push(ft(v)); } return out.join(", ") + (out.length === 3 ? "…" : ""); }
 function summary(){
   var d = startDate(), s, n = N();
-  if(F.mode !== "flex" && F.wake !== null && canWake() && F.unit === "h") return describe({kind:"fixed", unit:"h", n:n, wake:F.wake});
-  if(F.mode !== "flex" && F.wake !== null && canWake()) return t("eDay") + " · " + (F.wake ? t("wakeOff", {x:dur(F.wake)}) : t("wake0"));
+  if(F.mode !== "flex" && F.wake === -1 && canWake()) return (F.unit === "h" ? (n === 1 ? t("eHour") : t("eN", {n:n, u:t("uh")})) : t("eDay")) + " · " + t("tmWake").toLowerCase();
+  if(F.mode !== "flex" && F.wake !== null && canWake() && F.unit === "h") return describe({kind:"fixed", unit:"h", n:n, wake:F.wake, shift:F.shift});
+  if(F.mode !== "flex" && F.wake !== null && canWake()) return describe({kind:"fixed", unit:"d", n:1, wake:F.wake, shift:F.shift});
   if(F.mode === "flex") return describe({kind:"window", quota:F.quota, period:F.unit});
   if(F.unit === "h"){
     s = n === 1 ? t("eHour") : t("eN", {n:n, u:t("uh")});
-    s += ", " + (F.times[0] ? t("fromT", {t:ft(F.times[0])}) : t("startsNow"));
+    if(F.times[0]) s += ", " + t("fromT", {t:ft(F.times[0])});
     if(F.shift) s += " · " + t("sumShift");
     return s;
   }
@@ -1588,7 +1605,7 @@ function paintSheet(){
   h += '<div class="seg mode"><button type="button" data-mode="fixed" class="'+(!flex ? "on" : "")+'">'+esc(t(H ? "fixedT" : "fixedD"))+'</button><button type="button" data-mode="flex" class="'+(flex ? "on" : "")+(dis ? " off" : "")+'"'+(dis ? ' aria-disabled="true"' : '')+'>'+esc(t(H ? "flexT" : "flexD"))+'</button></div>';
   if(dis && F.why) h += '<p class="why">'+esc(t("noFixWhy"))+'</p>';
   if(!canWake()) F.wake = null;
-  if(!flex){ if(F.wake === null) h += toggle("shift", F.shift, t("shiftT"), t(H || F.times.length ? "shiftS" : "shiftSD")); }
+  if(!flex){ h += toggle("shift", F.shift, t("shiftT"), t(H || (F.times.length && F.wake === null) ? "shiftS" : "shiftSD")); }
   else h += '<div class="tgl on"><div class="optx"><span class="ol">'+esc(t("howMany"))+'</span>'+stepper("q", F.quota)+'</div></div>';
   $("fKind").innerHTML = h + '</div>';
   // On: weekday or day of month (fixed weeks / months only)
@@ -1608,10 +1625,12 @@ function paintSheet(){
   $("tMode").innerHTML = '<button type="button" data-tmode="clock" class="'+(!WK ? "on" : "")+'">'+esc(t("tmClock"))+'</button><button type="button" data-tmode="wake" class="'+(WK ? "on" : "")+'">'+ico("sun", 16).replace("<svg", '<svg style="display:inline-block;vertical-align:-3px;margin-inline-end:5px"')+esc(t("tmWake"))+'</button>';
   $("timeList").style.display = WK ? "none" : ""; if(WK) $("picker").classList.remove("on");
   $("wakeBox").style.display = WK ? "" : "none";
-  if(WK) $("wakeBox").innerHTML = '<div class="tgl on"><div class="optx" style="padding-top:12px"><span class="ol">'+esc(t(H ? "wakeLbl2" : "wakeLbl"))+'</span><div class="step"><button type="button" data-stp="wo" data-d="-15" aria-label="−"'+(F.wake <= 0 ? ' class="dim"' : '')+'>'+ico("minus")+'</button><output class="tab" style="min-width:64px">'+(F.wake ? "+" + dur(F.wake) : "0")+'</output><button type="button" data-stp="wo" data-d="15" aria-label="+">'+ico("plus")+'</button></div></div></div>'+
+  if(WK) $("wakeBox").innerHTML = '<div class="tgl on"><div class="optx" style="padding-top:12px"><span class="ol">'+esc(t(H ? "wakeLbl2" : "wakeLbl"))+'</span><div class="step"><button type="button" data-stp="wo" data-d="-15" aria-label="−"'+(F.wake <= 0 ? ' class="dim"' : '')+'>'+ico("minus")+'</button><output class="tab" style="min-width:64px">'+(F.wake < 0 ? '<span class="unset">'+esc(t("notSet"))+'</span>' : F.wake ? "+" + dur(F.wake) : "0")+'</output><button type="button" data-stp="wo" data-d="15" aria-label="+">'+ico("plus")+'</button></div></div></div>'+
     '<div class="sugg">'+[0, 15, 30, 45, 60, 90, 120, 180, 240, 360].map(function(v){ return '<button type="button" class="chip'+(F.wake === v ? " on" : "")+'" data-wo="'+v+'">'+(v ? "+" + dur(v) : esc(t("wake0")))+'</button>'; }).join("")+'</div>';
   $("timeList").innerHTML = F.times.map(function(x){ return '<span class="tchip">'+ft(x)+'<button type="button" data-rm="'+x+'" aria-label="Remove">'+ico("x", 16)+'</button></span>'; }).join("") +
     (H && F.times.length ? '' : '<button type="button" class="tadd" id="tAdd">'+ico("plus", 18)+esc(t("addTime"))+'</button>');
+  if(F.need === "wake" && WK) $("wakeBox").innerHTML += '<p class="need">'+esc(t("needWake"))+'</p>';
+  if(F.need === "time" && !WK) $("timeList").innerHTML += '<p class="need">'+esc(t("needStart"))+'</p>';
   $("gPause").style.display = editing ? "" : "none";
   $("gPause").innerHTML = editing ? toggle("paused", F.paused, t("pauseT"), t("pauseS")) : "";
   $("hint").innerHTML = ico("repeat", 18) + '<span><b>'+esc(summary())+'</b></span>';
@@ -1622,13 +1641,13 @@ $("sheet").addEventListener("click", function(e){
   else if((b = e.target.closest("[data-tg]"))){ var k = b.getAttribute("data-tg"); F[k] = !F[k]; paintSheet(); buzz(8); }
   else if((b = e.target.closest("[data-stp]"))){
     var dlt = +b.getAttribute("data-d");
-    if(b.getAttribute("data-stp") === "wo") F.wake = Math.min(1080, Math.max(0, F.wake + dlt));
+    if(b.getAttribute("data-stp") === "wo"){ F.need = null; F.wake = F.wake < 0 ? (dlt > 0 ? 15 : 0) : Math.min(1080, Math.max(0, F.wake + dlt)); }
     else if(b.getAttribute("data-stp") === "q") F.quota = Math.min(31, Math.max(1, F.quota + dlt));
     else F.nBy[F.unit] = Math.min(F.unit === "h" ? 23 : 365, Math.max(1, N() + dlt));
     paintSheet(); buzz(5);
   }
-  else if((b = e.target.closest("[data-tmode]"))){ F.wake = b.getAttribute("data-tmode") === "wake" ? (F.wake === null ? 30 : F.wake) : null; paintSheet(); buzz(6); }
-  else if((b = e.target.closest("[data-wo]"))){ F.wake = +b.getAttribute("data-wo"); paintSheet(); buzz(5); }
+  else if((b = e.target.closest("[data-tmode]"))){ F.need = null; F.wake = b.getAttribute("data-tmode") === "wake" ? (F.wake === null ? (editing && editing.wake !== null ? editing.wake : -1) : F.wake) : null; paintSheet(); buzz(6); }
+  else if((b = e.target.closest("[data-wo]"))){ F.need = null; F.wake = +b.getAttribute("data-wo"); paintSheet(); buzz(5); }
   else if((b = e.target.closest("[data-unit]"))){ F.unit = b.getAttribute("data-unit"); paintSheet(); buzz(4); }
   else if((b = e.target.closest("[data-wd]"))){ F.wd = +b.getAttribute("data-wd"); paintSheet(); buzz(5); }
   else if((b = e.target.closest("[data-md]"))){ F.md = +b.getAttribute("data-md"); paintSheet(); buzz(5); }
@@ -1791,7 +1810,7 @@ function openPicker(){
 }
 $("pCancel").addEventListener("click", function(){ $("picker").classList.remove("on"); });
 $("pAdd").addEventListener("click", function(){
-  var v = hm(readWheels("w")); if(F.unit === "h") F.times = [v]; else if(F.times.indexOf(v) < 0) F.times.push(v); F.times.sort();
+  F.need = null; var v = hm(readWheels("w")); if(F.unit === "h") F.times = [v]; else if(F.times.indexOf(v) < 0) F.times.push(v); F.times.sort();
   $("picker").classList.remove("on"); paintSheet(); buzz(10);
 });
 
@@ -1803,11 +1822,16 @@ $("saveBtn").addEventListener("click", function(){
   var flex = F.mode === "flex", kind = flex ? "window" : "fixed", n = flex ? 1 : N();
   var wakeOff = !flex && canWake() && F.wake !== null ? F.wake : null, times = flex || wakeOff !== null ? [] : F.times.slice().sort();
   if(!flex && F.unit === "h" && wakeOff !== null && editing && editing.unit === "h" && editing.wake !== null) times = editing.times.slice();
-  if(!flex && F.unit === "h" && !times.length) times = [stamp()];
+  if(wakeOff === -1 || (!flex && F.unit === "h" && wakeOff === null && !times.length)){
+    F.need = wakeOff === -1 ? "wake" : "time"; paintSheet(); buzz([10,50,10]);
+    var nd = $("sheet").querySelector(".need"); if(nd){ nd.scrollIntoView({block:"center", behavior:"smooth"}); nd.classList.remove("shake"); void nd.offsetWidth; nd.classList.add("shake"); }
+    return;
+  }
+  if(!flex && F.unit === "h" && !times.length) times = [stamp()];   /* internal only: after-waking hourly tasks are re-timed from the wake-up */
   var a0 = editing && (parse(editing.anchor) || parse(editing.next));
   var changed = !editing || editing.kind !== kind || editing.n !== n || editing.unit !== F.unit || editing.period !== (flex ? F.unit : editing.period)
     || (F.unit === "w" && a0 && (a0.getDay()+6)%7 !== F.wd) || (F.unit === "m" && a0 && a0.getDate() !== F.md) || (F.unit === "h" && wakeOff === null && editing.times[0] !== times[0]) || (editing.wake === null) !== (wakeOff === null);
-  it.name = name; it.desc = $("fDesc").value.trim().slice(0,500); it.kind = kind; it.n = n; it.unit = flex ? "d" : F.unit; it.quota = F.quota; it.period = flex ? F.unit : "w"; it.times = times; it.shift = !flex && F.shift && wakeOff === null; it.wake = wakeOff;
+  it.name = name; it.desc = $("fDesc").value.trim().slice(0,500); it.kind = kind; it.n = n; it.unit = flex ? "d" : F.unit; it.quota = F.quota; it.period = flex ? F.unit : "w"; it.times = times; it.shift = !flex && F.shift; it.wake = wakeOff;
   if(editing && editing.wake !== null && wakeOff !== null && editing.wake !== wakeOff){
     if(F.unit === "h") it.wakeAt = null;
     else if(it.last !== iso(today())){ it.times = []; it.slots = null; }
