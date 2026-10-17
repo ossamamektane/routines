@@ -1076,7 +1076,7 @@ function model(){
     if(doneToday && !hasDL) anyDone(it);
     m.coming.push({it:it, d:d});
   }
-  m.slots.sort(function(a, b){ return a.min - b.min || a.it.name.localeCompare(b.it.name); });
+  m.slots.sort(function(a, b){ return a.min - b.min || (b.done ? 1 : 0) - (a.done ? 1 : 0) || a.it.name.localeCompare(b.it.name); });   /* same minute: done first */
   m.coming.sort(function(a, b){ return a.d - b.d || (a.it.times[0] || "99").localeCompare(b.it.times[0] || "99"); });
   m.overdue.sort(function(a, b){ return a.d - b.d; });
   m.any.sort(function(a, b){ return a.done - b.done; });
@@ -1355,6 +1355,14 @@ function advance(it, o){
   if(it.kind === "fixed" && !it.shift) it.next = iso(nextFixed(it, parse(it.next) > td ? parse(it.next) : td));
   else { it.next = iso(step(it, td, 1)); if(it.shift) it.anchor = it.next; }
 }
+/* restart + own time: the next day starts at the time it was actually done (wake tasks follow the wake time instead) */
+function retime(it){
+  var p = it.prev, T0 = iso(today()), DL = dlGet(it);
+  if(it.kind !== "fixed" || !it.shift || it.unit === "h" || it.wake !== null || !p || p.date !== T0 || !p.times || it.last !== T0 || it.next === T0) return;
+  var tt = p.times.map(function(x){ return DL[x] && DL[x] !== "×" ? DL[x] : x; });
+  tt = tt.filter(function(x, k){ return tt.indexOf(x) === k; }); if(tt.length < p.times.length) tt = p.times.slice();   /* two times can't merge into one */
+  it.times = tt.sort(); it.at0 = it.times[0] || null;
+}
 function restore(it){
   var p = it.prev; if(!p || p.date !== iso(today()) || !p.next) return;
   it.next = p.next; it.last = p.last; if(p.anchor) it.anchor = p.anchor; if(p.times) it.times = p.times; if(p.at0) it.at0 = p.at0; it.prev = null;
@@ -1390,13 +1398,10 @@ function apply(kind, id, time, o){
         if(it.next !== T0 && it.last === T0 && !Object.keys(dlGet(it)).some(function(k){ return dlGet(it)[k] !== "×"; })){ it.next = T0; it.last = null; it.prev = null; }   /* not done today any more → due today */
       }
       else {
-        var st2 = o.missed ? "×" : (o.at || stamp()), key = time;
-        if(!o.missed && it.kind === "fixed" && it.shift && st2 !== time){
-          var tt2 = it.times.filter(function(x){ return x !== time; }); if(tt2.indexOf(st2) < 0) tt2.push(st2);
-          it.times = tt2.sort(); key = st2; res.time = st2;
-        }
-        it.slots.done[key] = st2; dlSet(it, key, st2); delete it.slots.snz[time];
+        var st2 = o.missed ? "×" : (o.at || stamp());
+        it.slots.done[time] = st2; dlSet(it, time, st2); delete it.slots.snz[time];   /* today's row stays at its planned time */
         if(it.next === T0 && it.times.every(function(x){ return it.slots.done[x]; })) advance(it, {missed:o.missed});
+        retime(it);
       }
     }
     if(o.missed) res.on = false;
