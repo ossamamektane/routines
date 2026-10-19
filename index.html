@@ -533,6 +533,25 @@ html[dir=rtl] .dsm{margin-left:auto;padding:4px 0 4px 10px}
 .tm.day{display:block;width:56px;font-size:14px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tm.day small{margin-top:2px;font-size:11px;white-space:nowrap}
 .h12 .tm.day{width:62px}
+
+/* small / older Android phones and large system text: give the name column the room */
+@media (max-width:380px){
+  .wrap{padding-left:calc(12px + var(--sl));padding-right:calc(12px + var(--sr))}
+  .row{gap:10px;padding-left:12px;padding-right:12px}
+  .ck{width:26px;height:26px}
+  .tm{width:44px;font-size:14px}.h12 .tm,.h12 .nowline b{width:56px}
+  .tm.day{width:50px;font-size:13px}.h12 .tm.day{width:56px}
+  .wakebar{gap:8px;padding-left:12px}
+  button.wk-t{white-space:normal;overflow:visible}
+  .wk-t{font-size:14px}.wk-n{font-size:13px;padding:0 10px;height:32px;max-width:46%;white-space:normal;line-height:1.1;text-align:center}
+}
+@media (max-width:330px){
+  .row{gap:8px;padding-left:10px;padding-right:10px}
+  .h12 .tm,.h12 .nowline b,.h12 .tm.day{width:52px}
+  .nm{overflow-wrap:anywhere}
+}
+.wakebar.long .wk-t small{color:#c77700}html[data-theme="dark"] .wakebar.long .wk-t small{color:#ffb340}
+.wakebar.long .wk-n{background:var(--y);color:#fff}
 </style>
 </head>
 <body>
@@ -763,6 +782,7 @@ var T = {
   wakeStarts:["Used for {list}","Utilisé pour {list}","يُستخدم لـ {list}"], wakeNow:["Now","Maintenant","الآن"], wakeEarlier:["Set Time","Choisir…","تحديد الوقت"],
   todayW:["Today","Aujourd’hui","اليوم"], agoT:["{x} ago","il y a {x}","قبل {x}"], future:["That’s in the future","C’est dans le futur","هذا في المستقبل"],
   justNow:["Just now","À l’instant","الآن"], newWake:["New Day","Nouvelle journée","يوم جديد"], yest:["Yesterday","Hier","أمس"],
+  ndOn:["Starts {d}","Commence le {d}","يبدأ {d}"], ndWeek:["new week","nouvelle semaine","أسبوع جديد"], ndMonth:["new month","nouveau mois","شهر جديد"],
   newDayQ:["New Day","Nouvelle journée","يوم جديد"], newDaySub:["When did you wake up? Today’s tasks restart from this time.","À quelle heure vous êtes-vous levé ? Les tâches repartent de cette heure.","متى استيقظت؟ تبدأ مهام اليوم من هذا الوقت."],
   wokeAt:["Woke up at {t}","Réveil à {t}","استيقظت في {t}"], edit:["Edit","Modifier","تعديل"], wakeSet:["Woke up at {t}","Réveil à {t}","استيقظت في {t}"],
   wakeClear:["Clear wake time","Effacer l’heure du réveil","مسح وقت الاستيقاظ"], wakeCleared:["Wake time cleared","Heure du réveil effacée","مُسح وقت الاستيقاظ"],
@@ -837,7 +857,7 @@ function repairFuture(){
   items.forEach(function(it){
     var bad = false;
     if(it.last && it.last > T0){ it.last = null; bad = true; }
-    var l = it.log.length; it.log = it.log.filter(function(d){ return d <= T0; }); if(l !== it.log.length) bad = true;
+    var l = it.log.length, C0 = iso(calDay()); it.log = it.log.filter(function(d){ return d <= C0; }); if(l !== it.log.length) bad = true;
     if(it.slots && it.slots.date > T0){ it.slots = null; bad = true; }
     if(it.dl && it.dl.date > T0){ it.dl = null; bad = true; }
     if(it.prev && it.prev.date > T0) it.prev = null;
@@ -867,7 +887,7 @@ function guardClock(){
     if(pick){ try{ items = JSON.parse(pick.s).map(norm).filter(Boolean); }catch(e){} }
     items.forEach(function(it){                     /* nothing can have happened after "now" */
       if(it.last && it.last > T0) it.last = null;
-      it.log = it.log.filter(function(d){ return d <= T0; });
+      it.log = it.log.filter(function(d){ return d <= iso(calDay()); });
       if(it.slots && it.slots.date > T0) it.slots = null;
       if(it.dl && it.dl.date > T0) it.dl = null;
       if(it.prev && it.prev.date > T0) it.prev = null;
@@ -905,6 +925,12 @@ function dayInfo(){
   return DI;
 }
 function today(){ return new Date(dayInfo().D); }
+/* weeks and months follow the calendar: your day counts as one day, but once a day runs past 24 h the
+   calendar moves on by itself (at your wake-up time), so "days left" never stalls. Never earlier than today. */
+function calDay(){ var di = dayInfo(); if(di.wake === null) return today(); var x = new Date(Date.now() - di.cut*6e4); x.setHours(12,0,0,0); return x > di.D ? x : new Date(di.D); }
+function calEnd(){ var di = dayInfo(), e = calDay(); e = addDays(e, 1); e.setHours(0,0,0,0); return e.getTime() + di.cut*6e4; }   /* when calDay() ends */
+function winToday(it){ var a = iso(today()), b = logKey(it), k = -1; it.log.forEach(function(d, i){ if(d >= a && d <= b) k = i; }); return k > -1 ? k : null; }   /* index of a check made during this day */
+function logKey(it){ return it.period === "d" ? iso(today()) : iso(calDay()); }
 function CUT(){ return dayInfo().cut; }
 function DE(){ return CUT() + 1440; }
 function lm(x){ var m = typeof x === "number" ? x : mins(x); if(m === null) return null; return m < CUT() ? m + 1440 : m; }
@@ -1045,9 +1071,9 @@ function model(){
   function one(it){
     if(it.paused) return;
     if(it.kind === "window"){
-      var pr = period(it.period, td), a = iso(pr[0]), b = iso(pr[1]);
+      var pd = it.period === "d" ? td : calDay(), pr = period(it.period, pd), a = iso(pr[0]), b = iso(pr[1]);
       var c = it.log.filter(function(d){ return d >= a && d <= b; }).length;
-      var o = {it:it, count:c, today:it.log.indexOf(T0) > -1, left:diff(td, pr[1])};
+      var o = {it:it, count:c, today:winToday(it) !== null, left:diff(pd, pr[1])};
       o.met = c >= it.quota;
       if(it.period === "d"){ m.dayWin.push(o); m.total += it.quota; m.done += Math.min(c, it.quota); if(!o.met) m.pending++; }
       else (it.period === "m" ? m.month : m.week).push(o);
@@ -1159,7 +1185,7 @@ function sec3(title, count, right, fixed, free){
   return '<section class="sec"><div class="sh2"><h2>'+esc(title)+'</h2>'+(count ? '<span>'+count+'</span>' : '')+(right || "")+'</div>'+
     mini("fixedD", fixed) + mini("flexD", free) + '</section>';
 }
-function left(l, list){ var open = list.filter(function(o){ return !o.met; }).length; if(l === 0) return '<em class="tab'+(open ? " red" : "")+'">'+esc(t("leftX", {x:dur(Math.max(0, DE() - nowMin()))}))+'</em>'; return '<em class="'+(l <= 1 && open ? "red" : "")+'">'+esc(l === 0 ? t("lastDay") : t("daysLeft", {n:l + 1}))+'</em>'; }
+function left(l, list){ var open = list.filter(function(o){ return !o.met; }).length; if(l === 0) return '<em class="tab'+(open ? " red" : "")+'">'+esc(t("leftX", {x:dur(Math.max(0, Math.round((calEnd() - Date.now()) / 6e4)))}))+'</em>'; return '<em class="'+(l <= 1 && open ? "red" : "")+'">'+esc(l === 0 ? t("lastDay") : t("daysLeft", {n:l + 1}))+'</em>'; }
 /* smooth list changes: rows glide to their new place, new rows fade in */
 var RM = window.matchMedia && matchMedia("(prefers-reduced-motion: reduce)").matches, flipOn = false;
 function flipKey(e){ if(e.classList.contains("row")) return "r" + e.getAttribute("data-id") + "|" + (e.getAttribute("data-time") || ""); if(e.classList.contains("nowline")) return "nl"; if(e.classList.contains("sec")){ var h = e.querySelector("h2"); return "s" + (h ? h.textContent : ""); } if(e.classList.contains("more")) return "m" + e.className; return null; }
@@ -1202,7 +1228,7 @@ function render(){
     out = '<div class="empty"><h2>'+esc(t("emptyT"))+'</h2><p>'+esc(t("emptyP"))+'</p><button class="btn y" type="button" data-act="add">'+ico("plus")+esc(t("addFirst"))+'</button></div>';
   } else {
     out += wakeCard() + nowCard(m);
-    var we = iso(addDays(weekStart(td), 6)), me = iso(new Date(td.getFullYear(), td.getMonth()+1, 0, 12));
+    var cd = calDay(), we = iso(addDays(weekStart(cd), 6)), me = iso(new Date(cd.getFullYear(), cd.getMonth()+1, 0, 12));
     var cw = [], cm = [], cl = [];
     m.coming.forEach(function(c){ if(c.it.unit === "h" || (c.it.unit === "d" && c.it.n === 1)) return; (c.it.next <= we ? cw : c.it.next <= me ? cm : cl).push(c); });
     /* same row shape as Today: [check] [when] [name · description · how often] [relative tag] */
@@ -1237,7 +1263,7 @@ function render(){
     var tl = getWake() !== null ? 0 : Math.max(0, DE() - nm), dueLeft = todayLeft > 0;
     out += sec3(t("schedule"), todayLeft, tl <= 0 ? "" : '<em class="tab'+(tl <= 120 && dueLeft ? " red" : "")+'">'+esc(t("leftX", {x:dur(tl)}))+'</em>', fx, freeHTML);
     // THIS WEEK / THIS MONTH
-    var wl = diff(td, parse(we)), ml = diff(td, parse(me));
+    var wl = diff(cd, parse(we)), ml = diff(cd, parse(me));
     out += sec3(t("week"), cw.length + m.week.filter(function(o){ return !o.met; }).length, left(wl, m.week), cw.map(function(c){ return comingRow(c, false); }).join(""), m.week.map(winRow).join(""));
     out += sec3(t("month"), cm.length + m.month.filter(function(o){ return !o.met; }).length, left(ml, m.month), cm.map(function(c){ return comingRow(c, true); }).join(""), m.month.map(winRow).join(""));
     if(cl.length){
@@ -1259,10 +1285,12 @@ function wakeCard(){
   var w = getWake();
   var DIx = dayInfo();
   if(w !== null){
-    var ago = Math.max(0, Math.round((Date.now() - DIx.wake) / 6e4)), when = new Date(DIx.wake).toDateString() !== new Date().toDateString();
-    var sm = (when ? t("yest") + " · " : "") + (ago < 2 ? t("justNow") : t("agoX", {x:dur(ago >= 60 ? Math.floor(ago/60)*60 : ago)}));
+    var ago = Math.max(0, Math.round((Date.now() - DIx.wake) / 6e4)), wd0 = new Date(DIx.wake); wd0.setHours(12,0,0,0);
+    var cd = diff(wd0, (function(){ var x = new Date(); x.setHours(12,0,0,0); return x; })());   /* calendar days since the wake-up */
+    var sm = (cd === 1 ? t("yest") + " · " : cd > 1 ? fmt(wd0, {weekday:"short", day:"numeric", month:"short"}) + " · " : "") + (ago < 2 ? t("justNow") : t("agoX", {x:dur(ago >= 60 ? Math.floor(ago/60)*60 : ago)}));
+    var longDay = ago >= 20*60;   /* a very long day: say it plainly, never start a new one by itself */
     var nb = true;
-    return '<div class="wakebar"><span class="wk-i">'+ico("sun", 18)+'</span><button type="button" class="wk-t" data-act="wakeEdit">'+esc(t("wokeAt", {t:ft(w)}))+'<small>'+esc(sm)+(nb ? ' · <b>'+esc(t("edit"))+'</b>' : '')+'</small></button>'+
+    return '<div class="wakebar'+(longDay ? " long" : "")+'"><span class="wk-i">'+ico("sun", 18)+'</span><button type="button" class="wk-t" data-act="wakeEdit">'+esc(t("wokeAt", {t:ft(w)}))+'<small>'+esc(sm)+(nb ? ' · <b>'+esc(t("edit"))+'</b>' : '')+'</small></button>'+
       (nb ? '<button type="button" class="wk-n" data-act="wakeNew">'+esc(t("newWake"))+'</button>' : '<button type="button" class="wk-e" data-act="wakeEdit">'+esc(t("edit"))+'</button>')+'</div>';
   }
   var list = wt.slice().sort(function(a, b){ return a.wake - b.wake; }).slice(0, 3).map(function(i){ return i.name + " +" + dur(i.wake); }).join(", ") + (wt.length > 3 ? " …" : "");
@@ -1270,9 +1298,11 @@ function wakeCard(){
     '<div class="wk-b"><button type="button" class="btn y" data-act="wakeNow">'+ico("check", 18, 2.6)+esc(t("wakeNow"))+'</button><button type="button" class="btn" data-act="wakeEdit">'+ico("clock", 18)+esc(t("wakeEarlier"))+'</button></div></div>';
 }
 function wakeIs(m, how){
-  var before = snap(), wb = get("r.wake") || "null"; setWake(m); roll(); lastHTML = ""; render(); buzz(14); undoWake = wb;
+  var before = snap(), wb = get("r.wake") || "null", d0 = today(); setWake(m); roll();
+  var d1 = today(), x = "";   /* say which day it is now, and whether a week or month turned over */
+  if(m !== null && iso(d1) !== iso(d0)){ x = " · " + fmt(d1, {weekday:"long", day:"numeric", month:"long"}); if(d1 > d0 && iso(weekStart(d1)) !== iso(weekStart(d0))) x += " · " + t("ndWeek"); else if(d1 > d0 && d1.getMonth() !== d0.getMonth()) x += " · " + t("ndMonth"); } lastHTML = ""; render(); buzz(14); undoWake = wb;
   var n = items.filter(function(i){ return i.wake !== null && !i.paused && i.next === iso(today()) && i.times.length && !(i.last === iso(today())); }).length;
-  toast(m === null ? t("wakeCleared") : t("wakeSet", {t:ft(m), n:n}), before); undoWake = wb;
+  toast(m === null ? t("wakeCleared") : t("wakeSet", {t:ft(m), n:n}) + x, before); undoWake = wb;
 }
 function newWake(){
   var nm = nowMin();
@@ -1406,9 +1436,9 @@ function apply(kind, id, time, o){
     }
     if(o.missed) res.on = false;
   } else if(kind === "win"){
-    var k = it.log.indexOf(T0);
-    if(k > -1){ it.log.splice(k, 1); res.on = false; if(it.prev && it.prev.date === T0) it.last = it.prev.last; }
-    else { it.prev = {last:it.last, date:T0}; it.log.push(T0); it.last = T0; }
+    var k = winToday(it);
+    if(k !== null){ it.log.splice(k, 1); res.on = false; if(it.prev && it.prev.date === T0) it.last = it.prev.last; }
+    else { it.prev = {last:it.last, date:T0}; it.log.push(logKey(it)); it.last = T0; }
   } else {
     if(o.later){ it.next = iso(addDays(today(), o.days || 1)); res.later = (o.days || 1) === 1 ? "tomorrow" : "d:" + it.next; return res; }
     if(o.missed){ skipItem(it); res.on = false; return res; }
@@ -1773,7 +1803,7 @@ $("lpSet").addEventListener("click", function(){
 function allTag(it){
   if(it.paused) return '<span class="tag">'+esc(t("paused1"))+'</span>';
   var td = today();
-  if(it.kind === "window"){ var pr = period(it.period, td), a = iso(pr[0]), b = iso(pr[1]), c = it.log.filter(function(d){ return d >= a && d <= b; }).length; return '<span class="tag tab'+(c >= it.quota ? " tnow" : "")+'">'+c+'/'+it.quota+'</span>'; }
+  if(it.kind === "window"){ var pr = period(it.period, it.period === "d" ? td : calDay()), a = iso(pr[0]), b = iso(pr[1]), c = it.log.filter(function(d){ return d >= a && d <= b; }).length; return '<span class="tag tab'+(c >= it.quota ? " tnow" : "")+'">'+c+'/'+it.quota+'</span>'; }
   var nx = parse(it.next), d = diff(td, nx), tm = it.times.length ? " · " + ft(it.times[0]) + (it.times.length > 1 ? " +" + (it.times.length - 1) : "") : "";
   if(d < 0 && !it.times.length) return '<span class="tag late">'+esc(t("lateD", {n:-d}))+'</span>';
   var lbl = d <= 0 ? t("dueToday") : d === 1 ? t("tomorrow") : fmt(nx, d < 7 ? {weekday:"short"} : {day:"numeric", month:"short"});
