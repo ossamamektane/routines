@@ -552,6 +552,53 @@ html[dir=rtl] .dsm{margin-left:auto;padding:4px 0 4px 10px}
 }
 .wakebar.long .wk-t small{color:#c77700}html[data-theme="dark"] .wakebar.long .wk-t small{color:#ffb340}
 .wakebar.long .wk-n{background:var(--y);color:#fff}
+/* ===== v31: calmer, denser layout — tabs with stats, plain lists, one-line status ===== */
+:root{--page:#fff;--card:#f2f2f7}
+html[data-theme="dark"]{--page:#000;--card:#1c1c1e}
+@media (prefers-color-scheme:dark){html:not([data-theme="light"]){--page:#000;--card:#1c1c1e}}
+html,body,.hdr{background:var(--page)}
+.meter{display:none!important}
+.day{margin:2px 0 12px}.day h1{font-size:24px}.clock{font-size:24px}.day p{font-size:13px;margin-top:3px}
+.wakebar{background:var(--card);box-shadow:none;min-height:46px;margin-bottom:10px;border-radius:14px}
+.now{background:var(--card)!important;box-shadow:none!important;padding:12px 14px 12px 16px;margin-bottom:14px;border-radius:16px;gap:12px}
+.now-n{font-size:19px}.now-r{font-size:13px}.now-k{font-size:12px}
+.bigck{width:48px;height:48px}
+.now .now-acts{margin-top:8px}
+/* tabs: three periods side by side, each with its own progress */
+.tabs{position:sticky;top:calc(58px + var(--st));z-index:15;display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;padding:6px 0 10px;margin:0 0 4px;background:var(--page)}
+.tb{display:flex;flex-direction:column;align-items:stretch;gap:5px;text-align:start;padding:9px 10px 8px;border-radius:13px;background:var(--card);min-width:0;transition:background .2s,box-shadow .2s}
+.tb.on{background:var(--page);box-shadow:inset 0 0 0 1.5px var(--y)}
+.tb-h{display:flex;align-items:baseline;justify-content:space-between;gap:4px;min-width:0}
+.tb-h b{font-size:14px;font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-h .tab{font-size:13px;font-weight:600;color:var(--ink2)}
+.tb.on .tb-h b{color:var(--y)}
+.tb-bar{height:4px;border-radius:2px;background:var(--bg3);overflow:hidden}
+.tb-bar i{display:block;height:100%;background:var(--ok);border-radius:2px;transition:width .4s}
+.tb-s{font-size:11.5px;color:var(--ink2);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.tb-s.red{color:var(--red)}
+.tb.full .tb-h .tab{color:var(--ok)}
+/* groups: a small label and a plain list — no boxes */
+.grp{margin:0 0 14px}
+.gh{display:flex;align-items:baseline;gap:8px;margin:8px 2px 2px;font-size:12px;font-weight:600;letter-spacing:.04em;text-transform:uppercase;color:var(--ink2)}
+html[lang="ar"] .gh{letter-spacing:0}
+#app .box{background:transparent;border-radius:0;box-shadow:none;overflow:visible}
+#app .row{min-height:48px;padding:7px 2px;gap:10px}
+#app .row+.row::before{inset-inline:38px 0}
+#app .ck{width:26px;height:26px}
+#app .tm{font-size:14px}
+#app .nm{font-size:15.5px;line-height:1.28}
+#app .sb{font-size:12.5px;margin-top:1px;line-height:1.35}
+#app .ds{font-size:12.5px;-webkit-line-clamp:1}
+#app .ds:not(.open){display:-webkit-box;-webkit-box-orient:vertical;overflow:hidden}
+.st{font-weight:600;color:var(--ink2)}
+.st.tnow{color:var(--y)}.st.late{color:var(--red)}.st.ok{color:var(--ink3);font-weight:500}
+.row.done .st{color:var(--ink3);font-weight:500}
+.nowline{padding-inline:0 2px;padding-left:8px}
+html[dir=rtl] .nowline{padding-left:2px;padding-right:8px}
+.tempty{color:var(--ink3);font-size:14px;text-align:center;padding:28px 0}
+.more.alltasks{margin-top:6px}
+@media (max-width:380px){.tabs{gap:5px}.tb{padding:8px 8px 7px}.tb-h b{font-size:13px}.tb-h .tab{font-size:12px}.tb-s{font-size:11px}#app .row{padding-inline:0}}
+body{overflow-x:clip}   /* clip, not hidden: keeps the header and tabs sticky */
 </style>
 </head>
 <body>
@@ -573,6 +620,7 @@ html[dir=rtl] .dsm{margin-left:auto;padding:4px 0 4px 10px}
   <div class="dd"><button class="ib" type="button" data-dd aria-haspopup="menu" aria-label="More"><span data-i="dots"></span></button>
     <div class="menu" role="menu">
       <button class="mi" id="allBtn"><span data-i="dots"></span><span data-t="allT"></span><small class="mx tab" id="allCount"></small></button>
+      <button class="mi" id="bedBtn"><span data-i="moon"></span><span data-t="bedT"></span><small class="mx tab" id="bedS"></small></button>
       <div class="msep"></div>
       <div class="mh" data-t="clockF"></div>
       <button class="mi" data-clock="24" role="menuitemradio"><span data-i="clock"></span><span data-t="c24"></span><small class="mx tab" id="c24s"></small><span class="mk"><span data-i="check"></span></span></button>
@@ -707,6 +755,12 @@ var T = {
   foot:["Stored on this device · works offline","Sur cet appareil · hors ligne","على هذا الجهاز · بدون إنترنت"],
   ofDone:["{a} of {b} done","{a} sur {b} faits","{a} من {b} منجزة"], streak:["{n}-day streak","{n} jours d’affilée","{n} أيام متتالية"],
   noTasks:["Nothing planned today","Rien de prévu aujourd’hui","لا شيء اليوم"],
+  tabD:["Today","Jour","اليوم"], tabW:["Week","Semaine","الأسبوع"], tabM:["Month","Mois","الشهر"],
+  grpAny:["Anytime today","Dans la journée","في أي وقت اليوم"], grpAnyW:["Anytime this week","Dans la semaine","في أي وقت هذا الأسبوع"], grpAnyM:["Anytime this month","Dans le mois","في أي وقت هذا الشهر"],
+  grpTimed:["On the clock","À heure fixe","بوقت محدد"], grpDays:["On a day","À date fixe","بتاريخ محدد"], grpLate:["Overdue","En retard","متأخرة"],
+  nextX:["next: {n} {w}","ensuite : {n} {w}","التالي: {n} {w}"], tabEmpty:["Nothing here","Rien ici","لا شيء هنا"], tabEmptyD:["Nothing left for today.","Plus rien pour aujourd’hui.","لا شيء متبقٍ لليوم."],
+  tabEmptyW:["Nothing else this week.","Rien d’autre cette semaine.","لا شيء آخر هذا الأسبوع."], tabEmptyM:["Nothing else this month.","Rien d’autre ce mois-ci.","لا شيء آخر هذا الشهر."],
+  dLeftS:["{n}d left","reste {n} j","باقي {n} ي"], hLeftS:["{x} left","reste {x}","باقي {x}"], lastDayS:["last day","dernier jour","آخر يوم"],
   kNow:["Now","Maintenant","الآن"], kLate:["Late","En retard","متأخر"], kNext:["Next","Ensuite","التالي"], kAny:["Anytime today","Dans la journée","خلال اليوم"],
   kGoal:["Goal","Objectif","هدف"],
   allDone:["Everything is checked","Tout est coché","كل شيء منجز"], allDoneSub:["Next: {n} · {w}","Ensuite : {n} · {w}","التالي: {n} · {w}"], allDoneNone:["Nothing else today","Rien d’autre aujourd’hui","لا شيء آخر اليوم"],
@@ -788,7 +842,10 @@ var T = {
   wakeClear:["Clear wake time","Effacer l’heure du réveil","مسح وقت الاستيقاظ"], wakeCleared:["Wake time cleared","Heure du réveil effacée","مُسح وقت الاستيقاظ"],
   wakeOff:["{x} after waking","{x} après le réveil","بعد {x} من الاستيقاظ"], wake0:["right after waking","dès le réveil","فور الاستيقاظ"],
   fromWake:["starts {x} after waking","dès {x} après le réveil","يبدأ بعد {x} من الاستيقاظ"], fromWake0:["starts when you wake up","dès le réveil","يبدأ عند الاستيقاظ"], wakeLbl2:["First one after waking","Premier après le réveil","الأول بعد الاستيقاظ"],
-  wakeWait:["waits for your wake-up","attend votre réveil","ينتظر استيقاظك"],
+  doneT:["done","fait","أُنجز"], bedT:["Bedtime","Coucher","وقت النوم"], bedOff:["Not set","Non défini","غير محدد"],
+  bedQ:["When does your day end?","Quand se termine votre journée ?","متى ينتهي يومك؟"], bedSub:["“Time left” counts down to this. Without it, your day ends 24 h after you wake up.","Le « temps restant » compte jusqu’à cette heure. Sans elle, la journée finit 24 h après le réveil.","يُحسب «الوقت المتبقي» حتى هذا الوقت. بدونه ينتهي يومك بعد 24 ساعة من الاستيقاظ."],
+  bedClear:["Remove bedtime","Retirer l’heure du coucher","إزالة وقت النوم"], bedAfter:["{x} after waking up","{x} après le réveil","بعد {x} من الاستيقاظ"], bedPast:["past bedtime","coucher dépassé","تجاوزت وقت النوم"],
+  bedSet:["Bedtime {t}","Coucher à {t}","وقت النوم {t}"], bedCleared:["Bedtime removed","Heure du coucher retirée","أزيل وقت النوم"], wakeWait:["waits for your wake-up","attend votre réveil","ينتظر استيقاظك"],
   tmClock:["At a time","À une heure","في وقت محدد"], tmWake:["After waking","Après le réveil","بعد الاستيقاظ"], wakeLbl:["How long after you wake up","Combien de temps après le réveil","كم بعد الاستيقاظ"],
   agoX:["{x} ago","il y a {x}","قبل {x}"], asSched:["As scheduled","Comme prévu","كما هو مقرر"], didWhen:["When did you do it?","Quand l’avez-vous fait ?","متى أنجزتها؟"],
   setTimeB:["Set time","Heure…","الوقت…"], didAt:["Done at {t}","Fait à {t}","أُنجز في {t}"], futureNo:["That time hasn’t happened yet","Cette heure n’est pas encore passée","هذا الوقت لم يأتِ بعد"],
@@ -1066,7 +1123,7 @@ function model(){
     var DL = dlGet(it);
     one(it);
     /* anything checked today that the schedule no longer shows (edited, skipped, paused…) */
-    Object.keys(DL).forEach(function(k){ if(k === "*"){ if(!ANYDONE) anyDone(it); } else if(!SHOWN[k] && mins(k) !== null) slot(it, k, DL, null, false); });
+    Object.keys(DL).forEach(function(k){ if(k === "*"){ if(!ANYDONE) anyDone(it); } else if(!SHOWN[k] && mins(k) !== null) slot(it, k, DL, it.slots && it.slots.date === T0 ? it.slots.snz : null, false); });
   });
   function one(it){
     if(it.paused) return;
@@ -1163,11 +1220,14 @@ function descH(it){ return it && it.desc ? '<div class="ds'+(DSX[it.id] ? ' open
 function dsBtn(k){ return '<span class="dsm" role="button" data-act="dsx" data-k="'+esc(k)+'" hidden>'+esc(t(DSX[k] ? "less" : "more2"))+'</span>'; }
 function dsFit(){ [].forEach.call($("app").querySelectorAll(".dsm"), function(m){ var d = m.previousElementSibling; if(!d) return; var open = d.classList.contains("open"); m.hidden = !open && d.scrollHeight <= d.clientHeight + 1; }); }
 window.addEventListener("resize", function(){ requestAnimationFrame(dsFit); });
-function row(cls, act, id, extra, left, name, sub, right, ckOn){
-  var tin = /^<span class="tag/.test(right || "") ? '<div>' + right.replace('class="tag', 'class="tagin tag') + '</div>' : "";
+/* one row shape everywhere: [check] [when] [name / note / status · how often] [progress dots] */
+function row(cls, act, id, extra, left, name, sub, right, ckOn, stat){
+  var st = stat || "", mt = /^<span class="tag([^"]*)">([\s\S]*)<\/span>$/.exec(right || "");
+  if(mt){ st = '<span class="st'+mt[1]+'">'+mt[2]+'</span>'; right = ""; }
+  var line = st + (st && sub ? '<span class="dot"> · </span>' : "") + (sub ? esc(sub) : "");
   return '<div class="row '+cls+'" data-id="'+id+'"'+extra+'>'+
     '<button class="ck'+(ckOn ? " on" : "")+'" type="button" data-act="'+act+'" aria-label="'+esc(name)+'">'+TICK+'</button>'+left+
-    '<button class="bd" type="button" data-act="edit"><div class="nm">'+esc(name)+'</div>'+descH(find(id))+(sub ? '<div class="sb">'+esc(sub)+'</div>' : '')+tin+'</button>'+right+'</div>';
+    '<button class="bd" type="button" data-act="edit"><div class="nm">'+esc(name)+'</div>'+descH(find(id))+(line ? '<div class="sb">'+line+'</div>' : '')+'</button>'+right+'</div>';
 }
 function sec(title, count, right, body){
   return '<section class="sec"><div class="sh2"><h2>'+esc(title)+'</h2>'+(count ? '<span>'+count+'</span>' : '')+(right || "")+'</div><div class="box">'+body+'</div></section>';
@@ -1177,13 +1237,35 @@ function winRow(o){
   if(o.it.quota <= 7){ for(var i = 0; i < o.it.quota; i++) dots += '<i class="'+(i < o.count ? "on" : "")+'"></i>'; dots = '<div class="dots">'+dots+'</div>'; }
   else dots = '<span class="tag tab">'+o.count+'/'+o.it.quota+'</span>';
   var sub = o.met ? t("goalDone", {p:t("p"+o.it.period)}) : describe(o.it) + (o.count ? " · " + o.count + "/" + o.it.quota : "");
-  return row(o.met ? "done" : "", "win", o.it.id, "", "", o.it.name, sub, dots, o.today);
+  var lft = o.met ? "" : periodLeft(o.it.period);
+  return row(o.met ? "done" : "", "win", o.it.id, "", "", o.it.name, sub, dots, o.today, lft ? '<span class="st'+(lft.red ? " late" : "")+'">'+esc(lft.x)+'</span>' : "");
 }
 function sec3(title, count, right, fixed, free){
   if(!fixed && !free) return "";
   function mini(k, body){ return body ? '<div class="mini">'+esc(t(k))+'</div><div class="box">'+body+'</div>' : ''; }
   return '<section class="sec"><div class="sh2"><h2>'+esc(title)+'</h2>'+(count ? '<span>'+count+'</span>' : '')+(right || "")+'</div>'+
     mini("fixedD", fixed) + mini("flexD", free) + '</section>';
+}
+/* the end of your day: your bedtime if you set one, otherwise 24 h after waking (or midnight with no wake-up) */
+function bedMin(){ var b = get("r.bed"); return /^\d\d:\d\d$/.test(b || "") ? mins(b) : null; }
+function dayEnd(){
+  var b = bedMin(), di = dayInfo(); if(b === null) return calEnd();
+  var th = di.wake !== null ? di.cut : 360, e = new Date(di.D); e.setHours(0,0,0,0);
+  if(b <= th) e = addDays(e, 1), e.setHours(0,0,0,0);
+  return e.getTime() + b*6e4;
+}
+function tabTop(){ var h = document.querySelector(".hdr"); return h ? h.getBoundingClientRect().height : 0; }
+/* the open tab lives in memory only: every launch (or coming back after a while) starts on Today */
+var TABV = "d", hidAt = 0;
+document.addEventListener("visibilitychange", function(){ if(document.hidden) hidAt = Date.now(); else if(hidAt && Date.now() - hidAt > 10*60e3 && TABV !== "d"){ TABV = "d"; lastHTML = ""; render(); } });
+function tabNow(){ if(get("r.test") === "1" && get("r.tab")) TABV = get("r.tab"); return TABV; }
+/* how long a period still runs: today → hours until the day ends; week / month → days, then hours on the last day */
+function periodLeft(p){
+  var cd = calDay(), hrs = Math.max(0, Math.round((calEnd() - Date.now()) / 6e4)), end;
+  if(p === "d"){ var dm = Math.round((dayEnd() - Date.now()) / 6e4); return dm <= 0 ? {x:t("bedPast"), red:true, min:0, past:true} : {x:t("leftX", {x:dur(dm)}), red:dm <= 120, min:dm}; }
+  end = p === "w" ? addDays(weekStart(cd), 6) : new Date(cd.getFullYear(), cd.getMonth()+1, 0, 12);
+  var l = diff(cd, end);
+  return l === 0 ? {x:t("leftX", {x:dur(hrs)}), red:true, min:hrs} : {x:t("daysLeft", {n:l + 1}), red:l <= 1, min:hrs + l*1440, days:l + 1};
 }
 function left(l, list){ var open = list.filter(function(o){ return !o.met; }).length; if(l === 0) return '<em class="tab'+(open ? " red" : "")+'">'+esc(t("leftX", {x:dur(Math.max(0, Math.round((calEnd() - Date.now()) / 6e4)))}))+'</em>'; return '<em class="'+(l <= 1 && open ? "red" : "")+'">'+esc(l === 0 ? t("lastDay") : t("daysLeft", {n:l + 1}))+'</em>'; }
 /* smooth list changes: rows glide to their new place, new rows fade in */
@@ -1229,54 +1311,67 @@ function render(){
   } else {
     out += wakeCard() + nowCard(m);
     var cd = calDay(), we = iso(addDays(weekStart(cd), 6)), me = iso(new Date(cd.getFullYear(), cd.getMonth()+1, 0, 12));
+    var ws = iso(weekStart(cd)), ms = iso(new Date(cd.getFullYear(), cd.getMonth(), 1, 12));
     var cw = [], cm = [], cl = [];
     m.coming.forEach(function(c){ if(c.it.unit === "h" || (c.it.unit === "d" && c.it.n === 1)) return; (c.it.next <= we ? cw : c.it.next <= me ? cm : cl).push(c); });
-    /* same row shape as Today: [check] [when] [name · description · how often] [relative tag] */
+    /* same row shape everywhere: [check] [when] [name / note / status · how often] */
     function comingRow(c, long){
       var nd = parse(c.it.next), day = long ? fmt(nd, {day:"numeric", month:"short"}) : fmt(nd, {weekday:"short"});
       var when = '<div class="tm day">'+esc(day)+(c.it.times.length ? '<small>'+esc(ft(c.it.times[0]))+(c.it.times.length > 1 ? " +" + (c.it.times.length - 1) : "")+'</small>' : "")+'</div>';
-      return row("coming", "item", c.it.id, "", when, c.it.name, describe(c.it), '<span class="tag">'+esc(inDays(c.d))+'</span>');
+      return row("coming", "item", c.it.id, "", when, c.it.name, freq(c.it), '<span class="tag">'+esc(inDays(c.d))+'</span>');
     }
-    // TODAY · fixed
+    function grp(k, right, body){ return body ? '<div class="grp"><div class="gh"><span>'+esc(t(k))+'</span>'+(right || "")+'</div><div class="box">'+body+'</div></div>' : ""; }
+    var dl = periodLeft("d");
+    // TODAY · anytime (always first, so it can't sink below a long timeline)
+    var gap = "", anyH = "";
+    m.overdue.forEach(function(o){ anyH += row("late", "item", o.it.id, "", gap, o.it.name, freq(o.it), '<span class="tag late">'+esc(t("lateD", {n:-o.d}))+'</span>'); });
+    m.any.forEach(function(a){
+      var ww = a.it.wake !== null && !a.done, at = dlGet(a.it)["*"];
+      var stt = a.done ? (at && at !== "×" ? t("doneAt", {t:ft(at)}) : t("doneT")) : ww ? t("wakeWait") : dl.x;
+      anyH += row(a.done ? "done" : ww ? "wwait" : "", a.wh ? "wakeEdit" : "item", a.it.id, "", ww && m.slots.length ? '<div class="tm">'+ico("sun", 18)+'</div>' : gap, a.it.name, freq(a.it), '<span class="tag'+(!a.done && !ww && dl.red ? " late" : "")+'">'+esc(stt)+'</span>');
+    });
+    anyH += m.dayWin.map(winRow).join("");
+    // TODAY · on the clock
     var fx = "";
-    var gap = m.slots.length ? '<div class="tm"></div>' : "";
-    m.overdue.forEach(function(o){ fx += row("late", "item", o.it.id, "", gap, o.it.name, describe(o.it), '<span class="tag late">'+esc(t("lateD", {n:-o.d}))+'</span>'); });
     if(m.slots.length){
       var placed = false;
       m.slots.forEach(function(s){
         if(!placed && s.min > nm){ placed = true; fx += '<div class="nowline"><b>'+ft(nm)+'</b></div>'; }
-        var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" && s.delta >= -2 ? "tnow" : s.state === "now" || s.state === "late" || s.state === "missed" ? "late" : "")+'">'+esc(r)+'</span>' : '';
-        fx += row("timed " + (s.state === "now" ? (s.delta >= -2 ? "due" : "due lt") : s.state), "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(s.time)}) + " · " : "") + describe(s.it), tag);
+        var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" && s.delta >= -2 ? "tnow" : s.state === "now" || s.state === "late" || s.state === "missed" ? "late" : s.state === "done" ? "ok" : "")+'">'+esc(r)+'</span>' : '';
+        fx += row("timed " + (s.state === "now" ? (s.delta >= -2 ? "due" : "due lt") : s.state), "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(s.time)}) + " · " : "") + freq(s.it), tag);
       });
+      if(!placed && m.slots.some(function(s){ return !s.done && !s.missed; })) fx += '<div class="nowline end"><b>'+ft(nm)+'</b></div>';
     }
-    var openFix = m.overdue.length + m.slots.filter(function(s){ return !s.done && !s.missed; }).length + m.any.filter(function(a){ return !a.done; }).length;
-    var freeOpen = m.dayWin.some(function(o){ return !o.met; }), nl = '<div class="nowline"><b>'+ft(nm)+'</b></div>', freeHTML = m.dayWin.map(winRow).join("");
-    /* nothing ahead on the clock: point "now" at what's still open, or drop it when the day is finished */
-    if(m.slots.length && !placed){
-      if(freeOpen && !m.any.some(function(a){ return !a.done; })) freeHTML = nl + freeHTML;
-      else if(openFix && !m.any.some(function(a){ return !a.done; })) fx += nl.replace('class="nowline"', 'class="nowline end"');
+    // stats per tab: done / total, and how long the period still runs
+    function cnt(list){ var d = 0, n = 0; list.forEach(function(o){ d += Math.min(o.count, o.it.quota); n += o.it.quota; }); return [d, n]; }
+    function doneIn(a, b, end){ return items.filter(function(i){ return !i.paused && i.kind !== "window" && i.unit !== "h" && !(i.unit === "d" && i.n === 1) && i.last && i.last >= a && i.last <= iso(cd) && i.next > end; }).length; }
+    var wc = cnt(m.week), mc = cnt(m.month), wDone = 0, mDone = 0;   /* a dated task checked early shows in Today's done list, so it isn't counted twice */
+    var st = {d:[m.done, m.total, dl], w:[wc[0] + wDone, wc[1] + wDone + cw.length, periodLeft("w")], m:[mc[0] + mDone, mc[1] + mDone + cm.length, periodLeft("m")]};
+    var TB = tabNow();
+    out += '<div class="tabs" role="tablist">' + ["d", "w", "m"].map(function(k){
+      var x = st[k], pc = x[1] ? Math.round(100 * x[0] / x[1]) : 0, open = x[1] - x[0];
+      return '<button type="button" role="tab" aria-selected="'+(TB === k)+'" class="tb'+(TB === k ? " on" : "")+(x[1] && !open ? " full" : "")+'" data-act="tab" data-tab="'+k+'">'+
+        '<span class="tb-h"><b>'+esc(t(k === "d" ? "tabD" : k === "w" ? "tabW" : "tabM"))+'</b><span class="tab">'+(x[1] ? x[0] + "/" + x[1] : "–")+'</span></span>'+
+        '<span class="tb-bar"><i style="width:'+pc+'%"></i></span><span class="tb-s'+(x[2].red && open ? " red" : "")+'">'+esc(x[2].past ? x[2].x : x[2].days ? t("dLeftS", {n:x[2].days}) : t("hLeftS", {x:x[2].min >= 60 ? Math.floor(x[2].min / 60) + t("hAbbr") : dur(x[2].min)}))+'</span></button>';
+    }).join("") + '</div>';
+    var body = "";
+    if(TB === "d") body = grp(m.overdue.length && !m.any.length && !m.dayWin.length ? "grpLate" : "grpAny", "", anyH) + grp("grpTimed", "", fx);
+    else if(TB === "w") body = grp("grpAnyW", "", m.week.map(winRow).join("")) + grp("grpDays", "", cw.map(function(c){ return comingRow(c, false); }).join(""));
+    else {
+      body = grp("grpAnyM", "", m.month.map(winRow).join("")) + grp("grpDays", "", cm.map(function(c){ return comingRow(c, true); }).join(""));
+      if(cl.length){
+        body += '<button class="more later" type="button" data-act="more">'+esc(t("laterN", {n:cl.length}))+'<span style="display:contents">'+ico("chev", 16).replace("<svg", expanded ? '<svg style="transform:rotate(180deg)"' : "<svg")+'</span></button>';
+        if(expanded) body += '<div class="box">'+cl.map(function(c){ return comingRow(c, true); }).join("")+'</div>';
+      }
     }
-    if(m.slots.length && !placed && m.any.some(function(a){ return !a.done; })) placed = "any";
-    var anyNl = placed === "any";
-    m.any.forEach(function(a){ if(anyNl && !a.done){ anyNl = false; fx += nl; } var ww = a.it.wake !== null && !a.done; fx += row(a.done ? "done" : ww ? "wwait" : "", a.wh ? "wakeEdit" : "item", a.it.id, "", ww && m.slots.length ? '<div class="tm">'+ico("sun", 18)+'</div>' : gap, a.it.name, describe(a.it), ww ? '<span class="tag">'+esc(t("wakeWait"))+'</span>' : ""); });
-    var todayLeft = m.overdue.length + m.slots.filter(function(s){ return !s.done && !s.missed; }).length + m.any.filter(function(a){ return !a.done; }).length + m.dayWin.filter(function(o){ return !o.met; }).length;
-    var tl = getWake() !== null ? 0 : Math.max(0, DE() - nm), dueLeft = todayLeft > 0;
-    out += sec3(t("schedule"), todayLeft, tl <= 0 ? "" : '<em class="tab'+(tl <= 120 && dueLeft ? " red" : "")+'">'+esc(t("leftX", {x:dur(tl)}))+'</em>', fx, freeHTML);
-    // THIS WEEK / THIS MONTH
-    var wl = diff(cd, parse(we)), ml = diff(cd, parse(me));
-    out += sec3(t("week"), cw.length + m.week.filter(function(o){ return !o.met; }).length, left(wl, m.week), cw.map(function(c){ return comingRow(c, false); }).join(""), m.week.map(winRow).join(""));
-    out += sec3(t("month"), cm.length + m.month.filter(function(o){ return !o.met; }).length, left(ml, m.month), cm.map(function(c){ return comingRow(c, true); }).join(""), m.month.map(winRow).join(""));
-    if(cl.length){
-      out += '<button class="more later" type="button" data-act="more">'+esc(t("laterN", {n:cl.length}))+'<span style="display:contents">'+ico("chev", 16).replace("<svg", expanded ? '<svg style="transform:rotate(180deg)"' : "<svg")+'</span></button>';
-      if(expanded) out += '<div class="box">'+cl.map(function(c){ return comingRow(c, true); }).join("")+'</div>';
-    }
+    out += '<div class="tbody">' + (body || '<div class="tempty">'+esc(t(TB === "d" ? "tabEmptyD" : TB === "w" ? "tabEmptyW" : "tabEmptyM"))+'</div>') + '</div>';
     var np = items.filter(function(i){ return i.paused; }).length;
     out += '<button class="more alltasks" type="button" data-act="all">'+ico("dots", 16)+esc(t("allT"))+' · '+items.length+(np ? ' · '+esc(t("pausedN", {n:np})) : '')+'</button>';
   }
   if(out !== lastHTML){ var fp = flipFirst(); $("app").innerHTML = out; lastHTML = out; dsFit(); flipPlay(fp); }
   if(warped){ var wb = warped; warped = null; repaired = 0; setTimeout(function(){ toast(t("clockBack"), wb); }, 300); }
   else if(repaired){ var rn = repaired; repaired = 0; setTimeout(function(){ toast(t("repairedN", {n:rn})); }, 300); }
-  $("allCount").textContent = items.length || "";
+  $("allCount").textContent = items.length || ""; $("bedS").textContent = bedMin() !== null ? ft(bedMin()) : t("bedOff");
   document.title = (m.pending ? "(" + m.pending + ") " : "") + "Routines";
   try{ if(navigator.setAppBadge){ if(m.pending) navigator.setAppBadge(m.pending); else navigator.clearAppBadge(); } }catch(e){}
 }
@@ -1322,7 +1417,13 @@ function nowCard(m){
   else if(soon.length && soon[0].delta <= 15){ s = soon[0]; kind = "kNext"; }
   else if(late.length){ s = late[late.length - 1]; kind = "kLate"; }
   else if(m.overdue.length){ s = {it:m.overdue[0].it, over:m.overdue[0].d}; kind = "kLate"; }
-  else if(soon.length){ s = soon[0]; kind = "kNext"; }
+  else {   /* nothing on the clock right now: bring up what's open for today, with the next timed one underneath */
+    var fa = anyOpen.filter(function(a){ return !a.wh && a.it.wake === null; })[0], fw = m.dayWin.filter(function(o){ return !o.met; })[0];
+    var nxt = soon[0] ? t("nextX", {n:soon[0].it.name, w:t("inX", {x:dur(soon[0].delta)})}) : "", dl = periodLeft("d").x;
+    if(fa){ s = {it:fa.it, rr:dl + (nxt ? " · " + nxt : "")}; kind = "kAny"; }
+    else if(fw){ s = {it:fw.it, win:fw, rr:fw.count + "/" + fw.it.quota + " · " + dl + (nxt ? " · " + nxt : "")}; kind = "kAny"; }
+    else if(soon.length){ s = soon[0]; kind = "kNext"; }
+  }
   if(!s){
     var openT = anyOpen.length + m.dayWin.filter(function(o){ return !o.met; }).length;
     if(openT) return '<div class="now calm"><div class="now-tx"><div class="now-k">'+esc(t("schedule"))+'</div><div class="now-n">'+esc(t("noneDue"))+'</div><div class="now-r">'+esc(t("openToday", {n:openT}))+'</div></div></div>';
@@ -1331,8 +1432,8 @@ function nowCard(m){
   }
   var act, attr = "", r;
   if(s.time){ act = "slot"; attr = ' data-time="'+s.time+'"'; r = rel(s); }
-  else if(s.win){ act = "win"; r = describe(s.it) + " · " + s.win.count + "/" + s.it.quota; }
-  else { act = "item"; r = s.over ? t("lateD", {n:-s.over}) : describe(s.it); }
+  else if(s.win){ act = "win"; r = s.rr || describe(s.it) + " · " + s.win.count + "/" + s.it.quota; }
+  else { act = "item"; r = s.over ? t("lateD", {n:-s.over}) : s.rr || describe(s.it); }
   var owed = late.length + m.overdue.length;
   return '<div class="now k-'+kind+'" data-id="'+s.it.id+'"'+attr+'><div class="now-tx"><div class="now-k">'+(s.time ? '<span class="tab">'+ft(s.eff || s.time)+'</span> · ' : '')+esc(t(kind))+'</div>'+
     '<div class="now-n">'+esc(s.it.name)+'</div>'+(s.it.desc ? '<div class="now-d'+(DSX["n:"+s.it.id] ? ' open' : '')+'" dir="auto">'+esc(s.it.desc)+'</div>'+dsBtn("n:"+s.it.id) : '')+'<div class="now-r">'+esc(r)+'</div>'+'<div class="now-acts">'+(owed > 1 || (owed && kind !== "kLate") ? '<button class="cchip" type="button" data-act="catch">'+ico("undo", 16)+esc(t("catchBtn"))+' · '+owed+'</button>' : '')+(act !== "win" ? '<button class="cchip ghost" type="button" data-act="later">'+ico("clock", 16)+esc(t("laterChip"))+'</button>' : '')+'</div></div>'+
@@ -1429,7 +1530,7 @@ function apply(kind, id, time, o){
       }
       else {
         var st2 = o.missed ? "×" : (o.at || stamp());
-        it.slots.done[time] = st2; dlSet(it, time, st2); delete it.slots.snz[time];   /* today's row stays at its planned time */
+        it.slots.done[time] = st2; dlSet(it, time, st2);   /* the row stays where it was: planned time, or the time it was moved to */
         if(it.next === T0 && it.times.every(function(x){ return it.slots.done[x]; })) advance(it, {missed:o.missed});
         retime(it);
       }
@@ -1481,6 +1582,8 @@ document.addEventListener("click", function(e){
   if(a === "add"){ openSheet(null); return; }
   if(a === "catch"){ openCatch(); return; }
   if(a === "more"){ expanded = !expanded; render(); return; }
+  if(a === "tab"){ var k2 = b.getAttribute("data-tab"); if(k2 === tabNow()) return; TABV = k2; if(get("r.test") === "1") set("r.tab", k2); buzz(6); flipOn = false; lastHTML = ""; render(); flipOn = true;
+    var tb = document.querySelector(".tabs"); if(tb){ var y = tb.getBoundingClientRect().top + window.pageYOffset - tabTop(); if(window.pageYOffset > y) window.scrollTo(0, y); } return; }
   if(a === "dsx"){ e.preventDefault(); e.stopPropagation(); var k = b.getAttribute("data-k"); if(DSX[k]) delete DSX[k]; else DSX[k] = 1; buzz(6); lastHTML = ""; render(); return; }
   if(a === "all"){ openAll(); return; }
   if(a === "wakeNow"){ wakeIs(nowMin()); return; }
@@ -1825,6 +1928,13 @@ $("aList").addEventListener("click", function(e){ var b = e.target.closest("[dat
 $("aScrim").addEventListener("click", closeAll); $("aClose").addEventListener("click", closeAll);
 $("aAdd").addEventListener("click", function(){ closeAll(); setTimeout(function(){ openSheet(null); }, 120); });
 $("allBtn").addEventListener("click", openAll);
+$("bedBtn").addEventListener("click", function(){
+  closeMenus(); var b = bedMin(), w = getWake();
+  openTime({title:t("bedQ"), sub:t("bedSub"), init:b !== null ? b : nowMin(), free:true, chips:[],
+    read:function(v){ if(w === null) return ft(v); var a = ((v - w) % 1440 + 1440) % 1440; return ft(v) + " · " + t("bedAfter", {x:dur(a)}); },
+    clear:b !== null ? t("bedClear") : null, onClear:function(){ var before = snap(); set("r.bed", ""); lastHTML = ""; render(); toast(t("bedCleared")); },
+    cb:function(v){ set("r.bed", hm(v)); lastHTML = ""; render(); buzz(10); toast(t("bedSet", {t:ft(v)})); }});
+});
 $("lScrim").addEventListener("click", closeLater);
 /* one sheet for "what time?" — wake-up and "I did it at…". Never accepts a future time. */
 var TS = null;
@@ -1832,6 +1942,7 @@ var TS = null;
 var TDD = 0;
 function tMoment(){ var c = readWheels("t"), d = new Date(); d.setHours(0,0,0,0); d.setDate(d.getDate() + TDD); return d.getTime() + c*6e4; }
 function tPaint(){
+  if(TS && TS.free){ $("tRead").classList.remove("bad"); $("tRead").textContent = TS.read ? TS.read(readWheels("t")) : ft(readWheels("t")); $("tWarn").style.display = "none"; return; }
   [].forEach.call($("tDay").children, function(b){ b.classList.toggle("on", +b.getAttribute("data-dd") === TDD); });
   var ts = tMoment(), ago = Math.round((Date.now() - ts) / 6e4), r = $("tRead");
   if(ago < 0){ r.textContent = t("future"); r.classList.add("bad"); }
@@ -1843,8 +1954,9 @@ function openTime(o){
   var nm = nowMin();
   $("tTitle").textContent = o.title; $("tSub").textContent = o.sub || ""; $("tSub").style.display = o.sub ? "" : "none";
   $("tChips").innerHTML = (o.chips || []).filter(function(c){ return c[1] <= nm; }).map(function(c){ return '<button type="button" class="lopt" data-tm="'+c[1]+'"><b>'+esc(c[0])+'</b><span>'+ft(c[1])+'</span></button>'; }).join("");
+  $("tDay").style.display = o.free ? "none" : "";
   $("tDay").children[0].textContent = t("yest"); $("tDay").children[1].textContent = t("todayW");
-  var ts = Math.min(Date.now(), dayInfo().mid + Math.min(nm, o.init) * 6e4), d0 = new Date(); d0.setHours(0,0,0,0);
+  var ts = o.free ? dayInfo().mid + o.init * 6e4 : Math.min(Date.now(), dayInfo().mid + Math.min(nm, o.init) * 6e4), d0 = new Date(); d0.setHours(0,0,0,0);
   TDD = ts < d0.getTime() ? -1 : 0; var dd = new Date(ts);
   $("tWarn").style.display = "none";
   $("tClear").style.display = o.clear ? "" : "none"; $("tClear").textContent = o.clear || "";
@@ -1859,6 +1971,7 @@ function pickTime(m){
 }
 $("tChips").addEventListener("click", function(e){ var b = e.target.closest("[data-tm]"); if(b){ buzz(8); pickTime(+b.getAttribute("data-tm")); } });
 $("tSet").addEventListener("click", function(){
+  if(TS && TS.free){ var fx0 = TS, v0 = readWheels("t"); closeTime(); fx0.cb(v0); return; }
   var ts = tMoment(); if(ts > Date.now() + 3e4){ $("tWarn").textContent = t("futureNo"); $("tWarn").style.display = ""; buzz([10, 40, 10]); return; }
   pickTime(Math.min(nowMin(), Math.round((ts - dayInfo().mid) / 6e4)));
 });
