@@ -599,6 +599,17 @@ html[dir=rtl] .nowline{padding-left:2px;padding-right:8px}
 .more.alltasks{margin-top:6px}
 @media (max-width:380px){.tabs{gap:5px}.tb{padding:8px 8px 7px}.tb-h b{font-size:13px}.tb-h .tab{font-size:12px}.tb-s{font-size:11px}#app .row{padding-inline:0}}
 body{overflow-x:clip}   /* clip, not hidden: keeps the header and tabs sticky */
+/* v32: one list, no cards */
+#app .box.list{margin:2px 0 8px}
+#app .row.anyt .tm,#app .row.coming .tm{color:var(--ink2)}
+.catchbar{display:flex;align-items:center;gap:8px;width:100%;height:42px;padding:0 12px;margin:0 0 6px;border-radius:12px;background:var(--redsoft);color:var(--red);font-weight:600;font-size:14px}
+.catchbar:active{opacity:.7}
+.hint{text-align:center;color:var(--ink3);font-size:12px;margin:2px 0 6px}
+/* one width for the "when" column, whatever it holds (time, day, or nothing) */
+#app .row .tm,#app .nowline b{width:52px;margin-inline-end:0}
+.h12 #app .row .tm,.h12 #app .nowline b{width:62px}
+@media (max-width:380px){#app .row .tm,#app .nowline b{width:46px}.h12 #app .row .tm,.h12 #app .nowline b{width:56px}}
+@media (max-width:330px){.h12 #app .row .tm,.h12 #app .nowline b{width:52px}}
 </style>
 </head>
 <body>
@@ -773,7 +784,7 @@ var T = {
   week:["This week","Cette semaine","هذا الأسبوع"], month:["This month","Ce mois-ci","هذا الشهر"], coming:["Coming up","À venir","قادم"],
   daysLeft:["{n} days left","{n} jours restants","باقي {n} أيام"], lastDay:["last day","dernier jour","آخر يوم"], oneLeft:["2 days left","2 jours restants","باقي يومان"],
   goalDone:["done for this {p}","fait pour ce {p}","منجز لهذا {p}"], pd:["day","jour","اليوم"], pw:["week","semaine","الأسبوع"], pm:["month","mois","الشهر"],
-  lateD:["{n}d late","{n} j de retard","متأخر {n} ي"], tomorrow:["Tomorrow","Demain","غدًا"],
+  lateD:["{n}d late","{n} j de retard","متأخر {n} ي"], lateY:["due yesterday","prévu hier","كان مستحقًا أمس"], tomorrow:["Tomorrow","Demain","غدًا"],
   showMore:["Show {n} more","Afficher {n} de plus","عرض {n} أخرى"], showLess:["Show less","Moins","أقل"],
   emptyT:["No tasks yet","Aucune tâche","لا توجد مهام بعد"], emptyP:["Add what you do regularly. Check it off.","Ajoutez ce que vous faites souvent. Cochez.","أضف ما تفعله بانتظام. ثم أنجزه."], addFirst:["Add your first task","Ajouter une tâche","أضف أول مهمة"],
   newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["Name","Nom","الاسم"], more2:["More","Plus","المزيد"], less:["Less","Moins","أقل"], descPh:["Description (optional)","Description (facultatif)","الوصف (اختياري)"], ph:["Task name","Nom de la tâche","اسم المهمة"],
@@ -842,7 +853,7 @@ var T = {
   wakeClear:["Clear wake time","Effacer l’heure du réveil","مسح وقت الاستيقاظ"], wakeCleared:["Wake time cleared","Heure du réveil effacée","مُسح وقت الاستيقاظ"],
   wakeOff:["{x} after waking","{x} après le réveil","بعد {x} من الاستيقاظ"], wake0:["right after waking","dès le réveil","فور الاستيقاظ"],
   fromWake:["starts {x} after waking","dès {x} après le réveil","يبدأ بعد {x} من الاستيقاظ"], fromWake0:["starts when you wake up","dès le réveil","يبدأ عند الاستيقاظ"], wakeLbl2:["First one after waking","Premier après le réveil","الأول بعد الاستيقاظ"],
-  doneT:["done","fait","أُنجز"], bedT:["Bedtime","Coucher","وقت النوم"], bedOff:["Not set","Non défini","غير محدد"],
+  doneT:["done","fait","أُنجز"], timeUp:["Time’s up: {n}","Temps écoulé : {n}","انتهى الوقت: {n}"], catchN:["Catch up · {n}","Rattraper · {n}","استدراك · {n}"], bedT:["Bedtime","Coucher","وقت النوم"], bedOff:["Not set","Non défini","غير محدد"],
   bedQ:["When does your day end?","Quand se termine votre journée ?","متى ينتهي يومك؟"], bedSub:["“Time left” counts down to this. Without it, your day ends 24 h after you wake up.","Le « temps restant » compte jusqu’à cette heure. Sans elle, la journée finit 24 h après le réveil.","يُحسب «الوقت المتبقي» حتى هذا الوقت. بدونه ينتهي يومك بعد 24 ساعة من الاستيقاظ."],
   bedClear:["Remove bedtime","Retirer l’heure du coucher","إزالة وقت النوم"], bedAfter:["{x} after waking up","{x} après le réveil","بعد {x} من الاستيقاظ"], bedPast:["past bedtime","coucher dépassé","تجاوزت وقت النوم"],
   bedSet:["Bedtime {t}","Coucher à {t}","وقت النوم {t}"], bedCleared:["Bedtime removed","Heure du coucher retirée","أزيل وقت النوم"], wakeWait:["waits for your wake-up","attend votre réveil","ينتظر استيقاظك"],
@@ -1060,7 +1071,7 @@ function norm(i){
   return it;
 }
 items = items.map(norm).filter(Boolean);
-if(get("r.test") === "1") window.__R = {get items(){ return items; }, set items(v){ items = v; }, model:function(){ return model(); }, apply:function(a,b,c,d){ return apply(a,b,c,d); }, describe:function(i,f){ return describe(i,f); }, render:function(){ lastHTML = ""; render(); }, save:function(){ save(); }, today:function(){ return iso(today()); }, find:function(id){ return find(id); }, setWake:function(m){ setWake(m); }, nowMin:function(){ return nowMin(); }};
+if(get("r.test") === "1") window.__R = {later:function(a,b,c){ openLater(a,b,c); }, get items(){ return items; }, set items(v){ items = v; }, model:function(){ return model(); }, apply:function(a,b,c,d){ return apply(a,b,c,d); }, describe:function(i,f){ return describe(i,f); }, render:function(){ lastHTML = ""; render(); }, save:function(){ save(); }, today:function(){ return iso(today()); }, find:function(id){ return find(id); }, setWake:function(m){ setWake(m); }, nowMin:function(){ return nowMin(); }};
 /* one-time: the day boundary used to be capped at 6 AM — move stored hourly times to the new boundary */
 if(get("r.cutv") !== "2"){ (function(){ var d = dayInfo(), old = d.wake === null ? 0 : Math.min(360, d.cut); reencode(old); set("r.cutv", "2"); })(); }
 
@@ -1232,13 +1243,13 @@ function row(cls, act, id, extra, left, name, sub, right, ckOn, stat){
 function sec(title, count, right, body){
   return '<section class="sec"><div class="sh2"><h2>'+esc(title)+'</h2>'+(count ? '<span>'+count+'</span>' : '')+(right || "")+'</div><div class="box">'+body+'</div></section>';
 }
-function winRow(o){
+function winRow(o, lateTxt){
   var dots = "";
   if(o.it.quota <= 7){ for(var i = 0; i < o.it.quota; i++) dots += '<i class="'+(i < o.count ? "on" : "")+'"></i>'; dots = '<div class="dots">'+dots+'</div>'; }
   else dots = '<span class="tag tab">'+o.count+'/'+o.it.quota+'</span>';
   var sub = o.met ? t("goalDone", {p:t("p"+o.it.period)}) : describe(o.it) + (o.count ? " · " + o.count + "/" + o.it.quota : "");
-  var lft = o.met ? "" : periodLeft(o.it.period);
-  return row(o.met ? "done" : "", "win", o.it.id, "", "", o.it.name, sub, dots, o.today, lft ? '<span class="st'+(lft.red ? " late" : "")+'">'+esc(lft.x)+'</span>' : "");
+  var lft = o.met ? "" : lateTxt ? {x:lateTxt, red:true} : periodLeft(o.it.period);
+  return row(o.met ? "done" : lateTxt ? "late" : "", "win", o.it.id, "", '<div class="tm"></div>', o.it.name, sub, dots, o.today, lft ? '<span class="st'+(lft.red ? " late" : "")+'">'+esc(lft.x)+'</span>' : "");
 }
 function sec3(title, count, right, fixed, free){
   if(!fixed && !free) return "";
@@ -1256,7 +1267,7 @@ function dayEnd(){
 }
 function tabTop(){ var h = document.querySelector(".hdr"); return h ? h.getBoundingClientRect().height : 0; }
 /* the open tab lives in memory only: every launch (or coming back after a while) starts on Today */
-var TABV = "d", hidAt = 0;
+var TABV = "d", hidAt = 0, LATEW = null;
 document.addEventListener("visibilitychange", function(){ if(document.hidden) hidAt = Date.now(); else if(hidAt && Date.now() - hidAt > 10*60e3 && TABV !== "d"){ TABV = "d"; lastHTML = ""; render(); } });
 function tabNow(){ if(get("r.test") === "1" && get("r.tab")) TABV = get("r.tab"); return TABV; }
 /* how long a period still runs: today → hours until the day ends; week / month → days, then hours on the last day */
@@ -1309,62 +1320,52 @@ function render(){
   if(!items.length){
     out = '<div class="empty"><h2>'+esc(t("emptyT"))+'</h2><p>'+esc(t("emptyP"))+'</p><button class="btn y" type="button" data-act="add">'+ico("plus")+esc(t("addFirst"))+'</button></div>';
   } else {
-    out += wakeCard() + nowCard(m);
-    var cd = calDay(), we = iso(addDays(weekStart(cd), 6)), me = iso(new Date(cd.getFullYear(), cd.getMonth()+1, 0, 12));
-    var ws = iso(weekStart(cd)), ms = iso(new Date(cd.getFullYear(), cd.getMonth(), 1, 12));
-    var cw = [], cm = [], cl = [];
-    m.coming.forEach(function(c){ if(c.it.unit === "h" || (c.it.unit === "d" && c.it.n === 1)) return; (c.it.next <= we ? cw : c.it.next <= me ? cm : cl).push(c); });
-    /* same row shape everywhere: [check] [when] [name / note / status · how often] */
-    function comingRow(c, long){
-      var nd = parse(c.it.next), day = long ? fmt(nd, {day:"numeric", month:"short"}) : fmt(nd, {weekday:"short"});
-      var when = '<div class="tm day">'+esc(day)+(c.it.times.length ? '<small>'+esc(ft(c.it.times[0]))+(c.it.times.length > 1 ? " +" + (c.it.times.length - 1) : "")+'</small>' : "")+'</div>';
-      return row("coming", "item", c.it.id, "", when, c.it.name, freq(c.it), '<span class="tag">'+esc(inDays(c.d))+'</span>');
-    }
-    function grp(k, right, body){ return body ? '<div class="grp"><div class="gh"><span>'+esc(t(k))+'</span>'+(right || "")+'</div><div class="box">'+body+'</div></div>' : ""; }
-    var dl = periodLeft("d");
-    // TODAY · anytime (always first, so it can't sink below a long timeline)
-    var gap = "", anyH = "";
-    m.overdue.forEach(function(o){ anyH += row("late", "item", o.it.id, "", gap, o.it.name, freq(o.it), '<span class="tag late">'+esc(t("lateD", {n:-o.d}))+'</span>'); });
-    m.any.forEach(function(a){
-      var ww = a.it.wake !== null && !a.done, at = dlGet(a.it)["*"];
-      var stt = a.done ? (at && at !== "×" ? t("doneAt", {t:ft(at)}) : t("doneT")) : ww ? t("wakeWait") : dl.x;
-      anyH += row(a.done ? "done" : ww ? "wwait" : "", a.wh ? "wakeEdit" : "item", a.it.id, "", ww && m.slots.length ? '<div class="tm">'+ico("sun", 18)+'</div>' : gap, a.it.name, freq(a.it), '<span class="tag'+(!a.done && !ww && dl.red ? " late" : "")+'">'+esc(stt)+'</span>');
+    out += wakeCard();
+    /* ONE list, soonest deadline first. Every task has one: its time, the end of your day (anytime today),
+       the end of the week / month (anytime this week / month), or its date. Past deadlines rise to the top in red. */
+    var cd = calDay(), me = iso(new Date(cd.getFullYear(), cd.getMonth()+1, 0, 12)), mid0 = dayInfo().mid;
+    var L = [], cl = [], nowK = nm, dl = periodLeft("d"), dEnd = Math.round((dayEnd() - mid0) / 6e4);
+    var blank = '<div class="tm"></div>';
+    function add(k, html, late, done){ L.push({k:k, h:html, late:late, done:done}); }
+    m.overdue.forEach(function(o){ add(-1e6 + o.d, row("late", "item", o.it.id, "", blank, o.it.name, freq(o.it), '<span class="tag late">'+esc(o.d === -1 ? t("lateY") : t("lateD", {n:-o.d}))+'</span>'), true, false); });
+    m.slots.forEach(function(s){
+      var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" && s.delta >= -2 ? "tnow" : s.state === "now" || s.state === "late" || s.state === "missed" ? "late" : s.state === "done" ? "ok" : "")+'">'+esc(r)+'</span>' : '';
+      add(s.min, row("timed " + (s.state === "now" ? (s.delta >= -2 ? "due" : "due lt") : s.state), "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(s.time)}) + " · " : "") + freq(s.it), tag), s.state === "late" || s.state === "missed", s.done);
     });
-    anyH += m.dayWin.map(winRow).join("");
-    // TODAY · on the clock
-    var fx = "";
-    if(m.slots.length){
-      var placed = false;
-      m.slots.forEach(function(s){
-        if(!placed && s.min > nm){ placed = true; fx += '<div class="nowline"><b>'+ft(nm)+'</b></div>'; }
-        var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" && s.delta >= -2 ? "tnow" : s.state === "now" || s.state === "late" || s.state === "missed" ? "late" : s.state === "done" ? "ok" : "")+'">'+esc(r)+'</span>' : '';
-        fx += row("timed " + (s.state === "now" ? (s.delta >= -2 ? "due" : "due lt") : s.state), "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(s.time)}) + " · " : "") + freq(s.it), tag);
-      });
-      if(!placed && m.slots.some(function(s){ return !s.done && !s.missed; })) fx += '<div class="nowline end"><b>'+ft(nm)+'</b></div>';
+    var pastD = dEnd <= nm, lateAny = [];
+    m.any.forEach(function(a){
+      var ww = a.it.wake !== null && !a.done, at = dlGet(a.it)["*"], late = !a.done && !ww && pastD;
+      var stt = a.done ? (at && at !== "×" ? t("doneAt", {t:ft(at)}) : t("doneT")) : ww ? t("wakeWait") : late ? t("lateX", {x:dur(nm - dEnd)}) : dl.x;
+      if(late) lateAny.push(a.it);
+      add(ww ? -5e5 : dEnd, row((a.done ? "done" : ww ? "wwait" : late ? "late" : "") + " anyt", a.wh ? "wakeEdit" : "item", a.it.id, "", ww ? '<div class="tm">'+ico("sun", 18)+'</div>' : blank, a.it.name, freq(a.it), '<span class="tag'+(late || (!a.done && !ww && dl.red) ? " late" : "")+'">'+esc(stt)+'</span>'), late, a.done);
+    });
+    function winAt(o, k, p){ var late = p === "d" && !o.met && pastD; if(late) lateAny.push(o.it); add(k, winRow(o, late ? t("lateX", {x:dur(nm - dEnd)}) : null), late, o.met); }
+    m.dayWin.forEach(function(o){ winAt(o, dEnd, "d"); });
+    var wk = periodLeft("w"), mk = periodLeft("m");
+    m.week.forEach(function(o){ winAt(o, nm + wk.min, "w"); });
+    m.month.forEach(function(o){ winAt(o, nm + mk.min, "m"); });
+    m.coming.forEach(function(c){
+      if(c.it.unit === "h" || (c.it.unit === "d" && c.it.n === 1)) return;
+      var nd = parse(c.it.next), long = c.d > 6, day = long ? fmt(nd, {day:"numeric", month:"short"}) : fmt(nd, {weekday:"short"});
+      var when = '<div class="tm day">'+esc(day)+(c.it.times.length ? '<small>'+esc(ft(c.it.times[0]))+(c.it.times.length > 1 ? " +" + (c.it.times.length - 1) : "")+'</small>' : "")+'</div>';
+      var h = row("coming", "item", c.it.id, "", when, c.it.name, freq(c.it), '<span class="tag">'+esc(inDays(c.d))+'</span>');
+      if(c.it.next > me) cl.push(h); else add(c.d * 1440 + (c.it.times.length ? lm(c.it.times[0]) : CUT()), h, false, false);
+    });
+    L.sort(function(a, b){ return a.k - b.k; });
+    /* a deadline that passes while you watch gets a clear signal, once */
+    m.overdue.forEach(function(o){ if(lateAny.indexOf(o.it) < 0) lateAny.push(o.it); });
+    var lateIds = lateAny.map(function(i){ return i.id; }).join(",");
+    if(LATEW !== null && lateIds !== LATEW){ var fresh = lateAny.filter(function(i){ return LATEW.split(",").indexOf(i.id) < 0; }); if(fresh.length && !document.hidden){ buzz([12, 60, 12]); setTimeout(function(){ toast(t("timeUp", {n:fresh.map(function(i){ return i.name; }).join(", ")})); }, 250); } }
+    LATEW = lateIds;
+    var owed = L.filter(function(x){ return x.late; }).length, body = "", placed = false;
+    L.forEach(function(x){ if(!placed && x.k > nowK){ placed = true; body += '<div class="nowline"><b>'+ft(nm)+'</b></div>'; } body += x.h; });
+    if(owed > 1 && lateQueue().length) out += '<button class="catchbar" type="button" data-act="catch">'+ico("clock", 16)+'<span>'+esc(t("catchN", {n:lateQueue().length}))+'</span></button>';
+    out += body ? '<div class="box list">'+body+'</div>' : '<div class="tempty">'+esc(t("tabEmptyD"))+'</div>';
+    if(body && !get("r.swiped")) out += '<div class="hint">'+esc(t("swipeHint"))+'</div>';
+    if(cl.length){
+      out += '<button class="more later" type="button" data-act="more">'+esc(t("laterN", {n:cl.length}))+'<span style="display:contents">'+ico("chev", 16).replace("<svg", expanded ? '<svg style="transform:rotate(180deg)"' : "<svg")+'</span></button>';
+      if(expanded) out += '<div class="box list">'+cl.join("")+'</div>';
     }
-    // stats per tab: done / total, and how long the period still runs
-    function cnt(list){ var d = 0, n = 0; list.forEach(function(o){ d += Math.min(o.count, o.it.quota); n += o.it.quota; }); return [d, n]; }
-    function doneIn(a, b, end){ return items.filter(function(i){ return !i.paused && i.kind !== "window" && i.unit !== "h" && !(i.unit === "d" && i.n === 1) && i.last && i.last >= a && i.last <= iso(cd) && i.next > end; }).length; }
-    var wc = cnt(m.week), mc = cnt(m.month), wDone = 0, mDone = 0;   /* a dated task checked early shows in Today's done list, so it isn't counted twice */
-    var st = {d:[m.done, m.total, dl], w:[wc[0] + wDone, wc[1] + wDone + cw.length, periodLeft("w")], m:[mc[0] + mDone, mc[1] + mDone + cm.length, periodLeft("m")]};
-    var TB = tabNow();
-    out += '<div class="tabs" role="tablist">' + ["d", "w", "m"].map(function(k){
-      var x = st[k], pc = x[1] ? Math.round(100 * x[0] / x[1]) : 0, open = x[1] - x[0];
-      return '<button type="button" role="tab" aria-selected="'+(TB === k)+'" class="tb'+(TB === k ? " on" : "")+(x[1] && !open ? " full" : "")+'" data-act="tab" data-tab="'+k+'">'+
-        '<span class="tb-h"><b>'+esc(t(k === "d" ? "tabD" : k === "w" ? "tabW" : "tabM"))+'</b><span class="tab">'+(x[1] ? x[0] + "/" + x[1] : "–")+'</span></span>'+
-        '<span class="tb-bar"><i style="width:'+pc+'%"></i></span><span class="tb-s'+(x[2].red && open ? " red" : "")+'">'+esc(x[2].past ? x[2].x : x[2].days ? t("dLeftS", {n:x[2].days}) : t("hLeftS", {x:x[2].min >= 60 ? Math.floor(x[2].min / 60) + t("hAbbr") : dur(x[2].min)}))+'</span></button>';
-    }).join("") + '</div>';
-    var body = "";
-    if(TB === "d") body = grp(m.overdue.length && !m.any.length && !m.dayWin.length ? "grpLate" : "grpAny", "", anyH) + grp("grpTimed", "", fx);
-    else if(TB === "w") body = grp("grpAnyW", "", m.week.map(winRow).join("")) + grp("grpDays", "", cw.map(function(c){ return comingRow(c, false); }).join(""));
-    else {
-      body = grp("grpAnyM", "", m.month.map(winRow).join("")) + grp("grpDays", "", cm.map(function(c){ return comingRow(c, true); }).join(""));
-      if(cl.length){
-        body += '<button class="more later" type="button" data-act="more">'+esc(t("laterN", {n:cl.length}))+'<span style="display:contents">'+ico("chev", 16).replace("<svg", expanded ? '<svg style="transform:rotate(180deg)"' : "<svg")+'</span></button>';
-        if(expanded) body += '<div class="box">'+cl.map(function(c){ return comingRow(c, true); }).join("")+'</div>';
-      }
-    }
-    out += '<div class="tbody">' + (body || '<div class="tempty">'+esc(t(TB === "d" ? "tabEmptyD" : TB === "w" ? "tabEmptyW" : "tabEmptyM"))+'</div>') + '</div>';
     var np = items.filter(function(i){ return i.paused; }).length;
     out += '<button class="more alltasks" type="button" data-act="all">'+ico("dots", 16)+esc(t("allT"))+' · '+items.length+(np ? ' · '+esc(t("pausedN", {n:np})) : '')+'</button>';
   }
@@ -1648,6 +1649,7 @@ $("extraBtn").addEventListener("click", function(){ var x = toastExtra; toastExt
     var go = r.classList.contains("sw-do") ? "do" : r.classList.contains("sw-later") ? "later" : null;
     r.classList.remove("sw-do", "sw-later");
     if(!go) return;
+    if(!get("r.swiped")){ set("r.swiped", "1"); lastHTML = ""; }
     var b = r.querySelector(".ck"), a = b && b.getAttribute("data-act"); if(!a) return;
     if(go === "do"){ if(!r.classList.contains("done")) act(a, r.getAttribute("data-id"), r.getAttribute("data-time"), b); }
     else if(a !== "win" && !r.classList.contains("done")) openLater(a, r.getAttribute("data-id"), r.getAttribute("data-time"));
@@ -1712,7 +1714,7 @@ $("cScrim").addEventListener("click", closeCatch); $("cClose").addEventListener(
     var rtl = document.documentElement.dir === "rtl", r = rtl ? -dx : dx;
     if(r > 90) answer("ontime"); else if(r < -90){ c.classList.remove("lean-r", "lean-l"); answer("later"); } else c.classList.remove("lean-r", "lean-l"); });
 })();
-function maybeCatch(){
+function maybeCatch(){ return;   /* never opens by itself: catching up is a button in the list */
   if($("all").classList.contains("on") || $("later").classList.contains("on") || $("sheet").classList.contains("on") || $("catch").classList.contains("on")) return;
   if(Date.now() - (+get("r.catchAt") || 0) < 25*60e3) return;
   if(lateQueue().length) setTimeout(openCatch, 450);
