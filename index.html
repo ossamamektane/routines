@@ -635,6 +635,26 @@ html:not([dir=rtl]) body{letter-spacing:-.011em}
 .lsec em{font-style:normal;margin-inline-start:auto;color:var(--y);font-size:15px;font-weight:500}
 .wakebar+.lsec,.wake+.lsec,.catchbar+.lsec{margin-top:6px}
 #app .dlist .row .tm{color:var(--ink3)}
+
+/* ===== v35: the calendar day + a time-left bar you can't miss ===== */
+.tl{position:sticky;top:calc(58px + var(--st));z-index:14;background:var(--page,var(--bg));margin:0 0 12px;padding:4px 0 10px}
+.tl[hidden]{display:none}
+.tl-h{display:flex;align-items:baseline;justify-content:space-between;gap:10px;margin:0 1px 7px}
+.tl-h b{font-size:17px;font-weight:700;letter-spacing:-.01em;color:var(--tlc)}
+.tl-h span{font-size:13px;font-weight:600;color:var(--ink2);white-space:nowrap}
+.tl-bar{height:12px;border-radius:6px;background:var(--bg3);overflow:hidden;position:relative}
+.tl-bar i{display:block;height:100%;width:100%;border-radius:6px;background:var(--tlb);transition:width .6s ease,background .6s}
+.tl{--tlb:#34c759;--tlc:#248a3d}
+.tl.y{--tlb:#ffcc00;--tlc:#a05a00}
+.tl.r{--tlb:#ff3b30;--tlc:#d70015}
+html[data-theme="dark"] .tl{--tlc:#30d158;--tlb:#30d158}
+html[data-theme="dark"] .tl.y{--tlc:#ffd60a;--tlb:#ffd60a}
+html[data-theme="dark"] .tl.r{--tlc:#ff453a;--tlb:#ff453a}
+@media (prefers-color-scheme:dark){html:not([data-theme="light"]) .tl{--tlc:#30d158;--tlb:#30d158}html:not([data-theme="light"]) .tl.y{--tlc:#ffd60a;--tlb:#ffd60a}html:not([data-theme="light"]) .tl.r{--tlc:#ff453a;--tlb:#ff453a}}
+.tl.last .tl-bar i{animation:tlp 1.6s ease-in-out infinite}
+@keyframes tlp{50%{opacity:.45}}
+@media (prefers-reduced-motion:reduce){.tl.last .tl-bar i{animation:none}}
+.wakebar .wk-e{font-weight:600;color:var(--y);padding:0 10px;height:36px}
 </style>
 </head>
 <body>
@@ -656,7 +676,6 @@ html:not([dir=rtl]) body{letter-spacing:-.011em}
   <div class="dd"><button class="ib" type="button" data-dd aria-haspopup="menu" aria-label="More"><span data-i="dots"></span></button>
     <div class="menu" role="menu">
       <button class="mi" id="allBtn"><span data-i="dots"></span><span data-t="allT"></span><small class="mx tab" id="allCount"></small></button>
-      <button class="mi" id="bedBtn"><span data-i="moon"></span><span data-t="bedT"></span><small class="mx tab" id="bedS"></small></button>
       <div class="msep"></div>
       <div class="mh" data-t="clockF"></div>
       <button class="mi" data-clock="24" role="menuitemradio"><span data-i="clock"></span><span data-t="c24"></span><small class="mx tab" id="c24s"></small><span class="mk"><span data-i="check"></span></span></button>
@@ -672,6 +691,7 @@ html:not([dir=rtl]) body{letter-spacing:-.011em}
 
 <main class="wrap">
   <div class="day"><div><h1 id="dayName"></h1><p id="dayMeta"></p></div><div class="clock tab" id="clock"></div></div>
+  <div class="tl" id="tl" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="tl-h"><b class="tab" id="tlX"></b><span id="tlS"></span></div><div class="tl-bar"><i id="tlI"></i></div></div>
   <div class="meter" id="meter"></div>
   <div id="app"></div>
   <input type="file" id="file" accept="application/json,.json" hidden>
@@ -873,8 +893,8 @@ var T = {
   noneYet:["No tasks yet","Aucune tâche","لا توجد مهام"], dueToday:["Today","Aujourd’hui","اليوم"], thisP:["this {p}","ce/cette {p}","هذا {p}"],
   noneDue:["Nothing due right now","Rien de prévu maintenant","لا شيء مستحق الآن"], openToday:["{n} left today, whenever suits you","{n} à faire aujourd’hui, quand vous voulez","{n} متبقية اليوم، متى شئت"],
   repairedN:["Fixed {n} tasks moved by a clock change","{n} tâches corrigées après un changement d’heure","صُحّحت {n} مهام بعد تغيير الساعة"],
-  wakeQ:["When did you wake up?","À quelle heure vous êtes-vous levé ?","متى استيقظت؟"], wakeHi:["Start your day","Commencer la journée","ابدأ يومك"],
-  wakeStarts:["Used for {list}","Utilisé pour {list}","يُستخدم لـ {list}"], wakeNow:["Now","Maintenant","الآن"], wakeEarlier:["Set Time","Choisir…","تحديد الوقت"],
+  wakeQ:["When did you wake up?","À quelle heure vous êtes-vous levé ?","متى استيقظت؟"], wakeHi:["Good morning","Bonjour","صباح الخير"], wakeHi2:["Wake-up","Réveil","الاستيقاظ"], dayLeft:["{x} left today","Encore {x} aujourd’hui","باقي {x} اليوم"], toDoN:["{n} to do","{n} à faire","{n} متبقية"], allClear:["All done","Tout est fait","أُنجز الكل"],
+  wakeStarts:["Used for {list}","Utilisé pour {list}","يُستخدم لـ {list}"], wakeNow:["Just now","À l’instant","الآن"], wakeEarlier:["Earlier…","Plus tôt…","في وقت سابق…"],
   todayW:["Today","Aujourd’hui","اليوم"], agoT:["{x} ago","il y a {x}","قبل {x}"], future:["That’s in the future","C’est dans le futur","هذا في المستقبل"],
   justNow:["Just now","À l’instant","الآن"], newWake:["New Day","Nouvelle journée","يوم جديد"], yest:["Yesterday","Hier","أمس"],
   ndOn:["Starts {d}","Commence le {d}","يبدأ {d}"], ndWeek:["new week","nouvelle semaine","أسبوع جديد"], ndMonth:["new month","nouveau mois","شهر جديد"],
@@ -883,10 +903,7 @@ var T = {
   wakeClear:["Clear wake time","Effacer l’heure du réveil","مسح وقت الاستيقاظ"], wakeCleared:["Wake time cleared","Heure du réveil effacée","مُسح وقت الاستيقاظ"],
   wakeOff:["{x} after waking","{x} après le réveil","بعد {x} من الاستيقاظ"], wake0:["right after waking","dès le réveil","فور الاستيقاظ"],
   fromWake:["starts {x} after waking","dès {x} après le réveil","يبدأ بعد {x} من الاستيقاظ"], fromWake0:["starts when you wake up","dès le réveil","يبدأ عند الاستيقاظ"], wakeLbl2:["First one after waking","Premier après le réveil","الأول بعد الاستيقاظ"],
-  doneT:["done","fait","أُنجز"], timeUp:["Time’s up: {n}","Temps écoulé : {n}","انتهى الوقت: {n}"], catchN:["Catch up · {n}","Rattraper · {n}","استدراك · {n}"], bedT:["Bedtime","Coucher","وقت النوم"], bedOff:["Not set","Non défini","غير محدد"],
-  bedQ:["When does your day end?","Quand se termine votre journée ?","متى ينتهي يومك؟"], bedSub:["“Time left” counts down to this. Without it, your day ends 24 h after you wake up.","Le « temps restant » compte jusqu’à cette heure. Sans elle, la journée finit 24 h après le réveil.","يُحسب «الوقت المتبقي» حتى هذا الوقت. بدونه ينتهي يومك بعد 24 ساعة من الاستيقاظ."],
-  bedClear:["Remove bedtime","Retirer l’heure du coucher","إزالة وقت النوم"], bedAfter:["{x} after waking up","{x} après le réveil","بعد {x} من الاستيقاظ"], bedPast:["past bedtime","coucher dépassé","تجاوزت وقت النوم"],
-  bedSet:["Bedtime {t}","Coucher à {t}","وقت النوم {t}"], bedCleared:["Bedtime removed","Heure du coucher retirée","أزيل وقت النوم"], wakeWait:["waits for your wake-up","attend votre réveil","ينتظر استيقاظك"],
+  doneT:["done","fait","أُنجز"], timeUp:["Time’s up: {n}","Temps écoulé : {n}","انتهى الوقت: {n}"], catchN:["Catch up · {n}","Rattraper · {n}","استدراك · {n}"], wakeWait:["waits for your wake-up","attend votre réveil","ينتظر استيقاظك"],
   tmClock:["At a time","À une heure","في وقت محدد"], tmWake:["After waking","Après le réveil","بعد الاستيقاظ"], wakeLbl:["How long after you wake up","Combien de temps après le réveil","كم بعد الاستيقاظ"],
   agoX:["{x} ago","il y a {x}","قبل {x}"], asSched:["As scheduled","Comme prévu","كما هو مقرر"], didWhen:["When did you do it?","Quand l’avez-vous fait ?","متى أنجزتها؟"],
   setTimeB:["Set time","Heure…","الوقت…"], didAt:["Done at {t}","Fait à {t}","أُنجز في {t}"], futureNo:["That time hasn’t happened yet","Cette heure n’est pas encore passée","هذا الوقت لم يأتِ بعد"],
@@ -935,16 +952,8 @@ function pushSnap(j){
 }
 function getWake(){ var d = dayInfo(); return d.wake === null ? null : Math.round((d.wake - d.mid) / 6e4); }
 function setWake(m){
-  var d0 = iso(today()), c0 = CUT();
   if(m === null) set("r.wake", "null"); else { var at = dayInfo().mid + m*6e4; set("r.wake", JSON.stringify({at:at, date:iso(new Date(at)), t:hm(m)})); }
-  DI = null; var d1 = iso(today()); reencode(c0);
-  if(d1 < d0){   /* the day moved back (e.g. "I woke up yesterday at 6:40 PM" after midnight): return to that day's last saved state */
-    var a = snaps(), pick = null;
-    for(var i = a.length - 1; i >= 0; i--){ var sd = a[i].d || iso(new Date(a[i].ts)); if(sd === d1){ pick = a[i]; break; } }
-    if(pick){ try{ items = JSON.parse(pick.s).map(norm).filter(Boolean); }catch(e){} }
-    items.forEach(function(it){ if(it.slots && it.slots.date > d1) it.slots = null; if(it.last && it.last > d1) it.last = it.prev && it.prev.last || null; it.log = it.log.filter(function(x){ return x <= d1; }); });
-    set("r.items", JSON.stringify(items));
-  }
+  DI = null;
 }
 function wakeTasks(){ return items.filter(function(i){ return i.wake !== null && !i.paused; }); }
 var warped = null, repaired = 0;
@@ -1003,30 +1012,25 @@ function guardClock(){
 }
 
 /* ---------- dates ---------- */
-/* A day runs from the wake-up you log until you start a new day — nothing is guessed. With no wake-up
-   logged, days follow the calendar. While a day runs, clock times between midnight and the wake-up
-   (at most 6 AM) belong to that night, not to the next day. */
+/* A day is the phone's calendar day: midnight to midnight. "Time left" counts down to midnight.
+   A wake-up you log only times your "after waking" tasks, and only for the date it was logged on. */
 var DI = null;
 function wakeRec(){ try{ var w = JSON.parse(get("r.wake") || "null"); if(!w) return null;
-  if(typeof w.at === "number") return w;   /* {at, up?} — up = "I haven't slept yet" */
+  if(typeof w.at === "number") return w;
   if(w.date && /^\d\d:\d\d$/.test(w.t || "")){ var p = w.date.split("-"); return {at:new Date(+p[0], p[1]-1, +p[2], +w.t.slice(0,2), +w.t.slice(3)).getTime()}; }
   }catch(e){} return null; }
 function dayInfo(){
   var now = Date.now(), raw = get("r.wake") || "";
   if(DI && DI.raw === raw && Math.abs(now - DI.t) < 1000) return DI;
-  var w = wakeRec(), cur = !!(w && w.at <= now + 6e5), D, cut = 0;
-  if(cur){ var wd = new Date(w.at); D = new Date(wd); D.setHours(12,0,0,0); cut = wd.getHours()*60 + wd.getMinutes(); }
-  else { D = new Date(now); D.setHours(12,0,0,0); }
+  var D = new Date(now); D.setHours(12,0,0,0);
   var mid = new Date(D); mid.setHours(0,0,0,0);
-  DI = {raw:raw, t:now, D:D, mid:mid.getTime(), cut:cut, wake:cur ? w.at : null,
-};
+  var w = wakeRec(), ok = !!(w && w.at >= mid.getTime() && w.at <= now + 6e5);   /* today's wake-up, never one "in the future" */
+  DI = {raw:raw, t:now, D:D, mid:mid.getTime(), cut:0, wake:ok ? w.at : null};
   return DI;
 }
 function today(){ return new Date(dayInfo().D); }
-/* weeks and months follow the calendar: your day counts as one day, but once a day runs past 24 h the
-   calendar moves on by itself (at your wake-up time), so "days left" never stalls. Never earlier than today. */
-function calDay(){ var di = dayInfo(); if(di.wake === null) return today(); var x = new Date(Date.now() - di.cut*6e4); x.setHours(12,0,0,0); return x > di.D ? x : new Date(di.D); }
-function calEnd(){ var di = dayInfo(), e = calDay(); e = addDays(e, 1); e.setHours(0,0,0,0); return e.getTime() + di.cut*6e4; }   /* when calDay() ends */
+function calDay(){ return today(); }
+function calEnd(){ var e = addDays(today(), 1); e.setHours(0,0,0,0); return e.getTime(); }   /* next midnight */
 function winToday(it){ var a = iso(today()), b = logKey(it), k = -1; it.log.forEach(function(d, i){ if(d >= a && d <= b) k = i; }); return k > -1 ? k : null; }   /* index of a check made during this day */
 function logKey(it){ return it.period === "d" ? iso(today()) : iso(calDay()); }
 function CUT(){ return dayInfo().cut; }
@@ -1103,7 +1107,10 @@ function norm(i){
 items = items.map(norm).filter(Boolean);
 if(get("r.test") === "1") window.__R = {later:function(a,b,c){ openLater(a,b,c); }, get items(){ return items; }, set items(v){ items = v; }, model:function(){ return model(); }, apply:function(a,b,c,d){ return apply(a,b,c,d); }, describe:function(i,f){ return describe(i,f); }, render:function(){ lastHTML = ""; render(); }, save:function(){ save(); }, today:function(){ return iso(today()); }, find:function(id){ return find(id); }, setWake:function(m){ setWake(m); }, nowMin:function(){ return nowMin(); }};
 /* one-time: the day boundary used to be capped at 6 AM — move stored hourly times to the new boundary */
-if(get("r.cutv") !== "2"){ (function(){ var d = dayInfo(), old = d.wake === null ? 0 : Math.min(360, d.cut); reencode(old); set("r.cutv", "2"); })(); }
+/* one-time (v35): days used to start at the logged wake-up — move stored hourly times to the calendar day */
+if(get("r.cutv") !== "3"){ (function(){ var w = wakeRec(), old = 0;
+  if(w && w.at <= Date.now() + 6e5){ var wd = new Date(w.at); old = wd.getHours()*60 + wd.getMinutes(); if(get("r.cutv") !== "2") old = Math.min(360, old); }
+  reencode(old); set("r.bed", ""); set("r.cutv", "3"); })(); }
 
 /* timed tasks belong to the clock: missed hours roll to today instead of piling up */
 function roll(){
@@ -1289,14 +1296,8 @@ function sec3(title, count, right, fixed, free){
   return '<section class="sec"><div class="sh2"><h2>'+esc(title)+'</h2>'+(count ? '<span>'+count+'</span>' : '')+(right || "")+'</div>'+
     mini("fixedD", fixed) + mini("flexD", free) + '</section>';
 }
-/* the end of your day: your bedtime if you set one, otherwise 24 h after waking (or midnight with no wake-up) */
-function bedMin(){ var b = get("r.bed"); return /^\d\d:\d\d$/.test(b || "") ? mins(b) : null; }
-function dayEnd(){
-  var b = bedMin(), di = dayInfo(); if(b === null) return calEnd();
-  var th = di.wake !== null ? di.cut : 360, e = new Date(di.D); e.setHours(0,0,0,0);
-  if(b <= th) e = addDays(e, 1), e.setHours(0,0,0,0);
-  return e.getTime() + b*6e4;
-}
+/* the end of your day: midnight */
+function dayEnd(){ return calEnd(); }
 function tabTop(){ var h = document.querySelector(".hdr"); return h ? h.getBoundingClientRect().height : 0; }
 /* the open tab lives in memory only: every launch (or coming back after a while) starts on Today */
 var TABV = "d", hidAt = 0, LATEW = null;
@@ -1305,7 +1306,7 @@ function tabNow(){ if(get("r.test") === "1" && get("r.tab")) TABV = get("r.tab")
 /* how long a period still runs: today → hours until the day ends; week / month → days, then hours on the last day */
 function periodLeft(p){
   var cd = calDay(), hrs = Math.max(0, Math.round((calEnd() - Date.now()) / 6e4)), end;
-  if(p === "d"){ var dm = Math.round((dayEnd() - Date.now()) / 6e4); return dm <= 0 ? {x:t("bedPast"), red:true, min:0, past:true} : {x:t("leftX", {x:dur(dm)}), red:dm <= 120, min:dm}; }
+  if(p === "d"){ var dm = Math.round((dayEnd() - Date.now()) / 6e4); return dm <= 0 ? {x:t("leftX", {x:dur(0)}), red:true, min:0, past:true} : {x:t("leftX", {x:dur(dm)}), red:dm <= 180, min:dm}; }
   end = p === "w" ? addDays(weekStart(cd), 6) : new Date(cd.getFullYear(), cd.getMonth()+1, 0, 12);
   var l = diff(cd, end);
   return l === 0 ? {x:t("leftX", {x:dur(hrs)}), red:true, min:hrs} : {x:t("daysLeft", {n:l + 1}), red:l <= 1, min:hrs + l*1440, days:l + 1};
@@ -1348,6 +1349,7 @@ function render(){
   m.any.forEach(function(a){ seg.push(a.done ? "on" : ""); });
   $("meter").innerHTML = seg.slice(0, 40).map(function(c){ return '<i class="'+c+'"></i>'; }).join("");
   $("meter").style.display = seg.length ? "" : "none";
+  paintLeft(m);
 
   if(!items.length){
     out = '<div class="empty"><h2>'+esc(t("emptyT"))+'</h2><p>'+esc(t("emptyP"))+'</p><button class="btn y" type="button" data-act="add">'+ico("plus")+esc(t("addFirst"))+'</button></div>';
@@ -1412,42 +1414,43 @@ function render(){
   if(out !== lastHTML){ var fp = flipFirst(); $("app").innerHTML = out; lastHTML = out; dsFit(); flipPlay(fp); }
   if(warped){ var wb = warped; warped = null; repaired = 0; setTimeout(function(){ toast(t("clockBack"), wb); }, 300); }
   else if(repaired){ var rn = repaired; repaired = 0; setTimeout(function(){ toast(t("repairedN", {n:rn})); }, 300); }
-  $("allCount").textContent = items.length || ""; $("bedS").textContent = bedMin() !== null ? ft(bedMin()) : t("bedOff");
+  $("allCount").textContent = items.length || "";
   document.title = (m.pending ? "(" + m.pending + ") " : "") + "Routines";
   try{ if(navigator.setAppBadge){ if(m.pending) navigator.setAppBadge(m.pending); else navigator.clearAppBadge(); } }catch(e){}
 }
+/* the big bar: how much of today is left. Green, then yellow from 8 h left, red from 3 h, pulsing in the last hour */
+function paintLeft(m){
+  var el = $("tl"), mid = dayInfo().mid, len = Math.max(1, calEnd() - mid), ms = Math.max(0, calEnd() - Date.now());
+  if(!items.length){ el.hidden = true; return; } el.hidden = false;
+  var lm0 = Math.max(0, Math.ceil(ms / 6e4)), pc = Math.max(0, Math.min(100, ms / len * 100)), open = Math.max(0, m.total - m.done);
+  el.className = "tl " + (lm0 > 480 ? "g" : lm0 > 180 ? "y" : "r") + (lm0 <= 60 && open ? " last" : "");
+  $("tlX").textContent = t("dayLeft", {x:dur(lm0)});
+  $("tlS").textContent = m.total ? (open ? t("toDoN", {n:open}) : t("allClear")) : "";
+  $("tlI").style.width = pc.toFixed(2) + "%";
+  el.setAttribute("aria-valuenow", Math.round(pc)); el.setAttribute("aria-label", $("tlX").textContent);
+}
 function wakeCard(){
-  var wt = wakeTasks(); if(!wt.length && getWake() === null) return "";
-  var w = getWake();
-  var DIx = dayInfo();
+  var wt = wakeTasks(); if(!wt.length) return "";   /* a wake-up only matters for "after waking" tasks */
+  var w = getWake(), DIx = dayInfo();
   if(w !== null){
-    var ago = Math.max(0, Math.round((Date.now() - DIx.wake) / 6e4)), wd0 = new Date(DIx.wake); wd0.setHours(12,0,0,0);
-    var cd = diff(wd0, (function(){ var x = new Date(); x.setHours(12,0,0,0); return x; })());   /* calendar days since the wake-up */
-    var sm = (cd === 1 ? t("yest") + " · " : cd > 1 ? fmt(wd0, {weekday:"short", day:"numeric", month:"short"}) + " · " : "") + (ago < 2 ? t("justNow") : t("agoX", {x:dur(ago >= 60 ? Math.floor(ago/60)*60 : ago)}));
-    var longDay = ago >= 20*60;   /* a very long day: say it plainly, never start a new one by itself */
-    var nb = true;
-    return '<div class="wakebar'+(longDay ? " long" : "")+'"><span class="wk-i">'+ico("sun", 18)+'</span><button type="button" class="wk-t" data-act="wakeEdit">'+esc(t("wokeAt", {t:ft(w)}))+'<small>'+esc(sm)+(nb ? ' · <b>'+esc(t("edit"))+'</b>' : '')+'</small></button>'+
-      (nb ? '<button type="button" class="wk-n" data-act="wakeNew">'+esc(t("newWake"))+'</button>' : '<button type="button" class="wk-e" data-act="wakeEdit">'+esc(t("edit"))+'</button>')+'</div>';
+    var ago = Math.max(0, Math.round((Date.now() - DIx.wake) / 6e4));
+    return '<div class="wakebar"><span class="wk-i">'+ico("sun", 18)+'</span><button type="button" class="wk-t" data-act="wakeEdit">'+esc(t("wokeAt", {t:ft(w)}))+'<small>'+esc(ago < 2 ? t("justNow") : t("agoX", {x:dur(ago >= 60 ? Math.floor(ago/60)*60 : ago)}))+'</small></button>'+
+      '<button type="button" class="wk-e" data-act="wakeEdit">'+esc(t("edit"))+'</button></div>';
   }
+  if(nowMin() < 180) return "";   /* still up after midnight: don't ask yet */
   var list = wt.slice().sort(function(a, b){ return a.wake - b.wake; }).slice(0, 3).map(function(i){ return i.name + " +" + dur(i.wake); }).join(", ") + (wt.length > 3 ? " …" : "");
-  return '<div class="wake"><div class="wk-k">'+ico("sun", 16)+esc(t("wakeHi"))+'</div><div class="wk-q">'+esc(t("wakeQ"))+'</div><div class="wk-s">'+esc(t("wakeStarts", {list:list}))+'</div>'+
+  return '<div class="wake"><div class="wk-k">'+ico("sun", 16)+esc(t(nowMin() < 720 ? "wakeHi" : "wakeHi2"))+'</div><div class="wk-q">'+esc(t("wakeQ"))+'</div><div class="wk-s">'+esc(t("wakeStarts", {list:list}))+'</div>'+
     '<div class="wk-b"><button type="button" class="btn y" data-act="wakeNow">'+ico("check", 18, 2.6)+esc(t("wakeNow"))+'</button><button type="button" class="btn" data-act="wakeEdit">'+ico("clock", 18)+esc(t("wakeEarlier"))+'</button></div></div>';
 }
 function wakeIs(m, how){
   var before = snap(), wb = get("r.wake") || "null", d0 = today(); setWake(m); roll();
-  var d1 = today(), x = "";   /* say which day it is now, and whether a week or month turned over */
-  if(m !== null && iso(d1) !== iso(d0)){ x = " · " + fmt(d1, {weekday:"long", day:"numeric", month:"long"}); if(d1 > d0 && iso(weekStart(d1)) !== iso(weekStart(d0))) x += " · " + t("ndWeek"); else if(d1 > d0 && d1.getMonth() !== d0.getMonth()) x += " · " + t("ndMonth"); } lastHTML = ""; render(); buzz(14); undoWake = wb;
+  var x = ""; lastHTML = ""; render(); buzz(14); undoWake = wb;
   var n = items.filter(function(i){ return i.wake !== null && !i.paused && i.next === iso(today()) && i.times.length && !(i.last === iso(today())); }).length;
   toast(m === null ? t("wakeCleared") : t("wakeSet", {t:ft(m), n:n}) + x, before); undoWake = wb;
 }
-function newWake(){
-  var nm = nowMin();
-  openTime({title:t("newDayQ"), sub:t("newDaySub"), init:nm, chips:[],
-    clear:null, cb:function(m){ wakeIs(m); }});
-}
 function editWake(){
   var w = getWake(), nm = nowMin();
-  openTime({title:t("wakeQ"), sub:"", init:w !== null ? w : nm, chips:[],
+  openTime({title:t("wakeQ"), sub:"", init:w !== null ? w : nm, chips:[], todayOnly:true,
     clear:w !== null ? t("wakeClear") : null, onClear:function(){ wakeIs(null); }, cb:function(m){ wakeIs(m); }});
 }
 function nowCard(m){
@@ -1630,7 +1633,6 @@ document.addEventListener("click", function(e){
   if(a === "all"){ openAll(); return; }
   if(a === "wakeNow"){ wakeIs(nowMin()); return; }
   if(a === "wakeEdit"){ editWake(); return; }
-  if(a === "wakeNew"){ newWake(); return; }
   var host = b.closest("[data-id]"); if(!host) return;
   var id = host.getAttribute("data-id");
   if(a === "edit") openSheet(find(id));
@@ -2009,13 +2011,6 @@ $("aList").addEventListener("click", function(e){ var b = e.target.closest("[dat
 $("aScrim").addEventListener("click", closeAll); $("aClose").addEventListener("click", closeAll);
 $("aAdd").addEventListener("click", function(){ closeAll(); setTimeout(function(){ openSheet(null); }, 120); });
 $("allBtn").addEventListener("click", openAll);
-$("bedBtn").addEventListener("click", function(){
-  closeMenus(); var b = bedMin(), w = getWake();
-  openTime({title:t("bedQ"), sub:t("bedSub"), init:b !== null ? b : nowMin(), free:true, chips:[],
-    read:function(v){ if(w === null) return ft(v); var a = ((v - w) % 1440 + 1440) % 1440; return ft(v) + " · " + t("bedAfter", {x:dur(a)}); },
-    clear:b !== null ? t("bedClear") : null, onClear:function(){ var before = snap(); set("r.bed", ""); lastHTML = ""; render(); toast(t("bedCleared")); },
-    cb:function(v){ set("r.bed", hm(v)); lastHTML = ""; render(); buzz(10); toast(t("bedSet", {t:ft(v)})); }});
-});
 $("lScrim").addEventListener("click", closeLater);
 /* one sheet for "what time?" — wake-up and "I did it at…". Never accepts a future time. */
 var TS = null;
@@ -2035,7 +2030,7 @@ function openTime(o){
   var nm = nowMin();
   $("tTitle").textContent = o.title; $("tSub").textContent = o.sub || ""; $("tSub").style.display = o.sub ? "" : "none";
   $("tChips").innerHTML = (o.chips || []).filter(function(c){ return c[1] <= nm; }).map(function(c){ return '<button type="button" class="lopt" data-tm="'+c[1]+'"><b>'+esc(c[0])+'</b><span>'+ft(c[1])+'</span></button>'; }).join("");
-  $("tDay").style.display = o.free ? "none" : "";
+  $("tDay").style.display = o.free || o.todayOnly ? "none" : "";
   $("tDay").children[0].textContent = t("yest"); $("tDay").children[1].textContent = t("todayW");
   var ts = o.free ? dayInfo().mid + o.init * 6e4 : Math.min(Date.now(), dayInfo().mid + Math.min(nm, o.init) * 6e4), d0 = new Date(); d0.setHours(0,0,0,0);
   TDD = ts < d0.getTime() ? -1 : 0; var dd = new Date(ts);
