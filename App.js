@@ -17,7 +17,7 @@ import { File, Paths } from "expo-file-system";
 import HTML from "./src/web";
 import { buildPage, jsArg } from "./src/shim";
 import { applyChange, flushStore, getStore, loadStore, readMeta, writeMeta } from "./src/store";
-import { applyPlan, askPermission, permState, setBadge, setupChannel } from "./src/notify";
+import { applyPlan, askOrOpenSettings, askPermission, permState, setBadge, setupChannel } from "./src/notify";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -52,6 +52,7 @@ function Main() {
   const meta = useRef({});
   const tz = useRef(timeZone());
   const asked = useRef(false);
+  const lastPlan = useRef(null);
 
   const [loaded, setLoaded] = useState(false); // saved data read from disk
   const [page, setPage] = useState(0); // bump = rebuild + reload the page
@@ -224,6 +225,7 @@ function Main() {
         setBadge(m.n);
         break;
       case "plan": {
+        lastPlan.current = m;
         applyPlan(m);
         // first time there is something to remind you of: ask once (iPhone shows its own prompt)
         if (!asked.current && m.n > 0) {
@@ -237,12 +239,14 @@ function Main() {
         }
         break;
       }
-      case "notifAsk": {
-        const p = await permState();
-        if (p.granted) { sendPerm(); break; }
-        if (p.undetermined) await askPermission();
-        else Linking.openSettings().catch(() => {});
+      case "permCheck":
         sendPerm();
+        break;
+      case "notifAsk": {
+        const r = await askOrOpenSettings(() => Linking.openSettings());
+        const p = await sendPerm();
+        if (p.granted) applyPlan(m.plan || lastPlan.current || { list: [] });
+        call(`window.__nat&&__nat.askDone&&__nat.askDone(${jsArg(Object.assign({}, r, { granted: p.granted }))})`);
         break;
       }
       case "export":

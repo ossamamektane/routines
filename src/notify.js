@@ -29,18 +29,44 @@ export async function setupChannel() {
 
 function granted(p) {
   if (!p) return false;
-  if (p.granted) return true;
+  if (p.granted === true || p.status === "granted") return true;
   const s = p.ios && p.ios.status, E = Notifications.IosAuthorizationStatus || {};
-  return s != null && (s === E.PROVISIONAL || s === E.EPHEMERAL);
+  if (s == null) return false;
+  // 2 = allowed, 3 = quiet (provisional), 4 = app clip
+  return s === E.AUTHORIZED || s === E.PROVISIONAL || s === E.EPHEMERAL || s === 2 || s === 3 || s === 4;
+}
+
+function describe(p) {
+  return { granted: granted(p), canAsk: p.canAskAgain !== false && !granted(p), undetermined: p.status === "undetermined" || (p.ios && p.ios.status === 0) };
 }
 
 export async function permState() {
   try {
-    const p = await Notifications.getPermissionsAsync();
-    return { granted: granted(p), canAsk: p.canAskAgain !== false && !granted(p), undetermined: p.status === "undetermined" };
+    return describe(await Notifications.getPermissionsAsync());
   } catch (e) {
-    return { granted: false, canAsk: false, undetermined: false };
+    return { granted: false, canAsk: false, undetermined: false, err: String((e && e.message) || e) };
   }
+}
+
+// You tapped "Turn on notifications": always do something you can see.
+// Ask with the iPhone prompt; if iPhone won't ask any more, open Settings for Routines.
+export async function askOrOpenSettings(openSettings) {
+  const r = {};
+  try {
+    const before = await Notifications.getPermissionsAsync();
+    r.before = String(before.status);
+    if (granted(before)) { r.granted = true; return r; }
+    await setupChannel();
+    const after = await Notifications.requestPermissionsAsync({
+      ios: { allowAlert: true, allowBadge: true, allowSound: true },
+    });
+    r.after = String(after.status);
+    if (granted(after)) { r.granted = true; return r; }
+  } catch (e) {
+    r.err = String((e && e.message) || e).slice(0, 160);
+  }
+  try { await openSettings(); r.settings = true; } catch (e) { r.err = r.err || "settings"; }
+  return r;
 }
 
 export async function askPermission() {
