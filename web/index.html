@@ -697,7 +697,9 @@ html[data-theme="dark"] .grow:active{background:#3a3a3c}
 .hdr .hb.pri{background:var(--y);color:#fff}
 html[data-theme="dark"] .hdr .hb:not(.pri){background:rgba(118,118,128,.24)}
 .hdr .hb:active{transform:scale(.92)}
-#clock,#tlS{display:none}
+#clock{display:none}
+#tlS:empty{display:none}
+.tl-t span#tlS{font-size:13px;font-weight:500;color:var(--ink2);margin-top:1px}
 .day{margin:4px 0 14px}
 .tl{--tlc:var(--ink)} .tl.y{--tlc:var(--ink)} .tl.r{--tlc:var(--red)}
 .tl-h b{font-size:16px;font-weight:600;letter-spacing:-.01em}
@@ -972,6 +974,7 @@ var T = {
   wakeQ:["When did you wake up?","À quelle heure vous êtes-vous levé ?","متى استيقظت؟"], wakeHi:["Good morning","Bonjour","صباح الخير"],
   onced:["Once a day","Une fois par jour","مرة في اليوم"], oncew:["Once a week","Une fois par semaine","مرة في الأسبوع"], oncem:["Once a month","Une fois par mois","مرة في الشهر"],
   timesd:["{n} times a day","{n} fois par jour","{n} مرات في اليوم"], timesw:["{n} times a week","{n} fois par semaine","{n} مرات في الأسبوع"], timesm:["{n} times a month","{n} fois par mois","{n} مرات في الشهر"],
+  upFor:["Up for {x}","Debout depuis {x}","مستيقظ منذ {x}"],
   setT:["Settings","Réglages","الإعدادات"], delT:["Delete task","Supprimer la tâche","حذف المهمة"], pauseB:["Pause task","Mettre en pause","إيقاف مؤقت"], resumeB:["Resume task","Reprendre","استئناف"], skipB:["Skip the next one","Passer la prochaine","تخطَّ القادمة"],
   ndTitle:["Start your day","Commencez votre journée","ابدأ يومك"], ndSub:["Tap New Day when you’re up.","Touchez « Nouveau jour » quand vous êtes levé.","اضغط «يوم جديد» عندما تستيقظ."],
   ndWhere:["It’s always at the top, next to the time left.","Le bouton est toujours en haut, à côté du temps restant.","تجده دائمًا في الأعلى بجانب الوقت المتبقي."],
@@ -983,8 +986,8 @@ var T = {
   nfAllow:["Allow notifications","Autoriser les notifications","السماح بالإشعارات"], nfAllowSub:["So Routines can remind you","Pour que Routines puisse vous rappeler","ليذكّرك Routines بمهامك"],
   nfOn:["Turn on notifications","Activer les notifications","تفعيل الإشعارات"], nfOnSub:["They’re off for Routines","Désactivées pour Routines","متوقفة لتطبيق Routines"],
   nNow:["It’s {t} — time for it","Il est {t} — c’est l’heure","الساعة {t} — حان وقتها"], nLate:["Still to do: {n}","Encore à faire : {n}","ما زال عليك: {n}"], nWas:["Was due at {t}","Prévu à {t}","كان موعدها {t}"],
-  nLeft:["⏳ {x} left today","⏳ Encore {x} aujourd’hui","⏳ باقي {x} اليوم"], nOpen:["Still open: {list}","Reste : {list}","متبقٍ: {list}"],
-  nMorning:["☀️ Good morning","☀️ Bonjour","☀️ صباح الخير"], nMorningB:["Tap New Day to start your day","Touchez « Nouveau jour » pour commencer","اضغط «يوم جديد» لتبدأ يومك"], nDoneAct:["Done ✓","Fait ✓","تم ✓"], wakeHi2:["Wake-up","Réveil","الاستيقاظ"], dayLeft:["{x} left today","{x} restantes","باقي {x} اليوم"], toDoN:["{n} to do","{n} à faire","{n} متبقية"], allClear:["All done","Tout est fait","أُنجز الكل"],
+  nLeft:["⏳ {x} until midnight","⏳ {x} avant minuit","⏳ {x} حتى منتصف الليل"], nOpen:["Still open: {list}","Reste : {list}","متبقٍ: {list}"],
+  nMorning:["☀️ Good morning","☀️ Bonjour","☀️ صباح الخير"], nMorningB:["Tap New Day to start your day","Touchez « Nouveau jour » pour commencer","اضغط «يوم جديد» لتبدأ يومك"], nDoneAct:["Done ✓","Fait ✓","تم ✓"], wakeHi2:["Wake-up","Réveil","الاستيقاظ"], dayLeft:["{x} until midnight","{x} avant minuit","{x} حتى منتصف الليل"], toDoN:["{n} to do","{n} à faire","{n} متبقية"], allClear:["All done","Tout est fait","أُنجز الكل"],
   wakeStarts:["It sets the time for {list}.","Il règle l’heure de {list}.","يضبط وقت {list}."], wakeNow:["Just now","À l’instant","الآن"], wakeEarlier:["Earlier…","Plus tôt…","في وقت سابق…"],
   todayW:["Today","Aujourd’hui","اليوم"], agoT:["{x} ago","il y a {x}","قبل {x}"], future:["That’s in the future","C’est dans le futur","هذا في المستقبل"],
   justNow:["Just now","À l’instant","الآن"], newWake:["New Day","Nouveau jour","يوم جديد"], yest:["Yesterday","Hier","أمس"],
@@ -1528,7 +1531,8 @@ function paintLeft(m){
   var lm0 = Math.max(0, Math.ceil(ms / 6e4)), pc = Math.max(0, Math.min(100, ms / len * 100)), open = Math.max(0, m.total - m.done);
   el.className = "tl " + (lm0 > 480 ? "g" : lm0 > 180 ? "y" : "r") + (lm0 <= 60 && open ? " last" : "");
   $("tlX").textContent = t("dayLeft", {x:dur(lm0)});
-  $("tlS").textContent = m.total ? (open ? t("toDoN", {n:open}) : t("allClear")) : "";
+  var wkM = getWake(), upM = wkM === null ? -1 : nowMin() - wkM;   /* only after you tapped New Day — never guessed */
+  $("tlS").textContent = upM >= 0 ? t("upFor", {x:dur(upM)}) : "";
   $("tlI").style.width = pc.toFixed(2) + "%";
   el.setAttribute("aria-valuenow", Math.round(pc)); el.setAttribute("aria-label", $("tlX").textContent);
   paintNd();
