@@ -463,7 +463,7 @@ body{font-size:16px;letter-spacing:-.011em}
 html[data-theme="dark"] .wk-k{color:#ffb340}
 .wk-q{font-size:21px;font-weight:700;letter-spacing:-.02em;margin-top:4px}
 .wk-s{color:var(--ink2);font-size:14px;margin-top:3px}
-.wk-b{display:flex;gap:8px;margin-top:14px}.wk-b .btn{height:46px;flex:1}.wk-b .btn:not(.y){background:var(--bg3)}
+.wk-b{display:flex;gap:8px;margin-top:14px}.wk-b .btn{height:46px;flex:1;white-space:nowrap;min-width:0}.wk-b .btn:not(.y){background:var(--bg3)}
 .wakebar{display:flex;align-items:center;gap:10px;background:var(--bg2);border-radius:14px;padding:0 6px 0 14px;height:48px;margin:0 0 12px;box-shadow:var(--card-sh)}
 .wk-i{color:#e08a00}.wk-t{flex:1;font-size:15px;font-weight:500;line-height:1.2;min-width:0}
 button.wk-t{text-align:start;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;padding:2px 0}
@@ -672,7 +672,7 @@ html[data-theme="dark"] .tl.r{--tlc:#ff453a;--tlb:#ff453a}
 .wake.ndc{position:relative;background:linear-gradient(135deg,rgba(255,204,0,.22),rgba(255,204,0,.06)) ,var(--card,var(--bg2));box-shadow:inset 0 0 0 1.5px rgba(255,204,0,.55)}
 .wake.ndc .wk-k{color:#b07d00}
 html[data-theme="dark"] .wake.ndc .wk-k{color:#ffd60a}
-.wake.ndc .wk-q{padding-inline-end:30px}
+.wake.ndc .wk-q{padding-inline-end:0}
 .wake.ndc .nd-b{background:#ffcc00;color:#000}
 .wake.ndc .nd-b:active{transform:scale(.97)}
 .wk-x{position:absolute;top:10px;inset-inline-end:10px;width:32px;height:32px;border-radius:16px;display:grid;place-items:center;color:var(--ink3)}
@@ -682,6 +682,13 @@ html[data-theme="dark"] .wake.ndc .wk-k{color:#ffd60a}
 .mx2{display:block;font-size:12px;color:var(--ink3)}
 .mi.nfask{height:auto;min-height:48px;padding-top:6px;padding-bottom:6px;color:var(--red)}
 /* ---------- premium pass ---------- */
+.tl .tl-bar i{background:var(--ok)}
+.tl.nowake .tl-h b{color:var(--ink2);font-weight:500;font-size:15px}
+
+.nd.set b{font-weight:700;color:var(--ink)}
+
+.wake .nd-e{display:flex;align-items:center;justify-content:center;gap:6px;width:100%;margin-top:6px;padding:10px 0 2px;background:none;border:0;font:inherit;font-size:15px;font-weight:500;color:var(--ink2);cursor:pointer}.wake .nd-e svg{opacity:.75}.wake .nd-e:active{opacity:.5}
+
 html[data-theme="dark"] .tl:not(.r){--tlc:var(--ink)}
 html[data-theme="dark"] .glist{background:#2c2c2e}
 html[data-theme="dark"] .grow:active{background:#3a3a3c}
@@ -971,24 +978,28 @@ var T = {
   noneYet:["No tasks yet","Aucune tâche","لا توجد مهام"], dueToday:["Today","Aujourd’hui","اليوم"], thisP:["this {p}","ce/cette {p}","هذا {p}"],
   noneDue:["Nothing due right now","Rien de prévu maintenant","لا شيء مستحق الآن"], openToday:["{n} left today, whenever suits you","{n} à faire aujourd’hui, quand vous voulez","{n} متبقية اليوم، متى شئت"],
   repairedN:["Fixed {n} tasks moved by a clock change","{n} tâches corrigées après un changement d’heure","صُحّحت {n} مهام بعد تغيير الساعة"],
-  wakeQ:["When did you wake up?","À quelle heure vous êtes-vous levé ?","متى استيقظت؟"], wakeHi:["Good morning","Bonjour","صباح الخير"],
+  wakeQ:["What time did you wake up?","À quelle heure vous êtes-vous levé ?","متى استيقظت؟"], wakeHi:["Good morning","Bonjour","صباح الخير"],
   onced:["Once a day","Une fois par jour","مرة في اليوم"], oncew:["Once a week","Une fois par semaine","مرة في الأسبوع"], oncem:["Once a month","Une fois par mois","مرة في الشهر"],
   timesd:["{n} times a day","{n} fois par jour","{n} مرات في اليوم"], timesw:["{n} times a week","{n} fois par semaine","{n} مرات في الأسبوع"], timesm:["{n} times a month","{n} fois par mois","{n} مرات في الشهر"],
   upFor:["Up for {x}","Debout depuis {x}","مستيقظ منذ {x}"],
+  ndNow:["Yes","Oui","نعم"], ndNotYet:["Not yet","Pas encore","ليس بعد"], ndKeep:["Okay — your day continues","D’accord — votre journée continue","حسنًا — يومك مستمر"], ndSlept:["Did you sleep?","Avez-vous dormi ?","هل نمت؟"], ndSleptS:["Tap Yes to start a new day.","Touchez « Oui » pour commencer une nouvelle journée.","اضغط «نعم» لتبدأ يومًا جديدًا."], ndDayS:["Your day starts from then.","Votre journée commence à ce moment-là.","يبدأ يومك من حينها."], ndBackT:["Back","Retour","رجوع"], ndNotNow:["Not now","Pas maintenant","ليس الآن"],
+  andMore:[" and {n} more"," et {n} de plus"," و{n} أخرى"],
+  wokeS:["Woke up","Levé à","استيقظت"],
+  ndHint:["Tap New Day when you’re up","Touchez « Nouveau jour » au réveil","اضغط «يوم جديد» عند استيقاظك"],
   setT:["Settings","Réglages","الإعدادات"], delT:["Delete task","Supprimer la tâche","حذف المهمة"], pauseB:["Pause task","Mettre en pause","إيقاف مؤقت"], resumeB:["Resume task","Reprendre","استئناف"], skipB:["Skip the next one","Passer la prochaine","تخطَّ القادمة"],
-  ndTitle:["Start your day","Commencez votre journée","ابدأ يومك"], ndSub:["Tap New Day when you’re up.","Touchez « Nouveau jour » quand vous êtes levé.","اضغط «يوم جديد» عندما تستيقظ."],
+ 
   ndWhere:["It’s always at the top, next to the time left.","Le bouton est toujours en haut, à côté du temps restant.","تجده دائمًا في الأعلى بجانب الوقت المتبقي."],
-  ndEarlier:["Set time…","Choisir l’heure…","اختر الوقت…"], ndNot:["Not today","Pas aujourd’hui","ليس اليوم"],
-  ndLater:["Hidden for now — New Day stays at the top","Masqué pour l’instant — « Nouveau jour » reste en haut","أُخفي الآن — يبقى «يوم جديد» في الأعلى"],
+  ndEarlier:["Earlier…","Plus tôt…","في وقت سابق…"],
+  ndLater:["Okay — tap New Day when you’re up","D’accord — touchez « Nouveau jour » au réveil","حسنًا — اضغط «يوم جديد» عند استيقاظك"],
   ndDone:["Day started at {t}","Journée commencée à {t}","بدأ يومك في {t}"],
-  nfH:["Notifications","Notifications","الإشعارات"], nfTasks:["Task reminders","Rappels des tâches","تذكير بالمهام"], nfLeft:["Time-left nudges","Rappels du temps restant","تنبيهات الوقت المتبقي"], nfMorning:["Morning New Day reminder","Rappel du matin","تذكير الصباح"],
+  nfH:["Notifications","Notifications","الإشعارات"], nfTasks:["Task reminders","Rappels des tâches","تذكير بالمهام"], nfLeft:["Evening check-ins","Rappels du soir","تذكيرات المساء"], nfMorning:["Morning New Day reminder","Rappel du matin","تذكير الصباح"],
   nfDone:["Notifications are on ✓","Notifications activées ✓","الإشعارات مفعّلة ✓"], nfManual:["Open iPhone Settings → Routines → Notifications","Ouvrez Réglages → Routines → Notifications","افتح الإعدادات ← Routines ← الإشعارات"],
   nfAllow:["Allow notifications","Autoriser les notifications","السماح بالإشعارات"], nfAllowSub:["So Routines can remind you","Pour que Routines puisse vous rappeler","ليذكّرك Routines بمهامك"],
   nfOn:["Turn on notifications","Activer les notifications","تفعيل الإشعارات"], nfOnSub:["They’re off for Routines","Désactivées pour Routines","متوقفة لتطبيق Routines"],
   nNow:["It’s {t} — time for it","Il est {t} — c’est l’heure","الساعة {t} — حان وقتها"], nLate:["Still to do: {n}","Encore à faire : {n}","ما زال عليك: {n}"], nWas:["Was due at {t}","Prévu à {t}","كان موعدها {t}"],
-  nLeft:["⏳ {x} until midnight","⏳ {x} avant minuit","⏳ {x} حتى منتصف الليل"], nOpen:["Still open: {list}","Reste : {list}","متبقٍ: {list}"],
+  nLeft:["⏳ Still to do today","⏳ Encore à faire aujourd’hui","⏳ ما زال عليك اليوم"], nOpen:["Still open: {list}","Reste : {list}","متبقٍ: {list}"],
   nMorning:["☀️ Good morning","☀️ Bonjour","☀️ صباح الخير"], nMorningB:["Tap New Day to start your day","Touchez « Nouveau jour » pour commencer","اضغط «يوم جديد» لتبدأ يومك"], nDoneAct:["Done ✓","Fait ✓","تم ✓"], wakeHi2:["Wake-up","Réveil","الاستيقاظ"], dayLeft:["{x} until midnight","{x} avant minuit","{x} حتى منتصف الليل"], toDoN:["{n} to do","{n} à faire","{n} متبقية"], allClear:["All done","Tout est fait","أُنجز الكل"],
-  wakeStarts:["It sets the time for {list}.","Il règle l’heure de {list}.","يضبط وقت {list}."], wakeNow:["Just now","À l’instant","الآن"], wakeEarlier:["Earlier…","Plus tôt…","في وقت سابق…"],
+  wakeStarts:["{list} start from then.","{list} partent de là.","{list} تبدأ من حينها."], wakeNow:["Just now","À l’instant","الآن"], wakeEarlier:["Earlier…","Plus tôt…","في وقت سابق…"],
   todayW:["Today","Aujourd’hui","اليوم"], agoT:["{x} ago","il y a {x}","قبل {x}"], future:["That’s in the future","C’est dans le futur","هذا في المستقبل"],
   justNow:["Just now","À l’instant","الآن"], newWake:["New Day","Nouveau jour","يوم جديد"], yest:["Yesterday","Hier","أمس"],
   ndOn:["Starts {d}","Commence le {d}","يبدأ {d}"], ndWeek:["new week","nouvelle semaine","أسبوع جديد"], ndMonth:["new month","nouveau mois","شهر جديد"],
@@ -997,7 +1008,7 @@ var T = {
   wakeClear:["Clear wake time","Effacer l’heure du réveil","مسح وقت الاستيقاظ"], wakeCleared:["Wake time cleared","Heure du réveil effacée","مُسح وقت الاستيقاظ"],
   wakeOff:["{x} after waking","{x} après le réveil","بعد {x} من الاستيقاظ"], wake0:["right after waking","dès le réveil","فور الاستيقاظ"],
   fromWake:["starts {x} after waking","dès {x} après le réveil","يبدأ بعد {x} من الاستيقاظ"], fromWake0:["starts when you wake up","dès le réveil","يبدأ عند الاستيقاظ"], wakeLbl2:["First one after waking","Premier après le réveil","الأول بعد الاستيقاظ"],
-  doneT:["done","fait","أُنجز"], timeUp:["Time’s up: {n}","Temps écoulé : {n}","انتهى الوقت: {n}"], catchN:["Catch up · {n}","Rattraper · {n}","استدراك · {n}"], wakeWait:["waits for your wake-up","attend votre réveil","ينتظر استيقاظك"],
+  doneT:["done","fait","أُنجز"], timeUp:["Time’s up: {n}","Temps écoulé : {n}","انتهى الوقت: {n}"], catchN:["Catch up · {n}","Rattraper · {n}","استدراك · {n}"], wakeWait:["starts when you’re up","commence à votre réveil","يبدأ عند استيقاظك"],
   tmClock:["At a time","À une heure","في وقت محدد"], tmWake:["After waking","Après le réveil","بعد الاستيقاظ"], wakeLbl:["How long after you wake up","Combien de temps après le réveil","كم بعد الاستيقاظ"],
   agoX:["{x} ago","il y a {x}","قبل {x}"], asSched:["As scheduled","Comme prévu","كما هو مقرر"], didWhen:["When did you do it?","Quand l’avez-vous fait ?","متى أنجزتها؟"],
   setTimeB:["Set time","Heure…","الوقت…"], didAt:["Done at {t}","Fait à {t}","أُنجز في {t}"], futureNo:["That time hasn’t happened yet","Cette heure n’est pas encore passée","هذا الوقت لم يأتِ بعد"],
@@ -1405,7 +1416,7 @@ function dayEnd(){ return calEnd(); }
 function tabTop(){ var h = document.querySelector(".hdr"); return h ? h.getBoundingClientRect().height : 0; }
 /* the open tab lives in memory only: every launch (or coming back after a while) starts on Today */
 var TABV = "d", hidAt = 0, LATEW = null;
-document.addEventListener("visibilitychange", function(){ if(document.hidden) hidAt = Date.now(); else if(hidAt && Date.now() - hidAt > 10*60e3 && TABV !== "d"){ TABV = "d"; lastHTML = ""; render(); } });
+document.addEventListener("visibilitychange", function(){ if(document.hidden){ hidAt = Date.now(); set("r.open", String(hidAt)); } else if(hidAt && Date.now() - hidAt > 10*60e3 && TABV !== "d"){ TABV = "d"; lastHTML = ""; render(); } });
 function tabNow(){ if(get("r.test") === "1" && get("r.tab")) TABV = get("r.tab"); return TABV; }
 /* how long a period still runs: today → hours until the day ends; week / month → days, then hours on the last day */
 function periodLeft(p){
@@ -1436,7 +1447,7 @@ function flipPlay(f){
 }
 var lastBadge = -1;
 function render(){
-  guardClock(); roll();
+  guardClock(); roll(); touch();
   var td = today(), m = model(), nm = nowMin(), out = "";
   $("dayName").textContent = fmt(td, {weekday:"long", day:"numeric", month:"long"});
   $("clock").innerHTML = ftH(nm);
@@ -1528,40 +1539,92 @@ function render(){
 function paintLeft(m){
   var el = $("tl"), mid = dayInfo().mid, len = Math.max(1, calEnd() - mid), ms = Math.max(0, calEnd() - Date.now());
   if(!items.length){ el.hidden = true; return; } el.hidden = false;
-  var lm0 = Math.max(0, Math.ceil(ms / 6e4)), pc = Math.max(0, Math.min(100, ms / len * 100)), open = Math.max(0, m.total - m.done);
-  el.className = "tl " + (lm0 > 480 ? "g" : lm0 > 180 ? "y" : "r") + (lm0 <= 60 && open ? " last" : "");
-  $("tlX").textContent = t("dayLeft", {x:dur(lm0)});
-  var wkM = getWake(), upM = wkM === null ? -1 : nowMin() - wkM;   /* only after you tapped New Day — never guessed */
-  $("tlS").textContent = upM >= 0 ? t("upFor", {x:dur(upM)}) : "";
+  /* how long you've been up (only from a New Day you tapped) + how much of today's list is done */
+  var at = lastWake(), pc = m.total ? Math.max(0, Math.min(100, m.done / m.total * 100)) : 0;
+  el.className = "tl" + (at === null ? " nowake" : "");
+  $("tlX").textContent = at !== null ? t("upFor", {x:dur(Math.max(0, Math.round((Date.now() - at) / 6e4)))}) : t("ndHint");
+  $("tlS").textContent = "";
   $("tlI").style.width = pc.toFixed(2) + "%";
   el.setAttribute("aria-valuenow", Math.round(pc)); el.setAttribute("aria-label", $("tlX").textContent);
   paintNd();
 }
-/* New Day: tap it when you wake up. It starts your "after waking" tasks and quiets the morning reminder.
-   The chip next to the time left is always there; the big card shows each morning until you tap it (or close it). */
-var NDX = false;   /* card closed: hidden until the app is opened again — nothing is assumed about your sleep */
-function ndSkip(){ return NDX; }
-function wakeCard(){
-  if(getWake() !== null || ndSkip()) return "";
-  var wt = wakeTasks();
-  var list = wt.slice().sort(function(a, b){ return a.wake - b.wake; }).slice(0, 3).map(function(i){ return i.name + " +" + dur(i.wake); }).join(", ") + (wt.length > 3 ? " …" : "");
-  var sub = t("ndSub") + " " + (wt.length ? t("wakeStarts", {list:list}) : t("ndWhere"));
-  return '<div class="wake ndc" id="ndCard"><button type="button" class="wk-x" data-act="ndSkip" aria-label="'+esc(t("ndNot"))+'">'+ico("x", 18)+'</button><div class="wk-k">'+ico("sun", 16)+esc(t("newWake"))+'</div><div class="wk-q">'+esc(t("ndTitle"))+'</div><div class="wk-s">'+esc(sub)+'</div>'+
-    '<div class="wk-b"><button type="button" class="btn nd-b" data-act="wakeNow">'+ico("sun", 18, 2.4)+esc(t("newWake"))+'</button><button type="button" class="btn" data-act="wakeEdit">'+ico("clock", 18)+esc(t("ndEarlier"))+'</button></div></div>';
+/* New Day = the moment you woke up. It starts your "after waking" tasks and the "Up for" count.
+   Routines never guesses when you sleep — it only decides WHEN to ask "Did you sleep?", from clues that add up:
+   how long the app sat untouched, how long you'd been up before that, and reminders that went by with nothing checked.
+   It learns how long your days usually are from your own answers. Clock hours are never used. */
+var ND2 = false;                       /* tapped "Yes" (slept): now asking what time */
+function askRec(){ try{ return JSON.parse(get("r.ask") || "null"); }catch(e){ return null; } }
+function askSet(o){ set("r.ask", o ? JSON.stringify(o) : ""); if(!o) ND2 = false; }
+function awakeList(){ try{ var a = JSON.parse(get("r.awake") || "[]"); return Array.isArray(a) ? a.filter(function(x){ return typeof x === "number"; }) : []; }catch(e){ return []; } }
+function dayLen(){                     /* hours you usually stay up: from your answers, 16 until it knows you */
+  var a = awakeList().sort(function(x, y){ return x - y; }); if(!a.length) return 16;
+  var md = a[a.length >> 1] / 60; return a.length < 3 ? (md + 16) / 2 : md;
 }
+function learnDay(h){ if(!(h >= 4 && h <= 30)) return; var a = awakeList(); a.push(Math.round(h*60)); set("r.awake", JSON.stringify(a.slice(-9))); }
+function missedIn(a, b){               /* today's reminders between a and b that nobody checked */
+  var mid = dayInfo().mid, n = 0;
+  try{ model().slots.forEach(function(s){ var at = mid + s.min*6e4; if(!s.done && !s.missed && at > a && at <= b) n++; }); }catch(e){}
+  return n;
+}
+function sleptLikely(l, n){
+  var G = (n - l) / 36e5; if(G < 2) return false;                 /* quiet hours */
+  var w = lastWake(); if(w === null) return wakeTasks().length > 0 || ndUsed();
+  var W = dayLen(), U = Math.max(0, (l - w) / 36e5), T = (n - w) / 36e5;  /* usual day, up before going quiet, up in total */
+  if(G >= 12 || (T >= W + 10)) return true;
+  var p = (G >= 6 ? 3 : G >= 4 ? 2 : 1) + (U >= W - 2 ? 2 : U >= W - 6 ? 1 : U < 4 ? -1 : 0);
+  if(p + 2 >= 4){ var M = missedIn(l, n); p += M >= 4 ? 2 : M >= 2 ? 1 : 0; }
+  return p >= 4;
+}
+function touch(){
+  var n = Date.now(), l = +get("r.open") || 0;
+  if(l > n + 6e5) l = 0;                                            /* the clock went back */
+  if(!askRec()){
+    if(!l){ if(lastWake() === null && (wakeTasks().length || ndUsed())) askSet({from:n, auto:0}); }
+    else if(sleptLikely(l, n)) askSet({from:l, auto:1});
+  }
+  if(!l || n - l >= 60e3) set("r.open", String(n));
+}
+/* your last wake-up, even if it was before midnight (you may still be up) */
+function lastWake(){ var w = wakeRec(); if(!w) return null; var n = Date.now(); return w.at > n + 6e5 || n - w.at > 48*3600e3 ? null : w.at; }
+function joinNames(a){ return a.length < 2 ? a.join("") : a.slice(0, -1).join(", ") + t("and") + a[a.length-1]; }
+function wakeCard(){
+  if(!items.length || !askRec()) return "";
+  var at = lastWake(), wt = wakeTasks();
+  var h = '<div class="wake ndc" id="ndCard"><div class="wk-k">'+ico("sun", 16)+esc(t("newWake"))+'</div>';
+  if(at !== null && !ND2){   /* 1 · did you sleep? */
+    h += '<div class="wk-q">'+esc(t("ndSlept"))+'</div><div class="wk-s">'+esc(t("ndSleptS"))+'</div>'+
+      '<div class="wk-b"><button type="button" class="btn nd-b" data-act="ndYes">'+esc(t("ndNow"))+'</button><button type="button" class="btn" data-act="ndNo">'+esc(t("ndNotYet"))+'</button></div>';
+  } else {                   /* 2 · what time did you wake up? */
+    var nm = wt.slice().sort(function(a, b){ return a.wake - b.wake; }).map(function(i){ return i.name; });
+    var list = nm.length <= 3 ? joinNames(nm) : nm.slice(0, 2).join(", ") + t("andMore", {n:nm.length - 2});
+    h += '<div class="wk-q">'+esc(t("wakeQ"))+'</div><div class="wk-s">'+esc(wt.length ? t("wakeStarts", {list:list}) : t("ndDayS"))+'</div>'+
+      '<div class="wk-b"><button type="button" class="btn nd-b" data-act="wakeNow">'+ico("sun", 18, 2.4)+esc(t("wakeNow"))+'</button><button type="button" class="btn" data-act="wakeEdit">'+ico("clock", 18)+esc(t("ndEarlier"))+'</button></div>'+
+      '<button type="button" class="nd-e" data-act="'+(ND2 ? "ndBack" : "ndNo")+'">'+esc(t(ND2 ? "ndBackT" : "ndNotNow"))+'</button>';
+  }
+  return h + '</div>';
+}
+/* "07:40" today, "Sun 07:40" otherwise */
+function wakeLbl(at){ var d = new Date(at); return (iso(d) === iso(today()) ? "" : fmt(d, {weekday:"short"}) + " ") + ft(d.getHours()*60 + d.getMinutes()); }
 function paintNd(){
-  var b = $("ndBtn"), w = getWake();
-  if(w !== null){ b.className = "nd set"; b.innerHTML = ico("sun", 17, 2.4) + '<span class="tab">' + esc(ft(w)) + '</span>'; b.setAttribute("aria-label", t("wokeAt", {t:ft(w)}) + " · " + t("edit")); }
-  else { b.className = "nd hint"; b.innerHTML = ico("sun", 17, 2.4) + '<span>' + esc(t("newWake")) + '</span>'; b.setAttribute("aria-label", t("newWake")); }
+  var b = $("ndBtn"), at = lastWake();
+  if(at !== null){ var tm = wakeLbl(at);
+    b.className = "nd set"; b.innerHTML = ico("sun", 17, 2.4) + '<span>' + esc(t("wokeS")) + ' <b class="tab">' + esc(tm) + '</b></span>'; b.setAttribute("aria-label", t("wokeAt", {t:tm}) + " · " + t("edit")); }
+  else { b.className = "nd" + (askRec() ? " hint" : ""); b.innerHTML = ico("sun", 17, 2.4) + '<span>' + esc(t("newWake")) + '</span>'; b.setAttribute("aria-label", t("newWake")); }
 }
 $("ndBtn").addEventListener("click", function(){
   closeMenus();
-  if(getWake() !== null) editWake(); else wakeIs(nowMin());
+  if(getWake() !== null) editWake();
+  else if(lastWake() !== null) showNd();   /* up since before midnight: ask, don't assume */
+  else wakeIs(nowMin());
 });
+function showNd(){ if(!askRec()) askSet({from:Date.now(), auto:0}); ND2 = false; lastHTML = ""; render(); window.scrollTo(0, 0); var c = $("ndCard"); if(c){ c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); } }
+var undoAsk = null;
 function wakeIs(m, how){
-  var before = snap(), wb = get("r.wake") || "null"; setWake(m); roll();
+  var before = snap(), wb = get("r.wake") || "null", q = askRec(), pw = lastWake(), aw = get("r.awake") || "";
+  setWake(m); roll();
+  if(m !== null){ if(q && q.auto && pw !== null && q.from > pw) learnDay((q.from - pw) / 36e5); askSet(null); }
   lastHTML = ""; render(); buzz(14);
-  toast(m === null ? t("wakeCleared") : t("ndDone", {t:ft(m)}), before); undoWake = wb;
+  toast(m === null ? t("wakeCleared") : t("ndDone", {t:ft(m)}), before); undoWake = wb; undoAsk = q ? {q:q, aw:aw} : null;
 }
 function editWake(){
   var w = getWake(), nm = nowMin();
@@ -1751,7 +1814,9 @@ document.addEventListener("click", function(e){
   if(a === "all"){ openAll(); return; }
   if(a === "wakeNow"){ wakeIs(nowMin()); return; }
   if(a === "wakeEdit"){ editWake(); return; }
-  if(a === "ndSkip"){ NDX = true; buzz(6); lastHTML = ""; render(); toast(t("ndLater")); return; }
+  if(a === "ndYes"){ ND2 = true; buzz(8); lastHTML = ""; render(); return; }
+  if(a === "ndBack"){ ND2 = false; buzz(6); lastHTML = ""; render(); return; }
+  if(a === "ndNo"){ var lw = lastWake(); askSet(null); buzz(6); lastHTML = ""; render(); toast(t(lw !== null ? "ndKeep" : "ndLater")); return; }
   var host = b.closest("[data-id]"); if(!host) return;
   var id = host.getAttribute("data-id");
   if(a === "edit") openSheet(find(id));
@@ -1763,14 +1828,14 @@ document.addEventListener("click", function(e){
 /* ---------- toast ---------- */
 var undoState = null, tt = null, toastExtra = null, undoWake = null, undoWakes = null;
 function toast(msg, undo, extra){
-  undoState = undo || null; toastExtra = extra || null; undoWake = null; undoWakes = null;
+  undoState = undo || null; toastExtra = extra || null; undoWake = null; undoWakes = null; undoAsk = null;
   $("toastTx").textContent = msg; $("undoBtn").style.display = undo ? "" : "none";
   $("extraBtn").style.display = extra ? "" : "none"; if(extra) $("extraTx").textContent = extra.label;
   var T = $("toast"); T.classList.remove("stack"); T.classList.add("on");
   if($("toastTx").scrollWidth > $("toastTx").clientWidth + 1) T.classList.add("stack");
   clearTimeout(tt); tt = setTimeout(function(){ $("toast").classList.remove("on"); undoState = null; toastExtra = null; }, extra ? 7000 : 4500);
 }
-$("undoBtn").addEventListener("click", function(){ if(!undoState) return; if(undoWake !== null){ set("r.wake", undoWake); if(undoWakes !== null) set("r.wakes", undoWakes); DI = null; undoWake = null; undoWakes = null; } items = JSON.parse(undoState).map(norm).filter(Boolean); save(); lastHTML = ""; render(); $("toast").classList.remove("on"); undoState = null; buzz(8); });
+$("undoBtn").addEventListener("click", function(){ if(!undoState) return; if(undoWake !== null){ set("r.wake", undoWake); if(undoWakes !== null) set("r.wakes", undoWakes); if(undoAsk){ set("r.ask", JSON.stringify(undoAsk.q)); set("r.awake", undoAsk.aw); } DI = null; undoWake = null; undoWakes = null; undoAsk = null; } items = JSON.parse(undoState).map(norm).filter(Boolean); save(); lastHTML = ""; render(); $("toast").classList.remove("on"); undoState = null; buzz(8); });
 $("extraBtn").addEventListener("click", function(){ var x = toastExtra; toastExtra = null; if(x) x.fn(); });
 
 (function(){
@@ -2430,7 +2495,7 @@ var askT = null;
 function askNf(){ clearTimeout(askT); nat("notifAsk"); askT = setTimeout(function(){ toast(t("nfManual")); }, 4000); }
 /* called by the app */
 window.__nat = {
-  resume:function(){ DI = null; lastHTML = ""; render(); },
+  resume:function(){ DI = null; touch(); lastHTML = ""; render(); },
   perm:function(p){ NPERM = p || null; paintNf(); planSent = ""; syncPlan(); },
   askDone:function(r){ clearTimeout(askT); r = r || {};
     if(r.granted){ buzz(10); toast(t("nfDone")); }
@@ -2454,7 +2519,6 @@ window.__nat = {
       var s = slotInfo(o.id, o.time);
       if(s && !s.done && !s.missed){ act("slot", o.id, o.time, null); return; }
     }
-    if(getWake() === null){ NDX = false; lastHTML = ""; render(); window.scrollTo(0, 0); var c = $("ndCard"); if(c){ c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); } }
   }
 };
 applyTheme(); applyLang(); applyClock(); maybeCatch(); paintNf(); nat("ready");
