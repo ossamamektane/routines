@@ -681,43 +681,59 @@ html[data-theme="dark"] .wake.ndc .wk-k{color:#ffd60a}
 @keyframes ndf{40%{box-shadow:inset 0 0 0 3px #ffcc00}}
 .mx2{display:block;font-size:12px;color:var(--ink3)}
 .mi.nfask{height:auto;min-height:48px;padding-top:6px;padding-bottom:6px;color:var(--red)}
+/* ---------- premium pass ---------- */
+html[data-theme="dark"] .tl:not(.r){--tlc:var(--ink)}
+html[data-theme="dark"] .glist{background:#2c2c2e}
+html[data-theme="dark"] .grow:active{background:#3a3a3c}
+
+.cdots i{height:3px}.cdots i.cur{background:var(--y)}
+.st.late{color:var(--late)}.row.missed .st.late{color:var(--red)}
+#skipBtn[style*="none"]+.grow::before{display:none}
+
+.logo{gap:10px;font-size:18px;font-weight:700;letter-spacing:-.02em}
+.logo svg{flex:none;border-radius:7px;box-shadow:0 1px 2px rgba(0,0,0,.14)}
+.hdr-in{gap:10px}
+.hdr .hb{width:36px;min-width:36px;height:36px;padding:0;border-radius:50%;box-shadow:none;background:rgba(118,118,128,.12);color:var(--y)}
+.hdr .hb.pri{background:var(--y);color:#fff}
+html[data-theme="dark"] .hdr .hb:not(.pri){background:rgba(118,118,128,.24)}
+.hdr .hb:active{transform:scale(.92)}
+#clock,#tlS{display:none}
+.day{margin:4px 0 14px}
+.tl{--tlc:var(--ink)} .tl.y{--tlc:var(--ink)} .tl.r{--tlc:var(--red)}
+.tl-h b{font-size:16px;font-weight:600;letter-spacing:-.01em}
+.tl-bar{height:8px;border-radius:4px}.tl-bar i{border-radius:4px}
+.gh{font-size:13px;font-weight:500;color:var(--ink2);margin:22px 16px 7px}
+.glist{background:var(--bg2);border-radius:14px;overflow:hidden}
+.grow{display:flex;align-items:center;gap:12px;width:100%;min-height:50px;padding:0 16px;font-size:16px;text-align:start;position:relative;color:var(--ink);transition:background .15s}
+.grow+.grow::before{content:"";position:absolute;top:0;inset-inline-start:50px;inset-inline-end:0;height:1px;transform:scaleY(.5);background:var(--line2)}
+.grow:active{background:var(--bg3)}
+.grow .gi{color:var(--y);display:inline-flex;width:22px;justify-content:center}
+.grow .gi svg{width:21px;height:21px}
+.grow .gl{flex:1;min-width:0}
+.grow .gv{color:var(--ink3);font-size:15px}
+.grow .gc{color:var(--ink3)} .grow .gc svg{width:17px;height:17px} html[dir="rtl"] .grow .gc svg{transform:scaleX(-1)}
+.grow.red,.grow.red .gi{color:var(--red)}
+.grow.armed{background:var(--red);color:#fff}.grow.armed .gi{color:#fff}
+.grow .sw{margin-inline-start:auto}
+.grow.on .sw{background:var(--ok)}
+.grow.on .sw i{transform:translateX(18px)} html[dir="rtl"] .grow.on .sw i{transform:translateX(-18px)}
+.pseg{height:38px;flex:none}
+.pseg button{font-size:14px;white-space:nowrap}
+.pseg button.sel{background:#fff;box-shadow:0 3px 8px rgba(0,0,0,.12),0 1px 1px rgba(0,0,0,.04);color:var(--ink);font-weight:600}
+html[data-theme="dark"] .pseg button.sel{background:#636366;box-shadow:none}
+.gfoot{font-size:12.5px;color:var(--ink3);text-align:center;margin:20px 0 4px}
+.pbody{padding-bottom:calc(22px + var(--sb))}
+#prefs .glist:first-child{margin-top:6px}
+.gacts{margin-top:26px}
+.gacts .grow{justify-content:flex-start}
 </style>
 </head>
 <body>
 <header class="hdr" id="hdr"><div class="hdr-in">
-  <div class="logo"><i><svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></i>Routines</div>
-  <button class="ib pri" id="addBtn" type="button"><span data-i="plus"></span><span class="tx" data-t="add"></span></button>
-  <div class="dd"><button class="ib" type="button" data-dd aria-haspopup="menu" id="themeBtn"><span id="themeIco"></span></button>
-    <div class="menu" role="menu"><div class="mh" data-t="theme"></div>
-      <button class="mi" data-theme-choice="auto" role="menuitemradio"><span data-i="auto"></span><span data-t="thAuto"></span><span class="mk"><span data-i="check"></span></span></button>
-      <button class="mi" data-theme-choice="light" role="menuitemradio"><span data-i="sun"></span><span data-t="thLight"></span><span class="mk"><span data-i="check"></span></span></button>
-      <button class="mi" data-theme-choice="dark" role="menuitemradio"><span data-i="moon"></span><span data-t="thDark"></span><span class="mk"><span data-i="check"></span></span></button>
-    </div></div>
-  <div class="dd"><button class="ib" type="button" data-dd aria-haspopup="menu"><span data-i="globe"></span><span class="lc" id="langCode"></span></button>
-    <div class="menu" role="menu"><div class="mh" data-t="language"></div>
-      <button class="mi" data-lang-choice="en" role="menuitemradio"><span class="tab" style="width:20px;font-weight:700;font-size:12px">EN</span>English<span class="mk"><span data-i="check"></span></span></button>
-      <button class="mi" data-lang-choice="fr" role="menuitemradio"><span class="tab" style="width:20px;font-weight:700;font-size:12px">FR</span>Français<span class="mk"><span data-i="check"></span></span></button>
-      <button class="mi" data-lang-choice="ar" role="menuitemradio"><span class="tab" style="width:20px;font-weight:700;font-size:12px">AR</span>العربية<span class="mk"><span data-i="check"></span></span></button>
-    </div></div>
-  <div class="dd"><button class="ib" type="button" data-dd aria-haspopup="menu" aria-label="More"><span data-i="dots"></span></button>
-    <div class="menu" role="menu">
-      <button class="mi" id="allBtn"><span data-i="dots"></span><span data-t="allT"></span><small class="mx tab" id="allCount"></small></button>
-      <div id="nfBox" hidden><div class="msep"></div><div class="mh" data-t="nfH"></div>
-      <button class="mi nfask" id="nfAsk" hidden><span data-i="bell"></span><span><span data-t="nfOn"></span><small class="mx2" data-t="nfOnSub"></small></span></button>
-      <button class="mi" data-nf="t" role="menuitemcheckbox"><span data-i="clock"></span><span data-t="nfTasks"></span><span class="mk"><span data-i="check"></span></span></button>
-      <button class="mi" data-nf="a" role="menuitemcheckbox"><span data-i="hourglass"></span><span data-t="nfLeft"></span><span class="mk"><span data-i="check"></span></span></button>
-      </div>
-      <div class="msep"></div>
-      <div class="mh" data-t="clockF"></div>
-      <button class="mi" data-clock="24" role="menuitemradio"><span data-i="clock"></span><span data-t="c24"></span><small class="mx tab" id="c24s"></small><span class="mk"><span data-i="check"></span></span></button>
-      <button class="mi" data-clock="12" role="menuitemradio"><span data-i="clock"></span><span data-t="c12"></span><small class="mx tab" id="c12s"></small><span class="mk"><span data-i="check"></span></span></button>
-      <div class="msep"></div>
-      <div class="mh" data-t="data"></div>
-      <button class="mi" id="exportBtn"><span data-i="download"></span><span data-t="export"></span></button>
-      <button class="mi" id="importBtn"><span data-i="upload"></span><span data-t="import"></span></button>
-      <div class="msep"></div>
-      <div class="mh" data-t="foot"></div>
-    </div></div>
+  <div class="logo"><svg width="28" height="28" viewBox="0 0 1024 1024" aria-hidden="true"><defs><linearGradient id="lg" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#409cff"/><stop offset="1" stop-color="#0062e6"/></linearGradient></defs><rect width="1024" height="1024" rx="230" fill="url(#lg)"/><path d="M300 520L450 670L735 365" fill="none" stroke="#fff" stroke-width="118" stroke-linecap="round" stroke-linejoin="round"/><rect x="290" y="790" width="444" height="56" rx="28" fill="#fff" fill-opacity=".27"/><rect x="290" y="790" width="270" height="56" rx="28" fill="#ffcc00"/></svg><span>Routines</span></div>
+  <button class="ib hb" id="prefBtn" type="button" aria-label="Settings"><span data-i="dots"></span></button>
+  <button class="ib pri hb" id="addBtn" type="button" aria-label="Add"><span data-i="plus"></span></button>
+  <span id="themeIco" hidden></span><span id="langCode" hidden></span>
 </div></header>
 
 <main class="wrap">
@@ -753,11 +769,14 @@ html[data-theme="dark"] .wake.ndc .wk-k{color:#ffd60a}
 
     <div class="fl" id="gOn"><div class="lb"><span id="onLbl"></span></div><div id="onPick"></div></div>
     <div class="fl" id="gPause"></div>
+    <div class="glist gacts" id="gActs">
+      <button class="grow" type="button" id="skipBtn"><span class="gi" data-i="skip"></span><span class="gl" data-t="skipB"></span></button>
+      <button class="grow" type="button" id="pauseBtn"><span class="gi" id="pauseIco"></span><span class="gl" id="pauseTx"></span></button>
+      <button class="grow red" type="button" id="delBtn"><span class="gi" data-i="trash"></span><span class="gl" id="delTx"></span></button>
+    </div>
   </div>
   <div class="sum" id="hint"></div>
   <div class="sfoot">
-    <button class="btn ic" type="button" id="delBtn" aria-label="Delete"><span data-i="trash"></span><span id="delTx"></span></button>
-    <button class="btn ic" type="button" id="skipBtn" aria-label="Skip"><span data-i="skip"></span></button>
     <button class="btn y" type="button" id="saveBtn"><span data-i="check"></span><span data-t="save"></span></button>
   </div>
 </section>
@@ -775,6 +794,31 @@ html[data-theme="dark"] .wake.ndc .wk-k{color:#ffd60a}
     <button class="btn cmiss" type="button" data-c="missed"><span data-i="x"></span><span data-t="missedB"></span></button>
     <button class="clink" type="button" data-c="other" id="cOther"><span data-t="otherTime"></span></button>
     <div class="cbulk" id="cBulk"><button type="button" data-c="allnow"><span data-t="allNow"></span></button><button type="button" class="r" data-c="allmissed"><span data-t="allMissed"></span></button></div>
+  </div>
+</section>
+<div class="scrim" id="pScrim"></div>
+<section class="sheet" id="prefs" role="dialog" aria-modal="true" aria-labelledby="pTitle">
+  <div class="sgrab"><i></i></div>
+  <div class="shd"><h3 id="pTitle" data-t="setT"></h3><button class="ib" type="button" id="pClose" aria-label="Close"><span data-i="x"></span></button></div>
+  <div class="sbody pbody">
+    <div class="glist"><button class="grow" type="button" id="allBtn"><span class="gi" data-i="list"></span><span class="gl" data-t="allT"></span><small class="gv tab" id="allCount"></small><span class="gc" data-i="right"></span></button></div>
+    <div class="gh" data-t="theme"></div>
+    <div class="seg pseg"><button type="button" data-theme-choice="auto" data-t="thAuto"></button><button type="button" data-theme-choice="light" data-t="thLight"></button><button type="button" data-theme-choice="dark" data-t="thDark"></button></div>
+    <div class="gh" data-t="language"></div>
+    <div class="seg pseg"><button type="button" data-lang-choice="en">English</button><button type="button" data-lang-choice="fr">Français</button><button type="button" data-lang-choice="ar">العربية</button></div>
+    <div class="gh" data-t="clockF"></div>
+    <div class="seg pseg"><button type="button" data-clock="24" class="tab" id="c24s"></button><button type="button" data-clock="12" class="tab" id="c12s"></button></div>
+    <div id="nfBox" hidden><div class="gh" data-t="nfH"></div>
+      <div class="glist">
+        <button class="grow" type="button" data-nf="t" role="switch"><span class="gi" data-i="bell"></span><span class="gl" data-t="nfTasks"></span><span class="sw"><i></i></span></button>
+        <button class="grow" type="button" data-nf="a" role="switch"><span class="gi" data-i="hourglass"></span><span class="gl" data-t="nfLeft"></span><span class="sw"><i></i></span></button>
+      </div></div>
+    <div class="gh" data-t="data"></div>
+    <div class="glist">
+      <button class="grow" type="button" id="exportBtn"><span class="gi" data-i="download"></span><span class="gl" data-t="export"></span></button>
+      <button class="grow" type="button" id="importBtn"><span class="gi" data-i="upload"></span><span class="gl" data-t="import"></span></button>
+    </div>
+    <p class="gfoot" data-t="foot"></p>
   </div>
 </section>
 <div class="scrim" id="aScrim"></div>
@@ -821,7 +865,7 @@ var $ = function(id){ return document.getElementById(id); };
 /* ---------- icons ---------- */
 var P = {
   bell:'<path d="M6 16.5V11a6 6 0 0 1 12 0v5.5l1.5 1.5h-15z"/><path d="M10 20.5a2 2 0 0 0 4 0"/>', hourglass:'<path d="M7 3h10M7 21h10M8 3v3.5a4 4 0 0 0 1.6 3.2L12 12l2.4-2.3A4 4 0 0 0 16 6.5V3M8 21v-3.5a4 4 0 0 1 1.6-3.2L12 12l2.4 2.3a4 4 0 0 1 1.6 3.2V21"/>',
-  plus:'<path d="M12 5v14M5 12h14"/>', minus:'<path d="M5 12h14"/>', check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
+  plus:'<path d="M12 5v14M5 12h14"/>', pause:'<path d="M9 5.5v13M15 5.5v13"/>', play:'<path d="M8 5.5l10.5 6.5L8 18.5z"/>', list:'<path d="M9.5 6.5h10M9.5 12h10M9.5 17.5h10"/><circle cx="5" cy="6.5" r="1.1" fill="currentColor"/><circle cx="5" cy="12" r="1.1" fill="currentColor"/><circle cx="5" cy="17.5" r="1.1" fill="currentColor"/>', minus:'<path d="M5 12h14"/>', check:'<path d="M5 12.5l4.5 4.5L19 7.5"/>',
   x:'<path d="M6 6l12 12M18 6L6 18"/>', sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2.5v2M12 19.5v2M2.5 12h2M19.5 12h2M5.3 5.3l1.4 1.4M17.3 17.3l1.4 1.4M5.3 18.7l1.4-1.4M17.3 6.7l1.4-1.4"/>',
   moon:'<path d="M20 14.5A8 8 0 0 1 9.5 4a8 8 0 1 0 10.5 10.5z"/>', auto:'<circle cx="12" cy="12" r="8.5"/><path d="M12 3.5v17A8.5 8.5 0 0 0 12 3.5z" fill="currentColor"/>',
   globe:'<circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.5 5.4 3.5 8.5s-1 5.9-3.5 8.5c-2.5-2.6-3.5-5.4-3.5-8.5s1-5.9 3.5-8.5z"/>',
@@ -857,7 +901,7 @@ var T = {
   inX:["in {x}","dans {x}","بعد {x}"], lateX:["{x} late","{x} de retard","متأخر {x}"], hAbbr:["h","h","س"], min:["min","min","د"],
   clockF:["Time format","Format de l’heure","صيغة الوقت"], c24:["24-hour","24 heures","24 ساعة"], c12:["12-hour","12 heures","12 ساعة"],
   none:["Nothing","Rien","لا شيء"], noFixWhy:["Only for “every 1 day, week or month”","Seulement pour « chaque jour, semaine ou mois »","فقط لـ«كل يوم أو أسبوع أو شهر»"],
-  somed:["Any time today","Quand vous voulez aujourd’hui","في أي وقت اليوم"], somew:["Somewhere this week","Dans la semaine","في وقت ما هذا الأسبوع"], somem:["Somewhere this month","Dans le mois","في وقت ما هذا الشهر"],
+  somed:["Any time today","Quand vous voulez aujourd’hui","في أي وقت اليوم"], somew:["Anytime this week","Dans la semaine","في أي وقت هذا الأسبوع"], somem:["Anytime this month","Dans le mois","في أي وقت هذا الشهر"],
   nowTag:["now","maintenant","الآن"], doneAt:["done {t}","fait à {t}","أُنجز {t}"],
   overdue:["Overdue","En retard","متأخرة"], schedule:["Today","Aujourd’hui","اليوم"], anytime:["Anytime today","Dans la journée","خلال اليوم"],
   week:["This week","Cette semaine","هذا الأسبوع"], month:["This month","Ce mois-ci","هذا الشهر"], coming:["Coming up","À venir","قادم"],
@@ -866,20 +910,20 @@ var T = {
   lateD:["{n}d late","{n} j de retard","متأخر {n} ي"], lateY:["due yesterday","prévu hier","كان مستحقًا أمس"], tomorrow:["Tomorrow","Demain","غدًا"],
   showMore:["Show {n} more","Afficher {n} de plus","عرض {n} أخرى"], showLess:["Show less","Moins","أقل"],
   emptyT:["No tasks yet","Aucune tâche","لا توجد مهام بعد"], emptyP:["Add what you do regularly. Check it off.","Ajoutez ce que vous faites souvent. Cochez.","أضف ما تفعله بانتظام. ثم أنجزه."], addFirst:["Add your first task","Ajouter une tâche","أضف أول مهمة"],
-  newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["Name","Nom","الاسم"], more2:["More","Plus","المزيد"], less:["Less","Moins","أقل"], descPh:["Description (optional)","Description (facultatif)","الوصف (اختياري)"], ph:["Task name","Nom de la tâche","اسم المهمة"],
+  newT:["New task","Nouvelle tâche","مهمة جديدة"], editT:["Edit task","Modifier","تعديل"], fName:["Name","Nom","الاسم"], more2:["More","Plus","المزيد"], less:["Less","Moins","أقل"], descPh:["Notes","Notes","ملاحظات"], ph:["Task name","Nom de la tâche","اسم المهمة"],
   fKind:["Every","Tous les","كل"],
-  fixedD:["Fixed date","Date fixe","تاريخ ثابت"], fixedT:["Fixed time","Heure fixe","وقت ثابت"],
+  fixedD:["Scheduled","Planifiée","مجدولة"], fixedT:["Scheduled","Planifiée","مجدولة"],
   fixedS:["On the calendar","Au calendrier","في التقويم"], fixedSH:["On the clock: {x}","Sur l’horloge : {x}","على الساعة: {x}"],
-  flexD:["No fixed date","Sans date fixe","بدون تاريخ ثابت"], flexT:["No fixed time","Sans heure fixe","بدون وقت ثابت"],
+  flexD:["Flexible","Flexible","مرنة"], flexT:["Flexible","Flexible","مرنة"],
   flexS:["Counts from the day you do it","Compte à partir du jour où c’est fait","يُحسب من يوم إنجازه"], flexSH:["Counts from the moment you check it","Compte à partir du moment où vous cochez","يُحسب من لحظة الإنجاز"],
-  shiftT:["Restart when checked","Repartir quand c’est coché","ابدأ من وقت الإنجاز"], shiftS:["Late? Everything after moves too.","En retard ? La suite se décale.","تأخرت؟ كل ما بعده يتأخر."],
-  shiftSD:["Late? The next date moves too.","En retard ? La date suivante se décale.","تأخرت؟ التاريخ التالي يتأخر."],
+  shiftT:["Repeat from when done","Répéter depuis la dernière fois","كرّر من وقت الإنجاز"], shiftS:["Next times count from when you check it off","Les heures suivantes partent du moment où vous cochez","الأوقات التالية تُحسب من وقت إنجازك"],
+  shiftSD:["The next date counts from when you check it off","La prochaine date part du moment où vous cochez","الموعد التالي يُحسب من وقت إنجازك"],
   goalT:["Any day this {p}","N’importe quel jour de la {p}","أي يوم في {p}"], goalS:["Shows under “{s}” until you've done it","Reste dans « {s} » jusqu’à ce que ce soit fait","يظهر في «{s}» حتى تنجزه"], howMany:["How many times","Combien de fois","كم مرة"],
   fStartAt:["Starts at","Commence à","يبدأ في"], change:["Change","Changer","تغيير"],
   noFixS:["Any time this {p}","N’importe quand ce {p}","في أي وقت هذا {p}"], noFixDis:["Only when repeating every 1","Seulement « tous les 1 »","فقط عند التكرار كل 1"],
   sumAny:["{q} a {p}, any time","{q} par {p}, n’importe quand","{q} في {p}، في أي وقت"],
   laterN:["Later · {n}","Plus tard · {n}","لاحقًا · {n}"], onLbl:["On","Le","في"], onDayLbl:["On day","Le jour","في يوم"], startsNow:["starting when you save","à partir de l’enregistrement","يبدأ عند الحفظ"],
-  catchT:["While you were away","Pendant votre absence","أثناء غيابك"], catchN:["{a} of {b}","{a} sur {b}","{a} من {b}"],
+  catchT:["While you were away","Pendant votre absence","أثناء غيابك"], catchPos:["{a} of {b}","{a} sur {b}","{a} من {b}"],
   onTimeAt:["Did it at {t}","Fait à {t}","أنجزته في {t}"], didIt:["Did it","Fait","أنجزته"], justNow:["Just now","À l’instant","الآن"], missedB:["Missed it","Raté","فاتني"],
   plus30:["Later…","Plus tard…","لاحقًا…"], tomorrowB:["Move to tomorrow","Reporter à demain","انقل للغد"],
   caught:["All caught up","Tout est à jour","كل شيء محدّث"], caughtS:["Nice — your day is honest again.","Parfait — votre journée est à jour.","رائع — يومك محدّث."],
@@ -898,14 +942,14 @@ var T = {
   hWin:["Shows under “{p}” until you've done it {q}. Resets every {u}.","Reste dans « {p} » jusqu’à {q}. Repart chaque {u}.","تظهر في «{p}» حتى تنجزها {q}. تتجدد كل {u}."],
   hTimes:[" Missed hours roll over to the next day."," Les heures manquées passent au lendemain."," الساعات الفائتة تنتقل لليوم التالي."],
   once:["once","1 fois","مرة"], timesN:["{n} times","{n} fois","{n} مرات"],
-  save:["Save","Enregistrer","حفظ"], del2:["Tap again","Encore","اضغط مجددًا"], undo:["Undo","Annuler","تراجع"],
+  save:["Save","Enregistrer","حفظ"], del2:["Tap again to delete","Touchez encore pour supprimer","اضغط مجددًا للحذف"], undo:["Undo","Annuler","تراجع"],
   checked:["Checked “{n}”","« {n} » coché","تم «{n}»"], unchecked:["Unchecked","Décoché","أُلغي"], removed:["Deleted","Supprimé","حُذف"],
   skipped:["Skipped to {d}","Reporté au {d}","أُجّل إلى {d}"], added:["Added “{n}”","« {n} » ajouté","أُضيف «{n}»"],
   imported:["Imported {n} tasks","{n} tâches importées","استيراد {n} مهام"], badFile:["That file isn't a Routines backup","Ce fichier n’est pas une sauvegarde","الملف ليس نسخة صالحة"],
   notSet:["Not set","Non défini","غير محدد"], needWake:["Choose how long after waking","Choisissez combien de temps après le réveil","اختر كم بعد الاستيقاظ"], needStart:["Choose a start time","Choisissez une heure de début","اختر وقت البدء"], needName:["Give it a name first","Donnez-lui un nom","أعطها اسمًا"],
   eDay:["Every day","Tous les jours","كل يوم"], eWeekOn:["Every {w}","Chaque {w}","كل {w}"], eMonth:["Every month","Tous les mois","كل شهر"], eN:["Every {n} {u}","Tous les {n} {u}","كل {n} {u}"],
   uh:["hours","heures","ساعات"], u1h:["hour","heure","ساعة"], ud:["days","jours","أيام"], uw:["weeks","semaines","أسابيع"], um:["months","mois","أشهر"], u1d:["day","jour","يوم"], u1w:["week","semaine","أسبوع"], u1m:["month","mois","شهر"],
-  onDay:["on the {n}","le {n}","يوم {n}"], afterDone:["restarts when checked","repart quand c’est coché","يُعاد من وقت الإنجاز"], onW:["on {w}","le {w}","يوم {w}"], atT:["at {t}","à {t}","في {t}"], stAt:["starts at {t}","dès {t}","يبدأ في {t}"], stFrom:["starts {d}","début : {d}","يبدأ {d}"], stonLbl:["Starts on","Commence le","يبدأ يوم"], stonDayLbl:["Starts on day","Commence le jour","يبدأ في يوم"], winSub:["{q} a {p}","{q} par {p}","{q} في {p}"],
+  onDay:["on the {n}","le {n}","يوم {n}"], afterDone:["repeats from when done","répétée depuis la dernière fois","تتكرر من وقت الإنجاز"], onW:["on {w}","le {w}","يوم {w}"], atT:["at {t}","à {t}","في {t}"], stAt:["starts at {t}","dès {t}","يبدأ في {t}"], stFrom:["starts {d}","début : {d}","يبدأ {d}"], stonLbl:["Starts on","Commence le","يبدأ يوم"], stonDayLbl:["Starts on day","Commence le jour","يبدأ في يوم"], winSub:["{q} a {p}","{q} par {p}","{q} في {p}"],
   lastDone:["done {x}","fait {x}","أُنجز {x}"], ago:["{n}d ago","il y a {n} j","منذ {n} ي"], agoToday:["today","aujourd’hui","اليوم"],
   today:["Today","Aujourd’hui","اليوم"], nextWeek:["In a week","Dans 1 sem.","بعد أسبوع"],
   mAb:["m","min","د"], eOne:["Every {u}","Chaque {u}","كل {u}"], movedFrom:["moved from {t}","décalé de {t}","نُقل من {t}"],
@@ -926,9 +970,12 @@ var T = {
   noneDue:["Nothing due right now","Rien de prévu maintenant","لا شيء مستحق الآن"], openToday:["{n} left today, whenever suits you","{n} à faire aujourd’hui, quand vous voulez","{n} متبقية اليوم، متى شئت"],
   repairedN:["Fixed {n} tasks moved by a clock change","{n} tâches corrigées après un changement d’heure","صُحّحت {n} مهام بعد تغيير الساعة"],
   wakeQ:["When did you wake up?","À quelle heure vous êtes-vous levé ?","متى استيقظت؟"], wakeHi:["Good morning","Bonjour","صباح الخير"],
-  ndTitle:["Start your day","Commencez votre journée","ابدأ يومك"], ndSub:["Tap New Day when you wake up.","Touchez « Nouveau jour » à votre réveil.","اضغط «يوم جديد» عندما تستيقظ."],
+  onced:["Once a day","Une fois par jour","مرة في اليوم"], oncew:["Once a week","Une fois par semaine","مرة في الأسبوع"], oncem:["Once a month","Une fois par mois","مرة في الشهر"],
+  timesd:["{n} times a day","{n} fois par jour","{n} مرات في اليوم"], timesw:["{n} times a week","{n} fois par semaine","{n} مرات في الأسبوع"], timesm:["{n} times a month","{n} fois par mois","{n} مرات في الشهر"],
+  setT:["Settings","Réglages","الإعدادات"], delT:["Delete task","Supprimer la tâche","حذف المهمة"], pauseB:["Pause task","Mettre en pause","إيقاف مؤقت"], resumeB:["Resume task","Reprendre","استئناف"], skipB:["Skip the next one","Passer la prochaine","تخطَّ القادمة"],
+  ndTitle:["Start your day","Commencez votre journée","ابدأ يومك"], ndSub:["Tap New Day when you’re up.","Touchez « Nouveau jour » quand vous êtes levé.","اضغط «يوم جديد» عندما تستيقظ."],
   ndWhere:["It’s always at the top, next to the time left.","Le bouton est toujours en haut, à côté du temps restant.","تجده دائمًا في الأعلى بجانب الوقت المتبقي."],
-  ndEarlier:["Earlier…","Plus tôt…","في وقت سابق…"], ndNot:["Not today","Pas aujourd’hui","ليس اليوم"],
+  ndEarlier:["Set time…","Choisir l’heure…","اختر الوقت…"], ndNot:["Not today","Pas aujourd’hui","ليس اليوم"],
   ndLater:["Hidden for now — New Day stays at the top","Masqué pour l’instant — « Nouveau jour » reste en haut","أُخفي الآن — يبقى «يوم جديد» في الأعلى"],
   ndDone:["Day started at {t}","Journée commencée à {t}","بدأ يومك في {t}"],
   nfH:["Notifications","Notifications","الإشعارات"], nfTasks:["Task reminders","Rappels des tâches","تذكير بالمهام"], nfLeft:["Time-left nudges","Rappels du temps restant","تنبيهات الوقت المتبقي"], nfMorning:["Morning New Day reminder","Rappel du matin","تذكير الصباح"],
@@ -938,7 +985,7 @@ var T = {
   nNow:["It’s {t} — time for it","Il est {t} — c’est l’heure","الساعة {t} — حان وقتها"], nLate:["Still to do: {n}","Encore à faire : {n}","ما زال عليك: {n}"], nWas:["Was due at {t}","Prévu à {t}","كان موعدها {t}"],
   nLeft:["⏳ {x} left today","⏳ Encore {x} aujourd’hui","⏳ باقي {x} اليوم"], nOpen:["Still open: {list}","Reste : {list}","متبقٍ: {list}"],
   nMorning:["☀️ Good morning","☀️ Bonjour","☀️ صباح الخير"], nMorningB:["Tap New Day to start your day","Touchez « Nouveau jour » pour commencer","اضغط «يوم جديد» لتبدأ يومك"], nDoneAct:["Done ✓","Fait ✓","تم ✓"], wakeHi2:["Wake-up","Réveil","الاستيقاظ"], dayLeft:["{x} left today","{x} restantes","باقي {x} اليوم"], toDoN:["{n} to do","{n} à faire","{n} متبقية"], allClear:["All done","Tout est fait","أُنجز الكل"],
-  wakeStarts:["Used for {list}","Utilisé pour {list}","يُستخدم لـ {list}"], wakeNow:["Just now","À l’instant","الآن"], wakeEarlier:["Earlier…","Plus tôt…","في وقت سابق…"],
+  wakeStarts:["It sets the time for {list}.","Il règle l’heure de {list}.","يضبط وقت {list}."], wakeNow:["Just now","À l’instant","الآن"], wakeEarlier:["Earlier…","Plus tôt…","في وقت سابق…"],
   todayW:["Today","Aujourd’hui","اليوم"], agoT:["{x} ago","il y a {x}","قبل {x}"], future:["That’s in the future","C’est dans le futur","هذا في المستقبل"],
   justNow:["Just now","À l’instant","الآن"], newWake:["New Day","Nouveau jour","يوم جديد"], yest:["Yesterday","Hier","أمس"],
   ndOn:["Starts {d}","Commence le {d}","يبدأ {d}"], ndWeek:["new week","nouvelle semaine","أسبوع جديد"], ndMonth:["new month","nouveau mois","شهر جديد"],
@@ -1338,8 +1385,9 @@ function winRow(o, lateTxt){
   if(o.it.quota === 1) dots = "";
   else if(o.it.quota <= 7){ for(var i = 0; i < o.it.quota; i++) dots += '<i class="'+(i < o.count ? "on" : "")+'"></i>'; dots = '<div class="dots">'+dots+'</div>'; }
   else dots = '<span class="tag tab">'+o.count+'/'+o.it.quota+'</span>';
-  var sub = o.met ? t("goalD"+o.it.period) : describe(o.it) + (o.count ? " · " + o.count + "/" + o.it.quota : "");
+  var sub = o.met ? t("goalD"+o.it.period) : o.it.quota === 1 ? t("once"+o.it.period) : t("times"+o.it.period, {n:o.it.quota});
   var lft = o.met ? "" : o.today ? {x:t("doneT")} : lateTxt ? {x:lateTxt, red:true} : periodLeft(o.it.period);
+  if(lft && o.it.period === "d" && !lft.red && !o.today) lft = {x:t("grpAny")};
   if(o.today && !o.met) sub = freq(o.it) + " · " + o.count + "/" + o.it.quota;
   return row(o.met || o.today ? "done" : lateTxt ? "late" : "", "win", o.it.id, "", '<div class="tm"></div>', o.it.name, sub, dots, o.today, lft ? '<span class="st'+(lft.red ? " late" : "")+'">'+esc(lft.x)+'</span>' : "");
 }
@@ -1423,7 +1471,7 @@ function render(){
     var pastD = dEnd <= nm, lateAny = [];
     m.any.forEach(function(a){
       var ww = a.it.wake !== null && !a.done, at = dlGet(a.it)["*"], late = !a.done && !ww && pastD;
-      var stt = a.done ? (at && at !== "×" ? t("doneAt", {t:ft(at)}) : t("doneT")) : ww ? t("wakeWait") : late ? t("lateX", {x:dur(nm - dEnd)}) : dl.x;
+      var stt = a.done ? (at && at !== "×" ? t("doneAt", {t:ft(at)}) : t("doneT")) : ww ? t("wakeWait") : late ? t("lateX", {x:dur(nm - dEnd)}) : dl.red ? dl.x : t("grpAny");
       if(late) lateAny.push(a.it);
       add(ww ? -5e5 : dEnd, row((a.done ? "done" : ww ? "wwait" : late ? "late" : "") + " anyt", a.wh ? "wakeEdit" : "item", a.it.id, "", ww ? '<div class="tm">'+ico("sun", 18)+'</div>' : blank, a.it.name, freq(a.it), '<span class="tag'+(late || (!a.done && !ww && dl.red) ? " late" : "")+'">'+esc(stt)+'</span>'), late, a.done, at && at !== "×" ? lm(at) : null);
     });
@@ -1828,8 +1876,8 @@ function paintCatch(dir){
   }
   var q = cq[ci];
   $("cBtns").style.display = "";
-  $("cCount").textContent = t("catchN", {a:ci + 1, b:cq.length});
-  $("cDots").innerHTML = cq.map(function(_, i){ return '<i class="'+(i < ci ? "on" : i === ci ? "cur" : "")+'"></i>'; }).join("");
+  $("cCount").textContent = t("catchPos", {a:ci + 1, b:cq.length});
+  $("cDots").innerHTML = cq.length < 2 ? "" : cq.map(function(_, i){ return '<i class="'+(i < ci ? "on" : i === ci ? "cur" : "")+'"></i>'; }).join("");
   c.innerHTML = '<div class="ccard'+(dir ? " in" : "")+'">'+(q.time ? '<div class="ctime tab">'+ftH(q.eff)+'</div>' : '<div class="ctime">'+ico("cal", 30)+'</div>')+'<div class="cname">'+esc(q.name)+'</div><div class="clate">'+esc(q.lab)+'</div><div class="csub">'+esc(q.sub)+'</div><div class="chint">'+esc(t("swipeHint"))+'</div></div>';
   $("cOnTime").innerHTML = ico("check", 20, 2.6) + '<span>' + esc(q.time ? t("onTimeAt", {t:ft(q.eff)}) : t("didIt")) + '</span>';
   $("cNow").style.display = q.time ? "" : "none";
@@ -1889,7 +1937,8 @@ function openSheet(it){
   $("shTitle").textContent = t(it ? "editT" : "newT");
   $("fName").value = F.name; $("fName").placeholder = t("ph");
   $("fDesc").value = it && it.desc || ""; $("fDesc").placeholder = t("descPh"); requestAnimationFrame(growDesc);
-  $("delBtn").style.display = it ? "" : "none"; $("skipBtn").style.display = it && it.kind !== "window" ? "" : "none";
+  $("gActs").style.display = it ? "" : "none"; $("skipBtn").style.display = it && it.kind !== "window" ? "" : "none";
+  if(it){ $("pauseTx").textContent = t(it.paused ? "resumeB" : "pauseB"); $("pauseIco").innerHTML = ico(it.paused ? "play" : "pause"); }
   disarm(); $("picker").classList.remove("on");
   paintSheet(); $("sbody").scrollTop = 0;
   $("scrim").classList.add("on"); $("sheet").classList.add("on"); lockSync();
@@ -1956,8 +2005,7 @@ function paintSheet(){
     (H && F.times.length ? '' : '<button type="button" class="tadd" id="tAdd">'+ico("plus", 18)+esc(t("addTime"))+'</button>');
   if(F.need === "wake" && WK) $("wakeBox").innerHTML += '<p class="need">'+esc(t("needWake"))+'</p>';
   if(F.need === "time" && !WK) $("timeList").innerHTML += '<p class="need">'+esc(t("needStart"))+'</p>';
-  $("gPause").style.display = editing ? "" : "none";
-  $("gPause").innerHTML = editing ? toggle("paused", F.paused, t("pauseT"), t("pauseS")) : "";
+  $("gPause").style.display = "none";
   $("hint").innerHTML = ico("repeat", 18) + '<span><b>'+esc(summary())+'</b></span>';
 }
 $("sheet").addEventListener("click", function(e){
@@ -2072,7 +2120,10 @@ function paintAll(){
   if(pz.length) h += '<div class="mini">'+esc(t("pausedT"))+' · '+pz.length+'</div><div class="box">'+list(pz)+'</div>';
   $("aList").innerHTML = h;
 }
-function openAll(){ closeMenus(); hideToast(); paintAll(); $("aList").scrollTop = 0; $("aScrim").classList.add("on"); $("all").classList.add("on"); lockSync(); }
+function openPrefs(){ closeMenus(); hideToast(); nat("permCheck"); paintNf(); $("prefs").querySelector(".sbody").scrollTop = 0; $("pScrim").classList.add("on"); $("prefs").classList.add("on"); lockSync(); buzz(4); }
+function closePrefs(){ $("pScrim").classList.remove("on"); $("prefs").classList.remove("on"); lockSync(); }
+$("prefBtn").addEventListener("click", openPrefs); $("pScrim").addEventListener("click", closePrefs); $("pClose").addEventListener("click", closePrefs);
+function openAll(){ closePrefs(); closeMenus(); hideToast(); paintAll(); $("aList").scrollTop = 0; $("aScrim").classList.add("on"); $("all").classList.add("on"); lockSync(); }
 function closeAll(){ $("aScrim").classList.remove("on"); $("all").classList.remove("on"); lockSync(); }
 $("aList").addEventListener("click", function(e){ var b = e.target.closest("[data-aid]"); if(!b) return; var it = find(b.getAttribute("data-aid")); closeAll(); if(it) setTimeout(function(){ openSheet(it); }, 120); });
 $("aScrim").addEventListener("click", closeAll); $("aClose").addEventListener("click", closeAll);
@@ -2188,7 +2239,8 @@ $("skipBtn").addEventListener("click", function(){
   toast(t("skipped", {d:fmt(parse(it.next), {weekday:"short", day:"numeric", month:"short"})}), before);
 });
 var armT = null;
-function disarm(){ clearTimeout(armT); $("delBtn").classList.remove("armed"); $("delTx").textContent = ""; }
+function disarm(){ clearTimeout(armT); $("delBtn").classList.remove("armed"); $("delTx").textContent = t("delT"); }
+$("pauseBtn").addEventListener("click", function(){ if(!editing) return; F.paused = !editing.paused; $("saveBtn").click(); });
 $("delBtn").addEventListener("click", function(){
   if(!editing) return;
   if(!this.classList.contains("armed")){ this.classList.add("armed"); $("delTx").textContent = t("del2"); buzz(20); armT = setTimeout(disarm, 3000); return; }
@@ -2198,7 +2250,7 @@ $("delBtn").addEventListener("click", function(){
 });
 
 /* swipe any sheet down to close */
-[["catch", function(){ closeCatch(); }], ["all", function(){ closeAll(); }], ["tsheet", function(){ closeTime(); }], ["later", function(){ closeLater(); }]].forEach(function(x){
+[["prefs", function(){ closePrefs(); }], ["catch", function(){ closeCatch(); }], ["all", function(){ closeAll(); }], ["tsheet", function(){ closeTime(); }], ["later", function(){ closeLater(); }]].forEach(function(x){
   var sh = $(x[0]), y0 = null, dy = 0;
   function start(e){ if(window.innerWidth >= 700 || e.target.closest("button")) return; y0 = e.touches[0].clientY; dy = 0; sh.classList.add("drag"); }
   function move(e){ if(y0 === null) return; dy = Math.max(0, e.touches[0].clientY - y0); sh.style.transform = "translateY(" + dy + "px)"; if(e.cancelable) e.preventDefault(); }
@@ -2221,7 +2273,7 @@ function fitMenu(m){ if(!m) return; m.style.transform = ""; m.style.marginInline
 function closeMenus(){ document.querySelectorAll(".dd.open").forEach(function(d){ d.classList.remove("open"); d.querySelector("[data-dd]").setAttribute("aria-expanded", "false"); }); }
 document.addEventListener("click", function(e){
   var b = e.target.closest("[data-dd]");
-  if(b){ var p = b.parentNode, was = p.classList.contains("open"); closeMenus(); if(!was){ if(p.querySelector("#nfAsk")) nat("permCheck"); p.classList.add("open"); b.setAttribute("aria-expanded", "true"); buzz(4); fitMenu(p.querySelector(".menu")); } return; }
+  if(b){ var p = b.parentNode, was = p.classList.contains("open"); closeMenus(); if(!was){ p.classList.add("open"); b.setAttribute("aria-expanded", "true"); buzz(4); fitMenu(p.querySelector(".menu")); } return; }
   if(!e.target.closest(".menu")) closeMenus();
 });
 document.querySelectorAll("[data-theme-choice]").forEach(function(b){ b.addEventListener("click", function(){ set("r.theme", b.getAttribute("data-theme-choice")); applyTheme(); closeMenus(); }); });
@@ -2251,16 +2303,17 @@ function applyLang(){
   document.querySelectorAll("[data-lang-choice]").forEach(function(b){ b.classList.toggle("sel", b.getAttribute("data-lang-choice") === lang); });
   lastHTML = ""; render(); if($("sheet").classList.contains("on")) paintSheet();
 }
-document.querySelectorAll("[data-i]").forEach(function(n){ n.innerHTML = ico(n.getAttribute("data-i"), n.closest(".mi") ? 19 : 20); n.style.display = "contents"; });
+document.querySelectorAll("[data-i]").forEach(function(n){ n.innerHTML = ico(n.getAttribute("data-i"), n.closest(".mi") ? 19 : 20); if(!n.classList.contains("gi") && !n.classList.contains("gc")) n.style.display = "contents"; });
 
 /* ---------- import / export ---------- */
 $("exportBtn").addEventListener("click", function(){
+  closePrefs();
   if(RNW){ closeMenus(); nat("export", {name:"routines-" + iso(today()) + ".json", text:JSON.stringify({app:"routines", version:3, items:items, hist:hist}, null, 2)}); return; }
   var blob = new Blob([JSON.stringify({app:"routines", version:3, items:items, hist:hist}, null, 2)], {type:"application/json"});
   var a = document.createElement("a"); a.href = URL.createObjectURL(blob); a.download = "routines-" + iso(today()) + ".json";
   document.body.appendChild(a); a.click(); document.body.removeChild(a); closeMenus(); setTimeout(function(){ URL.revokeObjectURL(a.href); }, 1500);
 });
-$("importBtn").addEventListener("click", function(){ closeMenus(); if(RNW){ nat("import"); return; } $("file").value = ""; $("file").click(); });
+$("importBtn").addEventListener("click", function(){ closePrefs(); closeMenus(); if(RNW){ nat("import"); return; } $("file").value = ""; $("file").click(); });
 function importText(txt){
     try{
       var data = JSON.parse(txt), list = Array.isArray(data) ? data : data.items;
@@ -2361,18 +2414,16 @@ function paintNf(){
   if(!RNW) return;
   $("nfBox").hidden = false;
   var nf = nfGet(), off = !!(NPERM && !NPERM.granted);
-  $("nfAsk").hidden = !off;
-  if(off){ var und = !!NPERM.undetermined; [["span[data-t]", und ? "nfAllow" : "nfOn"], ["small", und ? "nfAllowSub" : "nfOnSub"]].forEach(function(x){ var n = $("nfAsk").querySelector(x[0]); n.setAttribute("data-t", x[1]); n.textContent = t(x[1]); }); }
-  document.querySelectorAll("[data-nf]").forEach(function(b){ var k = b.getAttribute("data-nf"); b.classList.toggle("sel", !!nf[k]); b.setAttribute("aria-checked", !!nf[k]); b.style.opacity = off ? ".45" : ""; });
+  document.querySelectorAll("[data-nf]").forEach(function(b){ var k = b.getAttribute("data-nf"), on = !!nf[k] && !off; b.classList.toggle("on", on); b.setAttribute("aria-checked", on); });
 }
 document.querySelectorAll("[data-nf]").forEach(function(b){ b.addEventListener("click", function(){
-  var nf = nfGet(), k = b.getAttribute("data-nf"); nf[k] = !nf[k];
+  var nf = nfGet(), k = b.getAttribute("data-nf");
+  if(NPERM && !NPERM.granted){ nf[k] = 1; set("r.nf", JSON.stringify({t:nf.t ? 1 : 0, a:nf.a ? 1 : 0, m:nf.m ? 1 : 0})); askNf(); return; }
+  nf[k] = !nf[k];
   set("r.nf", JSON.stringify({t:nf.t ? 1 : 0, a:nf.a ? 1 : 0, m:nf.m ? 1 : 0})); buzz(6); paintNf(); syncPlan();
-  if(nf[k] && NPERM && !NPERM.granted) askNf();
 }); });
 var askT = null;
 function askNf(){ clearTimeout(askT); nat("notifAsk"); askT = setTimeout(function(){ toast(t("nfManual")); }, 4000); }
-$("nfAsk").addEventListener("click", function(){ closeMenus(); askNf(); });
 /* called by the app */
 window.__nat = {
   resume:function(){ DI = null; lastHTML = ""; render(); },
@@ -2387,6 +2438,7 @@ window.__nat = {
     if($("rMenu").classList.contains("on")){ closeMenu(); return true; }
     if(document.querySelector(".dd.open")){ closeMenus(); return true; }
     if($("all").classList.contains("on")){ closeAll(); return true; }
+    if($("prefs").classList.contains("on")){ closePrefs(); return true; }
     if($("catch").classList.contains("on")){ closeCatch(); return true; }
     if($("sheet").classList.contains("on")){ closeSheet(); return true; }
     if($("toast").classList.contains("on")){ hideToast(); return true; }
