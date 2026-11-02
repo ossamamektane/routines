@@ -11,6 +11,7 @@ jobs:
     timeout-minutes: 90
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EAS_BUILD_NO_EXPO_GO_WARNING: "true"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -18,13 +19,19 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 20
+          node-version: 22
 
       - name: Install EAS CLI
         run: npm install -g eas-cli
 
       - name: Install dependencies
         run: npm install
+
+      - name: Fix Expo package versions
+        run: npx expo install --fix
+
+      - name: Check Expo config
+        run: npx expo config --json
 
       - name: Build iOS locally on runner
         run: eas build --platform ios --profile production --local --non-interactive --output ${{ github.workspace }}/build.ipa
