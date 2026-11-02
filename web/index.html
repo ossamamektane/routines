@@ -661,6 +661,11 @@ html[data-theme="dark"] .tl.r{--tlc:#ff453a;--tlb:#ff453a}
 .tl-t{display:flex;flex-direction:column;min-width:0;gap:1px}
 .tl-t b{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .tl-t span{font-size:12.5px;font-weight:600;color:var(--ink2)}
+.nsq{display:flex;align-items:center;gap:3px;margin:9px 1px -2px;padding:2px 0;font-size:14px;font-weight:600;color:var(--y);background:none;border:0;-webkit-tap-highlight-color:transparent;transition:opacity .15s}
+.nsq[hidden]{display:none}
+.nsq:active{opacity:.45}
+.nsq svg{flex:none}
+[dir=rtl] .nsq svg{transform:scaleX(-1)}
 .nd{flex:none;height:36px;padding:0 13px 0 10px;border-radius:18px;display:inline-flex;align-items:center;gap:6px;font-size:14px;font-weight:700;background:#ffcc00;color:#000;transition:transform .12s,background .2s}
 .nd:active{transform:scale(.95)}
 .nd.set{background:var(--card,var(--bg2));color:var(--ink);font-weight:600}
@@ -747,7 +752,7 @@ html[data-theme="dark"] .pseg button.sel{background:#636366;box-shadow:none}
 
 <main class="wrap">
   <div class="day"><div><h1 id="dayName"></h1><p id="dayMeta"></p></div><div class="clock tab" id="clock"></div></div>
-  <div class="tl" id="tl" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="tl-h"><div class="tl-t"><b class="tab" id="tlX"></b><span id="tlS"></span></div><button type="button" class="nd" id="ndBtn"></button></div><div class="tl-bar"><i id="tlI"></i></div></div>
+  <div class="tl" id="tl" role="progressbar" aria-valuemin="0" aria-valuemax="100"><div class="tl-h"><div class="tl-t"><b class="tab" id="tlX"></b><span id="tlS"></span></div><button type="button" class="nd" id="ndBtn"></button></div><div class="tl-bar"><i id="tlI"></i></div><button type="button" class="nsq" id="nsq" hidden></button></div>
   <div class="meter" id="meter"></div>
   <div id="app"></div>
   <input type="file" id="file" accept="application/json,.json" hidden>
@@ -828,7 +833,7 @@ html[data-theme="dark"] .pseg button.sel{background:#636366;box-shadow:none}
       <button class="grow" type="button" id="importBtn"><span class="gi" data-i="upload"></span><span class="gl" data-t="import"></span></button>
     </div>
     <p class="gfoot" data-t="foot"></p>
-    <p class="gfoot tab" style="margin-top:2px;opacity:.55">Update 10</p>
+    <p class="gfoot tab" style="margin-top:2px;opacity:.55">Update 11</p>
   </div>
 </section>
 <div class="scrim" id="aScrim"></div>
@@ -979,7 +984,12 @@ var T = {
   noneYet:["No tasks yet","Aucune tâche","لا توجد مهام"], dueToday:["Today","Aujourd’hui","اليوم"], thisP:["this {p}","ce/cette {p}","هذا {p}"],
   noneDue:["Nothing due right now","Rien de prévu maintenant","لا شيء مستحق الآن"], openToday:["{n} left today, whenever suits you","{n} à faire aujourd’hui, quand vous voulez","{n} متبقية اليوم، متى شئت"],
   repairedN:["Fixed {n} tasks moved by a clock change","{n} tâches corrigées après un changement d’heure","صُحّحت {n} مهام بعد تغيير الساعة"],
-  wakeAutoS:["Set by itself from your usual wake-up time. Change it if you woke up at another time.","Réglée toute seule d’après votre heure de réveil habituelle. Changez-la si vous vous êtes levé à une autre heure.","ضُبط تلقائيًا حسب وقت استيقاظك المعتاد. غيّره إذا استيقظت في وقت آخر."],
+  wakeAutoS:["Set by itself. Not right? Pick when you woke up, or Yesterday if you haven’t slept.","Réglée toute seule. Pas juste ? Choisissez l’heure de votre réveil, ou Hier si vous n’avez pas dormi.","ضُبط تلقائيًا. غير صحيح؟ اختر وقت استيقاظك، أو «أمس» إن لم تنم."],
+  wakeYS:["Haven’t slept? Choose Yesterday and the time you woke up.","Pas dormi ? Choisissez Hier et l’heure de votre réveil.","لم تنم؟ اختر «أمس» ووقت استيقاظك."],
+  wakeUpS:["No sleep since {t}. Today’s tasks started at {s}. If you slept, choose when you woke up.","Pas de sommeil depuis {t}. Les tâches du jour ont commencé à {s}. Si vous avez dormi, choisissez l’heure du réveil.","لم تنم منذ {t}. بدأت مهام اليوم في {s}. إذا نمت، اختر وقت استيقاظك."],
+  noSleepB:["Didn’t sleep","Pas dormi","لم أنم"],
+  noSleepQ:["Didn’t sleep? Count from {t}","Pas dormi ? Compter depuis {t}","لم تنم؟ احسب من {t}"],
+  upSinceT:["Up since {t}","Debout depuis {t}","مستيقظ منذ {t}"],
   wakeQ:["What time did you wake up?","À quelle heure vous êtes-vous levé ?","متى استيقظت؟"], wakeHi:["Good morning","Bonjour","صباح الخير"],
   onced:["Once a day","Une fois par jour","مرة في اليوم"], oncew:["Once a week","Une fois par semaine","مرة في الأسبوع"], oncem:["Once a month","Une fois par mois","مرة في الشهر"],
   timesd:["{n} times a day","{n} fois par jour","{n} مرات في اليوم"], timesw:["{n} times a week","{n} fois par semaine","{n} مرات في الأسبوع"], timesm:["{n} times a month","{n} fois par mois","{n} مرات في الشهر"],
@@ -1071,12 +1081,77 @@ function wakeList(){ try{ var a = JSON.parse(get("r.wakes") || "[]"); return Arr
 function learnWake(at){ var d = new Date(at), a = wakeList(); a.push(d.getHours()*60 + d.getMinutes()); set("r.wakes", JSON.stringify(a.slice(-9))); }
 function usualWake(){ var a = wakeList().sort(function(x, y){ return x - y; }), n = a.length; return n ? (n % 2 ? a[n >> 1] : Math.round((a[n/2 - 1] + a[n/2]) / 2)) : null; }
 function wakeAuto(){ var w = wakeRec(), d = dayInfo(); return !!(w && w.a && d.wake === w.at); }
+/* Did you sleep? The app only sees when you use it. A quiet stretch of 3 h or more at night, once you've been up 10 h,
+   counts as sleep. Using the app all night = still up: your day keeps going and "Up for" keeps counting. */
+function actList(){ try{ var a = JSON.parse(get("r.act") || "[]"); return Array.isArray(a) ? a.filter(function(x){ return Array.isArray(x) && typeof x[0] === "number" && typeof x[1] === "number"; }) : []; }catch(e){ return []; } }
+function actNote(n){
+  var a = actList(), L = a[a.length - 1];
+  if(L && n >= L[0] && n - L[1] < 15*6e4){ if(n - L[1] < 60e3) return; L[1] = n; }
+  else a.push([n, n]);
+  set("r.act", JSON.stringify(a.filter(function(x){ return n - x[1] < 4*864e5 && x[0] <= n + 6e5; }).slice(-300)));
+}
+var LI = Date.now();   /* last time you really touched the app (open, tap, type) */
+["pointerdown", "keydown", "touchstart"].forEach(function(e){ document.addEventListener(e, function(){ LI = Date.now(); actNote(LI); }, {passive:true, capture:true}); });
+var QG = {k:null, pts:[]};
+function actPts(){   /* every moment you used the app: open time + every change you made */
+  var ra = get("r.act") || "", rs = get("r.snaps") || "", k = ra.length + "|" + rs.length + "|" + ra.slice(-30) + "|" + rs.slice(-40);
+  if(QG.k === k) return QG.pts;
+  var pts = actList().map(function(x){ return [x[0], x[1]]; });
+  snaps().forEach(function(x){ if(x && typeof x.ts === "number") pts.push([x.ts, x.ts]); });
+  pts.sort(function(a, b){ return a[0] - b[0]; });
+  QG = {k:k, pts:pts}; return pts;
+}
+function quietGaps(from, to){
+  var gaps = [], cur = from, G = 3*36e5;
+  actPts().forEach(function(p){ if(p[1] < from || p[0] > to) return; var st = Math.max(p[0], from); if(st - cur >= G) gaps.push([cur, st]); if(p[1] > cur) cur = Math.min(p[1], to); });
+  if(to - cur >= G) gaps.push([cur, to]);
+  return gaps.filter(nightish);
+}
+/* sleep happens at night: at least 2 h of the quiet stretch fall between 8 h before your usual wake-up and 2 h after it.
+   An evening or an afternoon without opening the app is not sleep. */
+function nightish(g){
+  var u = usualWake(); if(u === null) u = 480;
+  var d = new Date(g[0]); d.setHours(0,0,0,0); d = addDays(d, -1);
+  for(var k = 0; k < 4; k++){
+    var m = new Date(d); m.setHours(0,0,0,0); var a = m.getTime() + (u - 480)*6e4, b = m.getTime() + (u + 120)*6e4;
+    if(Math.min(g[1], b) - Math.max(g[0], a) >= 2*36e5) return true;
+    d = addDays(d, 1);
+  }
+  return false;
+}
+function sleepFrom(w){ return Math.max((w.up || w.at) + 10*36e5, w.still || 0); }
+function stillUp(w, now){ var f = sleepFrom(w); return f >= now || !quietGaps(f, now).length; }
+/* when you really woke up (it can be yesterday if you haven't slept since); null = you slept and today hasn't started */
+function upSince(){
+  var a = lastWake(), w = wakeRec(); if(a === null || !w) return null;
+  var up = typeof w.up === "number" && w.up <= a && a - w.up < 72*36e5 ? w.up : a, d = dayInfo();
+  if(d.wake === null && !d.ext && !stillUp(w, Date.now())) return null;
+  return up;
+}
+/* A new day you haven't started yourself starts by itself:
+   still up → where your day ended (Up for keeps counting) · slept → at your usual wake-up (or when you showed up, if earlier) */
 function autoWake(){
   if(ND2) return;
   var d = dayInfo(); if(d.ext || d.wake !== null) return;
-  var u = usualWake(), T = iso(d.D); if(u === null || get("r.autoOff") === T) return;
-  var at = d.mid + u*6e4; if(Date.now() < at) return;
-  set("r.wake", JSON.stringify({at:at, date:iso(new Date(at)), t:hm(u), a:1})); set("r.ndSeen", "1"); DI = null;
+  if(get("r.autoOff") === iso(d.D)) return;
+  var now = Date.now(), w = wakeRec(), u = usualWake(), rec = null;
+  if(w && w.at <= now + 6e5 && w.at >= d.mid - 864e5){
+    var up = typeof w.up === "number" && w.up <= w.at ? w.up : w.at;
+    if(now - up < 60*36e5 && stillUp(w, now)){
+      var wd = new Date(w.at), C = w.at < d.mid ? extCut(wd.getHours()*60 + wd.getMinutes(), true) : 0;
+      rec = {at:Math.min(now, d.mid + Math.max(C, u === null ? 0 : u)*6e4), up:up}; if(w.still) rec.still = w.still;
+    }
+  }
+  if(!rec){
+    if(u === null) return;
+    var S = d.mid + u*6e4; if(now < S) return;
+    var wake = S, g = w ? quietGaps(Math.max(sleepFrom(w), d.mid - 864e5), now).pop() : null;
+    if(g) wake = g[0] > S ? g[1] : Math.min(S, g[1]);
+    rec = {at:wake};
+    if(w && w.at >= d.mid - 864e5){ var pu = typeof w.up === "number" && w.up <= w.at ? w.up : w.at; if(pu < wake && wake - pu < 48*36e5){ rec.pu = pu; if(g && g[0] - pu >= 14*36e5) rec.late = 1; } }   /* for "Didn't sleep?" (late night = ask on the main screen too) */
+  }
+  var rd = new Date(rec.at); rec.a = 1; rec.date = iso(rd); rec.t = hm(rd.getHours()*60 + rd.getMinutes());
+  set("r.wake", JSON.stringify(rec)); set("r.ndSeen", "1"); DI = null;
   if(askRec()) askSet(null);
 }
 var warped = null, repaired = 0;
@@ -1153,8 +1228,9 @@ function wakeRec(){ try{ var w = JSON.parse(get("r.wake") || "null"); if(!w) ret
   if(w.date && /^\d\d:\d\d$/.test(w.t || "")){ var p = w.date.split("-"); return {at:new Date(+p[0], p[1]-1, +p[2], +w.t.slice(0,2), +w.t.slice(3)).getTime()}; }
   }catch(e){} return null; }
 /* minutes after midnight the day you're still up for may last */
-function extCut(wt){
-  var C = Math.max(60, Math.min(wt, 720, Math.round(wt + dayLen()*60 + 240 - 1440)));   /* usual day + 4 h, never past your wake-up time or noon */
+function extCut(wt, up){
+  var C = up ? Math.max(60, Math.min(wt, 720))                                         /* still up: until the time you woke up (or noon) */
+    : Math.max(60, Math.min(wt, 720, Math.round(wt + dayLen()*60 + 240 - 1440)));   /* usual day + 4 h, never past your wake-up time or noon */
   (Array.isArray(items) ? items : []).forEach(function(i){
     if(!i || i.paused || i.kind === "window" || i.unit === "h" || (typeof i.wake === "number" && i.wake >= 0)) return;
     (Array.isArray(i.times) ? i.times : []).forEach(function(x){ var m = mins(x); if(m !== null && m < C) C = m; });
@@ -1171,7 +1247,7 @@ function dayInfo(){
   if(w && w.at < M && String(w.at) !== get("r.noext")){
     var Y = addDays(D, -1), ym = new Date(Y); ym.setHours(0,0,0,0);
     if(w.at >= ym.getTime()){   /* woke up yesterday and no New Day since: still up? */
-      var wd = new Date(w.at), C = extCut(wd.getHours()*60 + wd.getMinutes());
+      var wd = new Date(w.at), C = extCut(wd.getHours()*60 + wd.getMinutes(), stillUp(w, now));
       if((now - M) / 6e4 < C) di = {raw:raw, t:now, D:Y, mid:ym.getTime(), cut:C, wake:w.at, ext:true};
     }
   }
@@ -1472,7 +1548,7 @@ function dayEnd(){ return calEnd(); }
 function tabTop(){ var h = document.querySelector(".hdr"); return h ? h.getBoundingClientRect().height : 0; }
 /* the open tab lives in memory only: every launch (or coming back after a while) starts on Today */
 var TABV = "d", hidAt = 0, LATEW = null;
-document.addEventListener("visibilitychange", function(){ if(document.hidden){ hidAt = Date.now(); set("r.open", String(hidAt)); } else if(hidAt && Date.now() - hidAt > 10*60e3 && TABV !== "d"){ TABV = "d"; lastHTML = ""; render(); } });
+document.addEventListener("visibilitychange", function(){ if(document.hidden){ hidAt = Date.now(); set("r.open", String(hidAt)); } else { LI = Date.now(); } if(!document.hidden && hidAt && Date.now() - hidAt > 10*60e3 && TABV !== "d"){ TABV = "d"; lastHTML = ""; render(); } });
 function tabNow(){ if(get("r.test") === "1" && get("r.tab")) TABV = get("r.tab"); return TABV; }
 /* how long a period still runs: today → hours until the day ends; week / month → days, then hours on the last day */
 function periodLeft(p){
@@ -1596,10 +1672,12 @@ function paintLeft(m){
   var el = $("tl"), mid = dayInfo().mid, len = Math.max(1, calEnd() - mid), ms = Math.max(0, calEnd() - Date.now());
   if(!items.length){ el.hidden = true; return; } el.hidden = false;
   /* how long you've been up (only from a New Day you tapped) + how much of today's list is done */
-  var at = lastWake(), pc = m.total ? Math.max(0, Math.min(100, m.done / m.total * 100)) : 0;
+  var at = upSince(), pc = m.total ? Math.max(0, Math.min(100, m.done / m.total * 100)) : 0;
   el.className = "tl" + (at === null ? " nowake" : "");
   $("tlX").textContent = at !== null ? t("upFor", {x:dur(Math.max(0, Math.round((Date.now() - at) / 6e4)))}) : t("ndHint");
   $("tlS").textContent = dayInfo().ext ? t("extS", {d:fmt(today(), {weekday:"long"})}) : "";
+  var ns = dayInfo().ext ? null : noSleep(), Q = $("nsq");
+  Q.hidden = ns === null; if(ns !== null){ Q.setAttribute("data-pu", ns); Q.innerHTML = esc(t("noSleepQ", {t:wakeLbl(ns)})) + ico("right", 14, 2.4); }
   $("tlI").style.width = pc.toFixed(2) + "%";
   el.setAttribute("aria-valuenow", Math.round(pc)); el.setAttribute("aria-label", $("tlX").textContent);
   paintNd();
@@ -1640,6 +1718,7 @@ function touch(){
     else if(sleptLikely(l, n) && !((lastWake() || 0) > l)) askSet({from:l, auto:1});
   }
   if(!l || n - l >= 60e3) set("r.open", String(n));
+  if(n - LI < 5*60e3) actNote(n);   /* a screen left open on its own is not you being up */
 }
 /* your last wake-up, even if it was before midnight (you may still be up) */
 function lastWake(){ var w = wakeRec(); if(!w) return null; var n = Date.now(); return w.at > n + 6e5 || n - w.at > 48*3600e3 ? null : w.at; }
@@ -1663,7 +1742,7 @@ function wakeCard(){
 /* "07:40" today, "Sun 07:40" otherwise */
 function wakeLbl(at){ var d = new Date(at); return (iso(d) === iso(today()) ? "" : fmt(d, {weekday:"short"}) + " ") + ft(d.getHours()*60 + d.getMinutes()); }
 function paintNd(){
-  var b = $("ndBtn"), at = lastWake();
+  var b = $("ndBtn"), at = upSince();
   if(at !== null){ var tm = wakeLbl(at);
     b.className = "nd set"; b.innerHTML = ico("sun", 17, 2.4) + '<span>' + esc(t("wokeS")) + ' <b class="tab">' + esc(tm) + '</b></span>'; b.setAttribute("aria-label", t("wokeAt", {t:tm}) + " · " + t("edit")); }
   else { b.className = "nd" + (askRec() ? " hint" : ""); b.innerHTML = ico("sun", 17, 2.4) + '<span>' + esc(t("newWake")) + '</span>'; b.setAttribute("aria-label", t("newWake")); }
@@ -1677,17 +1756,42 @@ $("ndBtn").addEventListener("click", function(){
 function showNd(){ if(!askRec()) askSet({from:Date.now(), auto:0}); ND2 = false; lastHTML = ""; render(); window.scrollTo(0, 0); var c = $("ndCard"); if(c){ c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); } }
 var undoAsk = null;
 function wakeIs(m, how){
-  var before = snap(), wb = get("r.wake") || "null", q = askRec(), pw = lastWake(), aw = get("r.awake") || "";
+  var before = snap(), wb = get("r.wake") || "null", wsb = get("r.wakes") || "", q = askRec(), pw = upSince() !== null ? upSince() : lastWake(), aw = get("r.awake") || "";
   if(m === null) set("r.autoOff", iso(today()));
   setWake(m); if(m !== null){ var nw = wakeRec(); if(nw) learnWake(nw.at); } roll();
   if(m !== null){ if(q && q.auto && pw !== null && q.from > pw) learnDay((q.from - pw) / 36e5); askSet(null); }
   lastHTML = ""; render(); buzz(14);
-  toast(m === null ? t("wakeCleared") : t("ndDone", {t:ft(m)}), before); undoWake = wb; undoAsk = q ? {q:q, aw:aw} : null;
+  toast(m === null ? t("wakeCleared") : t("ndDone", {t:ft(m)}), before); undoWake = wb; undoWakes = wsb; undoAsk = q ? {q:q, aw:aw} : null;
+}
+/* The day started by itself because you went quiet for hours. If you were really up all along,
+   one tap keeps counting from your last wake-up. After a late night it's offered on the main screen
+   (for 3 h after you first open the app that day); otherwise in the wake-up editor. */
+function noSleep(){
+  var w = wakeRec(), d = dayInfo(), now = Date.now();
+  if(!w || !w.a || !w.late || typeof w.pu !== "number" || typeof w.up === "number" || d.wake !== w.at || now - w.pu > 60*36e5) return null;
+  var f = null; actPts().forEach(function(p){ if(f === null && p[1] >= w.at) f = Math.max(p[0], w.at); });
+  return f === null || now - f < 3*36e5 ? w.pu : null;
+}
+$("nsq").addEventListener("click", function(){ var v = +this.getAttribute("data-pu"); if(v) wakeAtAbs(v, true); });
+/* a wake-up picked in the editor: today = you woke up then · yesterday = you haven't slept since then */
+function wakeAtAbs(at, keep){
+  var d = dayInfo(), c = new Date(); c.setHours(0,0,0,0);
+  if(at >= c.getTime()){ wakeIs(Math.round((at - d.mid) / 6e4)); return; }
+  var before = snap(), wb = get("r.wake") || "null", wsb = get("r.wakes") || "", w = wakeRec(), now = Date.now();
+  var rec = !d.ext && w && w.at >= c.getTime() && w.at <= now + 6e5 ? {at:w.at, up:at} : {at:at};   /* today's tasks keep their times */
+  var rd = new Date(rec.at); rec.still = now; rec.date = iso(rd); rec.t = hm(rd.getHours()*60 + rd.getMinutes());
+  set("r.wake", JSON.stringify(rec)); set("r.ndSeen", "1"); set("r.autoOff", ""); DI = null; if(!keep) learnWake(at); askSet(null);
+  roll(); lastHTML = ""; render(); buzz(14);
+  toast(t("upSinceT", {t:wakeLbl(at)}), before); undoWake = wb; undoWakes = wsb;
 }
 function editWake(){
-  var w = dayInfo().ext ? null : getWake(), nm = nowMin();
-  openTime({title:t("wakeQ"), sub:w !== null && wakeAuto() ? t("wakeAutoS") : "", init:w !== null ? w : nm, chips:[], todayOnly:true,
-    clear:w !== null ? t("wakeClear") : null, onClear:function(){ wakeIs(null); }, cb:function(m){ wakeIs(m); }});
+  var d = dayInfo(), up = upSince(), w = wakeRec(), nm = nowMin(), st = getWake();
+  var cont = up !== null && w && typeof w.up === "number" && w.up === up && w.at !== up && d.wake !== null;
+  var sub = cont ? t("wakeUpS", {t:wakeLbl(up), s:ft(st)}) : st !== null && wakeAuto() ? t("wakeAutoS") : t("wakeYS");
+  openTime({title:t("wakeQ"), sub:sub, init:up !== null ? Math.round((up - d.mid) / 6e4) : nm, chips:[],
+    clear:st !== null ? t("wakeClear") : null, onClear:function(){ wakeIs(null); }, cb:function(m){ wakeAtAbs(dayInfo().mid + m*6e4); }});
+  if(wakeAuto() && typeof w.pu === "number" && typeof w.up !== "number" && Date.now() - w.pu < 60*36e5)   /* one tap: I didn't sleep */
+    $("tChips").innerHTML = '<button type="button" class="lopt" data-pu="'+w.pu+'"><b>'+esc(t("noSleepB"))+'</b><span>'+esc(t("upSinceT", {t:wakeLbl(w.pu)}))+'</span></button>';
 }
 function nowCard(m){
   var s = null, kind = "";
@@ -2291,7 +2395,9 @@ function pickTime(m){
   if(m > nowMin()){ $("tWarn").textContent = t("futureNo"); $("tWarn").style.display = ""; buzz([10, 40, 10]); return; }
   var x = TS; closeTime(); if(x) x.cb(m);
 }
-$("tChips").addEventListener("click", function(e){ var b = e.target.closest("[data-tm]"); if(b){ buzz(8); pickTime(+b.getAttribute("data-tm")); } });
+$("tChips").addEventListener("click", function(e){ var b = e.target.closest("[data-tm]"), p = e.target.closest("[data-pu]");
+  if(p){ var v = +p.getAttribute("data-pu"); closeTime(); wakeAtAbs(v, true); return; }
+  if(b){ buzz(8); pickTime(+b.getAttribute("data-tm")); } });
 $("tSet").addEventListener("click", function(){
   if(TS && TS.free){ var fx0 = TS, v0 = readWheels("t"); closeTime(); fx0.cb(v0); return; }
   var ts = tMoment(); if(ts > Date.now() + 3e4){ $("tWarn").textContent = t("futureNo"); $("tWarn").style.display = ""; buzz([10, 40, 10]); return; }
@@ -2570,7 +2676,7 @@ var askT = null;
 function askNf(){ clearTimeout(askT); nat("notifAsk"); askT = setTimeout(function(){ toast(t("nfManual")); }, 4000); }
 /* called by the app */
 window.__nat = {
-  resume:function(){ DI = null; touch(); lastHTML = ""; render(); },
+  resume:function(){ DI = null; LI = Date.now(); touch(); lastHTML = ""; render(); },
   perm:function(p){ NPERM = p || null; paintNf(); planSent = ""; syncPlan(); },
   askDone:function(r){ clearTimeout(askT); r = r || {};
     if(r.granted){ buzz(10); toast(t("nfDone")); }
