@@ -1,6 +1,5 @@
 # One-click build: GitHub repo → Actions → "Send to App Store" → Run workflow.
-# It builds the iPhone app on GitHub's own Mac (free — no Expo build credits used)
-# and uploads it to TestFlight / App Store Connect.
+# It builds the iPhone app in the cloud and uploads it to TestFlight / App Store Connect.
 # To update the app's screen: replace web/index.html (same file as the website), then run this again.
 name: Send to App Store
 
@@ -9,7 +8,7 @@ on:
 
 jobs:
   ios:
-    runs-on: macos-latest
+    runs-on: ubuntu-latest
     timeout-minutes: 90
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
@@ -26,11 +25,6 @@ jobs:
     steps:
       - name: Get the code
         uses: actions/checkout@v4
-
-      - name: Use the newest Xcode
-        uses: maxim-lobanov/setup-xcode@v1
-        with:
-          xcode-version: latest-stable
 
       - name: Set up Node
         uses: actions/setup-node@v4
@@ -80,8 +74,8 @@ jobs:
       - name: Link to your Expo account
         run: eas init --force --non-interactive
 
-      - name: Build the iPhone app on GitHub's Mac (takes ~20–40 min)
-        run: eas build --platform ios --profile production --local --non-interactive --output "$RUNNER_TEMP/Routines.ipa"
+      - name: Build the iPhone app (takes ~15–30 min)
+        run: eas build --platform ios --profile production --non-interactive --wait
 
       - name: Upload to App Store Connect
-        run: eas submit --platform ios --path "$RUNNER_TEMP/Routines.ipa" --profile production --non-interactive --wait
+        run: eas submit --platform ios --latest --profile production --non-interactive --wait
