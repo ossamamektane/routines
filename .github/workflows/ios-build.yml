@@ -12,6 +12,7 @@ jobs:
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       EAS_BUILD_NO_EXPO_GO_WARNING: "true"
+      ASC_APP_ID: "6829007704"
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -85,5 +86,18 @@ jobs:
           name: ios-build
           path: build.ipa
 
+      - name: Add App Store app ID to eas.json
+        run: |
+          node -e '
+          const fs = require("fs");
+          const f = "eas.json";
+          const cfg = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : {};
+          cfg.submit = cfg.submit || {};
+          cfg.submit.production = cfg.submit.production || {};
+          cfg.submit.production.ios = cfg.submit.production.ios || {};
+          cfg.submit.production.ios.ascAppId = process.env.ASC_APP_ID;
+          fs.writeFileSync(f, JSON.stringify(cfg, null, 2));
+          '
+
       - name: Submit to App Store Connect
-        run: eas submit --platform ios --path ${{ github.workspace }}/build.ipa --non-interactive
+        run: eas submit --platform ios --profile production --path ${{ github.workspace }}/build.ipa --non-interactive
