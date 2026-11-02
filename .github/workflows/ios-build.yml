@@ -12,7 +12,10 @@ jobs:
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       EAS_BUILD_NO_EXPO_GO_WARNING: "true"
-      ASC_APP_ID: "6829007704"
+      ASC_APP_ID: "6829303154"
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_KEY_P8: ${{ secrets.ASC_KEY_P8 }}
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -86,16 +89,21 @@ jobs:
           name: ios-build
           path: build.ipa
 
-      - name: Add App Store app ID to eas.json
+      - name: Set up App Store upload key
         run: |
+          printf '%s\n' "$ASC_KEY_P8" > ${{ github.workspace }}/asc-key.p8
           node -e '
           const fs = require("fs");
           const f = "eas.json";
           const cfg = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, "utf8")) : {};
           cfg.submit = cfg.submit || {};
           cfg.submit.production = cfg.submit.production || {};
-          cfg.submit.production.ios = cfg.submit.production.ios || {};
-          cfg.submit.production.ios.ascAppId = process.env.ASC_APP_ID;
+          cfg.submit.production.ios = Object.assign(cfg.submit.production.ios || {}, {
+            ascAppId: process.env.ASC_APP_ID,
+            ascApiKeyPath: process.env.GITHUB_WORKSPACE + "/asc-key.p8",
+            ascApiKeyId: process.env.ASC_KEY_ID,
+            ascApiKeyIssuerId: process.env.ASC_ISSUER_ID
+          });
           fs.writeFileSync(f, JSON.stringify(cfg, null, 2));
           '
 
