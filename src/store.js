@@ -2,7 +2,7 @@
 // Writing A then B means one of them is always complete, even if the phone dies mid-save.
 import { File, Paths } from "expo-file-system";
 
-const FILES = ["routines-a.json", "routines-b.json"];
+const FILES = ["calls-a.json", "calls-b.json"];
 let state = { rev: 0, data: {} };
 let timer = null;
 let dirty = false;
@@ -58,27 +58,5 @@ export function flushStore() {
       dirty = true; // try again next time
       console.warn("Could not save", name, e);
     }
-  }
-}
-
-// Small extra file for app-only bits (e.g. which notification tap was already handled).
-const META = "routines-meta.json";
-export async function readMeta() {
-  try {
-    const f = file(META);
-    if (!f.exists) return {};
-    const j = JSON.parse(await f.text());
-    return j && typeof j === "object" ? j : {};
-  } catch (e) {
-    return {};
-  }
-}
-export function writeMeta(obj) {
-  try {
-    const f = file(META);
-    if (!f.exists) f.create();
-    f.write(JSON.stringify(obj));
-  } catch (e) {
-    // not important
   }
 }
