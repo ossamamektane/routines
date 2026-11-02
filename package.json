@@ -1,0 +1,30 @@
+{
+  "name": "routines",
+  "version": "1.0.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "setup": "expo install react react-native expo-status-bar expo-font expo-splash-screen expo-system-ui react-native-safe-area-context react-native-webview expo-notifications expo-haptics expo-localization expo-document-picker expo-sharing expo-file-system && expo install --fix",
+    "web": "node scripts/make-web.js",
+    "start": "expo start",
+    "check": "expo-doctor"
+  },
+  "dependencies": {
+    "expo": "~57.0.31",
+    "react": "19.2.3",
+    "react-native": "0.86.3",
+    "expo-document-picker": "~57.0.3",
+    "expo-file-system": "~57.0.7",
+    "expo-font": "~57.0.4",
+    "expo-haptics": "~57.0.3",
+    "expo-localization": "~57.0.2",
+    "expo-notifications": "~57.0.23",
+    "expo-sharing": "~57.0.24",
+    "expo-splash-screen": "~57.0.10",
+    "expo-status-bar": "~57.0.1",
+    "expo-symbols": "~57.0.3",
+    "expo-system-ui": "~57.0.4",
+    "react-native-safe-area-context": "~5.7.0",
+    "react-native-webview": "13.16.1"
+  }
+}
