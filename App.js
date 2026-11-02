@@ -1,33 +1,38 @@
-// The phone app. Opening it shows a FaceTime look-alike (src/Decoy.js). Hold the big "FaceTime"
-// title for 1 second to get to the real app: the same page as the website (bundled inside, works
-// offline). "Start call" is handed to iOS itself (modules/fake-call), so the call rings on the real
-// iPhone call screen with your ringtone, even locked, in your pocket or with the app closed.
-// While a call is going on, opening the app shows its call screen (src/InCall.js).
+// Routines — the phone app. The screen is the same Routines page as the website (bundled inside,
+// works offline); the app adds what a web page can't do: real notifications, haptics, the app badge,
+// safe saving, backups through the share sheet, and the Android back button.
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
-import { AppState, Keyboard, Linking, StyleSheet, View, useColorScheme } from "react-native";
+import { AppState, BackHandler, Linking, Platform, StyleSheet, View, useColorScheme } from "react-native";
 import { WebView } from "react-native-webview";
-import { SafeAreaProvider, initialWindowMetrics } from "react-native-safe-area-context";
+import { SafeAreaProvider, initialWindowMetrics, useSafeAreaInsets } from "react-native-safe-area-context";
 import { StatusBar } from "expo-status-bar";
 import * as SplashScreen from "expo-splash-screen";
+import * as Haptics from "expo-haptics";
+import * as Notifications from "expo-notifications";
+import * as Sharing from "expo-sharing";
+import * as DocumentPicker from "expo-document-picker";
+import * as Localization from "expo-localization";
+import { File, Paths } from "expo-file-system";
 
 import HTML from "./src/web";
-import SOUNDS, { SIG } from "./src/sounds";
 import { buildPage, jsArg } from "./src/shim";
-import { preScript } from "./src/pre";
-import { applyChange, flushStore, getStore, loadStore } from "./src/store";
-import FakeCall, { onCallEvent } from "./src/fakecall";
-import Decoy from "./src/Decoy";
-import InCall from "./src/InCall";
+import { applyChange, flushStore, getStore, loadStore, readMeta, writeMeta } from "./src/store";
+import { applyPlan, askOrOpenSettings, askPermission, permState, setBadge, setupChannel } from "./src/notify";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
-const BASE = "https://app.calls.invalid/"; // ".invalid" never exists on the internet: nothing is ever loaded from it
-const PRE = preScript(SOUNDS, SIG);
+const BASE = "https://app.routines.invalid/"; // ".invalid" never exists on the internet: nothing is ever loaded from it
 
-// sound files are saved under a name like "s1a2b3c4-123456.mp3" (fingerprint + size)
-function sizeOf(key) {
-  const m = /^s[0-9a-f]+-(\d+)\./.exec(String(key || ""));
-  return m ? Number(m[1]) : 0;
+function timeZone() {
+  try {
+    const c = Localization.getCalendars();
+    if (c && c[0] && c[0].timeZone) return c[0].timeZone;
+  } catch (e) {}
+  try {
+    return Intl.DateTimeFormat().resolvedOptions().timeZone || "";
+  } catch (e) {
+    return "";
+  }
 }
 
 export default function App() {
@@ -39,119 +44,62 @@ export default function App() {
 }
 
 function Main() {
-  const dark = useColorScheme() === "dark";
+  const system = useColorScheme();
+  const insets = useSafeAreaInsets();
   const web = useRef(null);
   const ready = useRef(false);
-  const outbox = useRef([]); // messages waiting for the page to be ready
-  const quietUntil = useRef(0); // while iPhone shows a permission prompt, don't lock
-  const splashDone = useRef(false);
+  const outbox = useRef([]); // calls waiting for the page to be ready
+  const meta = useRef({});
+  const tz = useRef(timeZone());
+  const asked = useRef(false);
+  const lastPlan = useRef(null);
 
-  const [loaded, setLoaded] = useState(false);
+  const [loaded, setLoaded] = useState(false); // saved data read from disk
   const [page, setPage] = useState(0); // bump = rebuild + reload the page
-  const [locked, setLockedState] = useState(true);
-  const [info, setInfo] = useState(null); // from iOS: planned call, quick call, recent calls, language
-  const [call, setCall] = useState(null); // the call going on right now (shown on the call screen)
-  const [ended, setEnded] = useState(false); // "Call Ended" showing
-  const callRef = useRef(null);
-  const endingRef = useRef(false);
+  const [dark, setDark] = useState(system === "dark");
 
-  const hideSplash = useCallback(() => {
-    if (splashDone.current) return;
-    splashDone.current = true;
-    SplashScreen.hideAsync().catch(() => {});
-  }, []);
-
-  /* ---------- start ---------- */
+  /* ---------- start: read saved data, then show the page ---------- */
   useEffect(() => {
     let done = false;
-    const failSafe = setTimeout(hideSplash, 1200);
-    loadStore()
-      .catch(() => {})
-      .then(() => { if (!done) setLoaded(true); });
+    const failSafe = setTimeout(() => SplashScreen.hideAsync().catch(() => {}), 6000);
+    (async () => {
+      await loadStore();
+      meta.current = await readMeta();
+      const th = getStore().data["r.theme"];
+      if (th === "dark" || th === "light") setDark(th === "dark");
+      await setupChannel();
+      if (!done) setLoaded(true);
+    })();
     return () => { done = true; clearTimeout(failSafe); };
-  }, [hideSplash]);
+  }, []);
 
+  // Android draws under the status and navigation bars: tell the page how much room they take.
+  const css = Platform.OS === "android"
+    ? `:root{--st:${Math.round(insets.top)}px!important;--sb:${Math.round(insets.bottom)}px!important;--sl:${Math.round(insets.left)}px!important;--sr:${Math.round(insets.right)}px!important}`
+    : "";
   const source = useMemo(
-    () => (loaded ? { html: buildPage(HTML, getStore(), "", PRE), baseUrl: BASE } : null),
+    () => (loaded ? { html: buildPage(HTML, getStore(), css), baseUrl: BASE } : null),
     // rebuilt only when the page is (re)loaded on purpose, never while you use it
     // eslint-disable-next-line react-hooks/exhaustive-deps
     [loaded, page]
   );
-
   /* ---------- talking to the page ---------- */
-  const send = useCallback((js) => {
+  const call = useCallback((js) => {
     const code = `try{${js}}catch(e){}true;`;
     if (ready.current && web.current) web.current.injectJavaScript(code);
-    else {
-      outbox.current.push(code);
-      if (outbox.current.length > 40) outbox.current.shift();
-    }
+    else outbox.current.push(code);
   }, []);
-
-  /* ---------- the call screen ---------- */
-  const showCall = useCallback((c) => {
-    callRef.current = c;
-    setCall(c);
-  }, []);
-  const patchCall = useCallback((p) => {
-    if (callRef.current) showCall(Object.assign({}, callRef.current, p));
-  }, [showCall]);
-  const closeCall = useCallback(() => {
-    endingRef.current = false;
-    setEnded(false);
-    showCall(null);
-  }, [showCall]);
-  // the call is over: "Call Ended" for a moment (only if you're looking at it)
-  const callOver = useCallback(() => {
-    if (!callRef.current) return;
-    if (AppState.currentState !== "active") {
-      closeCall();
-      return;
-    }
-    if (endingRef.current) return;
-    endingRef.current = true;
-    setEnded(true);
-  }, [closeCall]);
-  const syncCall = useCallback((c) => {
-    if (c && c.state === "active") {
-      if (!endingRef.current) showCall(Object.assign({}, callRef.current || {}, c));
-    } else if (callRef.current && !endingRef.current) {
-      callOver();
-    }
-  }, [showCall, callOver]);
-
-  const refresh = useCallback(async () => {
-    if (!FakeCall) return null;
-    try {
-      const st = await FakeCall.status();
-      if (st) {
-        setInfo(st);
-        syncCall(st.call || null);
-        send(`window.__fc&&__fc.status(${jsArg(st)})`);
-      }
-      return st || null;
-    } catch (e) {
-      return null;
-    }
-  }, [send, syncCall]);
 
   useEffect(() => {
-    refresh().then(() => setTimeout(hideSplash, 60));
-  }, [refresh, hideSplash]);
+    if (Platform.OS !== "android" || !ready.current) return;
+    call(`(function(s){var r=document.documentElement.style;r.setProperty("--st",s.t+"px");r.setProperty("--sb",s.b+"px");r.setProperty("--sl",s.l+"px");r.setProperty("--sr",s.r+"px");})(${jsArg({ t: Math.round(insets.top), b: Math.round(insets.bottom), l: Math.round(insets.left), r: Math.round(insets.right) })})`);
+  }, [insets.top, insets.bottom, insets.left, insets.right]);
 
-  const setLocked = useCallback((v) => {
-    setLockedState(v);
-    if (v) {
-      Keyboard.dismiss();
-      if (web.current) web.current.injectJavaScript("try{document.activeElement&&document.activeElement.blur&&document.activeElement.blur()}catch(e){}true;");
-    }
-  }, []);
-
-  const flush = useCallback(() => {
-    if (web.current) web.current.injectJavaScript("try{window.__flushStore&&__flushStore()}catch(e){}true;");
-    setTimeout(flushStore, 150);
-    flushStore();
-  }, []);
+  const sendPerm = useCallback(async () => {
+    const p = await permState();
+    call(`window.__nat&&__nat.perm(${jsArg(p)})`);
+    return p;
+  }, [call]);
 
   const reload = useCallback(() => {
     ready.current = false;
@@ -160,227 +108,203 @@ function Main() {
     setPage((n) => n + 1);
   }, []);
 
-  /* ---------- calls: events from iOS ---------- */
-  useEffect(
-    () =>
-      onCallEvent((e) => {
-        if (!e || !e.type) return;
-        if (e.type === "ringing") setLocked(true); // after the call, the app opens on FaceTime
-        if (e.type === "answered" && e.call) {
-          endingRef.current = false;
-          setEnded(false);
-          showCall(e.call);
-        } else if (e.type === "muted") patchCall({ muted: !!e.muted });
-        else if (e.type === "route") patchCall({ speaker: !!e.speaker });
-        else if (e.type === "ended" || e.type === "missed" || e.type === "failed") callOver();
-        if (e.type === "muted" || e.type === "route") return;
-        send(`window.__fc&&__fc.event(${jsArg(e)})`);
-        if (e.type !== "scheduled" && e.type !== "ringing" && e.type !== "answered") refresh();
-      }),
-    [send, refresh, setLocked, showCall, patchCall, callOver]
-  );
+  /* ---------- notification taps ---------- */
+  const handleResponse = useCallback((r) => {
+    if (!r || !r.notification) return;
+    const req = r.notification.request || {};
+    const key = (req.identifier || "") + "|" + (r.actionIdentifier || "") + "|" + (r.notification.date || "");
+    if (meta.current.lastResp === key) return; // already handled (e.g. the same tap seen again at next launch)
+    meta.current = { ...meta.current, lastResp: key };
+    writeMeta(meta.current);
+    const data = (req.content && req.content.data) || {};
+    const action = r.actionIdentifier === "done" ? "done" : "open";
+    call(`window.__nat&&__nat.opened(${jsArg({ ...data, action })})`);
+    try { Notifications.clearLastNotificationResponseAsync && Notifications.clearLastNotificationResponseAsync(); } catch (e) {}
+  }, [call]);
 
-  /* ---------- the call screen's buttons ---------- */
-  const endIt = useCallback(() => {
-    callOver();
-    try { if (FakeCall && FakeCall.endCall) FakeCall.endCall().catch(() => {}); } catch (e) {}
-  }, [callOver]);
-  const toggleSpeaker = useCallback(() => {
-    const c = callRef.current;
-    if (!c || !FakeCall || !FakeCall.setSpeaker) return;
-    const next = !c.speaker;
-    patchCall({ speaker: next });
-    Promise.resolve()
-      .then(() => FakeCall.setSpeaker(next))
-      .then((ok) => { if (!ok) patchCall({ speaker: !next }); })
-      .catch(() => patchCall({ speaker: !next }));
-  }, [patchCall]);
-  const toggleMute = useCallback(() => {
-    const c = callRef.current;
-    if (!c || !FakeCall || !FakeCall.setMuted) return;
-    const next = !c.muted;
-    patchCall({ muted: next });
-    Promise.resolve()
-      .then(() => FakeCall.setMuted(next))
-      .then((ok) => { if (!ok) patchCall({ muted: !next }); })
-      .catch(() => patchCall({ muted: !next }));
-  }, [patchCall]);
-  const digit = useCallback((k) => {
-    try { if (FakeCall && FakeCall.playDigit) FakeCall.playDigit(String(k)); } catch (e) {}
-  }, []);
+  useEffect(() => {
+    if (!loaded) return; // wait for the saved "already handled" mark
+    const sub = Notifications.addNotificationResponseReceivedListener(handleResponse);
+    Notifications.getLastNotificationResponseAsync().then(handleResponse).catch(() => {});
+    return () => sub.remove();
+  }, [handleResponse, loaded]);
 
   /* ---------- the app goes to the background / comes back ---------- */
   useEffect(() => {
     const sub = AppState.addEventListener("change", (s) => {
       if (s === "active") {
-        refresh();
-        return;
+        const now = timeZone();
+        if (now && tz.current && now !== tz.current) { // new time zone: start the page fresh so every clock reads right
+          tz.current = now;
+          reload();
+          return;
+        }
+        call("window.__nat&&__nat.resume()");
+        sendPerm();
+      } else if (s === "background" || s === "inactive") {
+        if (web.current) web.current.injectJavaScript("try{window.__flushStore&&__flushStore()}catch(e){}true;");
+        setTimeout(flushStore, 150);
+        flushStore();
       }
-      if (endingRef.current) closeCall();
-      // leaving the app (home, app switcher, lock button): back to the FaceTime cover
-      if (s === "background" || Date.now() >= quietUntil.current) setLocked(true);
-      flush();
     });
     return () => sub.remove();
-  }, [refresh, setLocked, flush, closeCall]);
+  }, [call, reload, sendPerm]);
 
-  /* ---------- requests from the page ---------- */
-  const reply = (id, r) => {
-    if (id) send(`window.__fc&&__fc.reply(${jsArg(Object.assign({}, r || {}, { id }))})`);
-  };
+  /* ---------- Android back button: close the open sheet first ---------- */
+  useEffect(() => {
+    if (Platform.OS !== "android") return;
+    const sub = BackHandler.addEventListener("hardwareBackPress", () => {
+      if (!ready.current || !web.current) return false;
+      web.current.injectJavaScript(
+        `try{var h=window.__nat&&__nat.back();window.ReactNativeWebView.postMessage(JSON.stringify({type:"back",handled:!!h}))}catch(e){}true;`
+      );
+      return true;
+    });
+    return () => sub.remove();
+  }, []);
 
-  const askPermissions = async () => {
-    quietUntil.current = Date.now() + 60000;
-    try { await FakeCall.requestPermissions(); } catch (e) {}
-    quietUntil.current = Date.now() + 800;
-  };
-
-  const fc = async (m) => {
-    const id = m.id || 0;
-    if (!FakeCall) {
-      reply(id, { error: "no native part" });
-      return;
-    }
+  /* ---------- backups ---------- */
+  const doExport = async (m) => {
     try {
-      switch (m.op) {
-        case "status": {
-          const st = await refresh();
-          reply(id, st || {});
-          break;
-        }
-        case "have": { // which sound files does the app still need?
-          const keys = Array.isArray(m.keys) ? m.keys.map(String) : [];
-          const missing = keys.filter((k) => {
-            let have = -1;
-            try { have = Number(FakeCall.fileSize(k)); } catch (e) {}
-            const want = sizeOf(k);
-            return !(have > 0) || (want > 0 && have !== want);
-          });
-          reply(id, { missing });
-          break;
-        }
-        case "chunk": {
-          const ok = await FakeCall.writeChunk(String(m.key || ""), String(m.data || ""), !!m.append, !!m.last);
-          reply(id, { ok: !!ok });
-          break;
-        }
-        case "call":
-        case "quick": {
-          await askPermissions();
-          const opts = {
-            name: String(m.name || ""),
-            handle: String(m.handle || ""),
-            delay: Math.max(0, Number(m.delay) || 0),
-            cid: String(m.cid || ""),
-            voice: m.voice ? String(m.voice) : "",
-            hangup: m.hangup ? String(m.hangup) : "",
-            ring: m.ring ? String(m.ring) : "", // your own ringtone (none = the iPhone's ringtone)
-            ringNew: !!m.ringNew, // just picked: try it even if iPhone stopped an earlier one
-          };
-          const r = m.op === "call" ? await FakeCall.schedule(opts) : await FakeCall.saveQuick(opts);
-          reply(id, r || {});
-          refresh();
-          break;
-        }
-        case "cancel": {
-          const ok = await FakeCall.cancel();
-          reply(id, { ok: !!ok });
-          refresh();
-          break;
-        }
-        default:
-          reply(id, { error: "unknown" });
-      }
+      const name = /^[\w.-]+\.json$/.test(m.name || "") ? m.name : "routines.json";
+      const f = new File(Paths.cache, name);
+      if (f.exists) f.delete();
+      f.create();
+      f.write(String(m.text || ""));
+      await Sharing.shareAsync(f.uri, { mimeType: "application/json", UTI: "public.json", dialogTitle: name });
     } catch (e) {
-      reply(id, { error: String((e && e.message) || e || "error") });
+      console.warn("Export failed", e);
+    }
+  };
+  const doImport = async () => {
+    try {
+      const res = await DocumentPicker.getDocumentAsync({ type: ["application/json", "text/plain", "*/*"], copyToCacheDirectory: true });
+      if (res.canceled || !res.assets || !res.assets[0]) return;
+      const txt = await new File(res.assets[0].uri).text();
+      call(`window.__nat&&__nat.importText(${jsArg(txt)})`);
+    } catch (e) {
+      call(`window.__nat&&__nat.importText("")`);
     }
   };
 
-  const onMessage = (e) => {
+  const haptic = (k) => {
+    try {
+      if (k === "success") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success).catch(() => {});
+      else if (k === "warning") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Warning).catch(() => {});
+      else if (k === "error") Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error).catch(() => {});
+      else if (k === "select") Haptics.selectionAsync().catch(() => {});
+      else Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    } catch (e) {}
+  };
+
+  /* ---------- messages from the page ---------- */
+  const onMessage = async (e) => {
     let m;
     try { m = JSON.parse(e.nativeEvent.data); } catch (err) { return; }
     if (!m || typeof m.type !== "string") return;
-    if (m.type === "store") applyChange(m);
-    else if (m.type === "fc") fc(m);
-    else if (m.type === "ready") {
-      ready.current = true;
-      const q = outbox.current;
-      outbox.current = [];
-      q.forEach((code) => web.current && web.current.injectJavaScript(code));
-      refresh();
+    switch (m.type) {
+      case "store":
+        applyChange(m);
+        break;
+      case "ready": {
+        ready.current = true;
+        SplashScreen.hideAsync().catch(() => {});
+        const q = outbox.current;
+        outbox.current = [];
+        q.forEach((code) => web.current && web.current.injectJavaScript(code));
+        sendPerm();
+        break;
+      }
+      case "theme":
+        setDark(!!m.dark);
+        break;
+      case "haptic":
+        haptic(m.k);
+        break;
+      case "badge":
+        setBadge(m.n);
+        break;
+      case "plan": {
+        lastPlan.current = m;
+        applyPlan(m);
+        // first time there is something to remind you of: ask once (iPhone shows its own prompt)
+        if (!asked.current && m.n > 0) {
+          asked.current = true;
+          const p = await permState();
+          if (!p.granted && p.undetermined) {
+            await askPermission();
+            const p2 = await sendPerm();
+            if (p2.granted) applyPlan(m);
+          }
+        }
+        break;
+      }
+      case "permCheck":
+        sendPerm();
+        break;
+      case "notifAsk": {
+        const r = await askOrOpenSettings(() => Linking.openSettings());
+        const p = await sendPerm();
+        if (p.granted) applyPlan(m.plan || lastPlan.current || { list: [] });
+        call(`window.__nat&&__nat.askDone&&__nat.askDone(${jsArg(Object.assign({}, r, { granted: p.granted }))})`);
+        break;
+      }
+      case "export":
+        doExport(m);
+        break;
+      case "import":
+        doImport();
+        break;
+      case "back":
+        if (!m.handled) BackHandler.exitApp();
+        break;
+      default:
+        break;
     }
   };
 
-  const unlock = useCallback(() => {
-    setLockedState(false);
-    send("window.__fc&&__fc.resync&&__fc.resync()");
-  }, [send]);
-
-  const deleteRecent = useCallback(async (at) => {
-    try { if (FakeCall && FakeCall.deleteHistory) await FakeCall.deleteHistory(Number(at) || 0); } catch (e) {}
-    refresh();
-  }, [refresh]);
-
-  const pageBg = dark ? "#000000" : "#F2F2F7";
+  const bg = dark ? "#000000" : "#FFFFFF";
   return (
-    <View style={[styles.root, { backgroundColor: dark ? "#000000" : "#FFFFFF" }]}>
-      <StatusBar style={call || dark ? "light" : "dark"} />
-      <View
-        style={styles.root}
-        pointerEvents={locked ? "none" : "auto"}
-        accessibilityElementsHidden={locked}
-        importantForAccessibility={locked ? "no-hide-descendants" : "auto"}
-      >
-        {source && (
-          <WebView
-            key={page}
-            ref={web}
-            source={source}
-            originWhitelist={["*"]}
-            onMessage={onMessage}
-            onLoadStart={() => { ready.current = false; }}
-            onShouldStartLoadWithRequest={(req) => {
-              const u = req.url || "";
-              if (u.startsWith(BASE) || u.startsWith("about:") || u.startsWith("data:") || u.startsWith("blob:")) return true;
-              Linking.openURL(u).catch(() => {});
-              return false;
-            }}
-            onContentProcessDidTerminate={reload}
-            javaScriptEnabled
-            domStorageEnabled
-            allowsInlineMediaPlayback
-            mediaPlaybackRequiresUserAction={false}
-            style={{ flex: 1, backgroundColor: pageBg }}
-            containerStyle={{ backgroundColor: pageBg }}
-            contentInsetAdjustmentBehavior="never"
-            automaticallyAdjustContentInsets={false}
-            bounces={false}
-            keyboardDisplayRequiresUserAction={false}
-            hideKeyboardAccessoryView={false}
-            allowsBackForwardNavigationGestures={false}
-            allowsLinkPreview={false}
-            dataDetectorTypes="none"
-            pullToRefreshEnabled={false}
-            setSupportMultipleWindows={false}
-            showsVerticalScrollIndicator={false}
-            showsHorizontalScrollIndicator={false}
-            allowFileAccess={false}
-            cacheEnabled={false}
-            webviewDebuggingEnabled={__DEV__}
-          />
-        )}
-      </View>
-      {locked && <Decoy info={info} dark={dark} onUnlock={unlock} onDelete={deleteRecent} />}
-      {call && (
-        <InCall
-          call={call}
-          ended={ended}
-          lang={(info && info.lang) || "en"}
-          onEnd={endIt}
-          onSpeaker={toggleSpeaker}
-          onMute={toggleMute}
-          onDigit={digit}
-          onClosed={closeCall}
+    <View style={[styles.root, { backgroundColor: bg }]}>
+      <StatusBar style={dark ? "light" : "dark"} />
+      {source && (
+        <WebView
+          key={page}
+          ref={web}
+          source={source}
+          originWhitelist={["*"]}
+          onMessage={onMessage}
+          onLoadStart={() => { ready.current = false; }}
+          onShouldStartLoadWithRequest={(req) => {
+            const u = req.url || "";
+            if (u.startsWith(BASE) || u.startsWith("about:") || u.startsWith("data:") || u.startsWith("blob:")) return true;
+            Linking.openURL(u).catch(() => {});
+            return false;
+          }}
+          onContentProcessDidTerminate={reload}
+          onRenderProcessGone={() => { reload(); return true; }}
+          javaScriptEnabled
+          domStorageEnabled
+          style={{ flex: 1, backgroundColor: bg }}
+          containerStyle={{ backgroundColor: bg }}
+          contentInsetAdjustmentBehavior="never"
+          automaticallyAdjustContentInsets={false}
+          keyboardDisplayRequiresUserAction={false}
+          hideKeyboardAccessoryView={false}
+          allowsBackForwardNavigationGestures={false}
+          allowsLinkPreview={false}
+          dataDetectorTypes="none"
+          pullToRefreshEnabled={false}
+          setSupportMultipleWindows={false}
+          setBuiltInZoomControls={false}
+          setDisplayZoomControls={false}
+          overScrollMode="never"
+          textZoom={100}
+          showsVerticalScrollIndicator={false}
+          showsHorizontalScrollIndicator={false}
+          allowFileAccess={false}
+          cacheEnabled={false}
+          webviewDebuggingEnabled={__DEV__}
         />
       )}
     </View>

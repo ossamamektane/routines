@@ -1,51 +1,57 @@
 {
   "expo": {
-    "name": "FacеTime",
-    "slug": "calls",
+    "name": "Routines",
+    "slug": "routines",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
     "userInterfaceStyle": "automatic",
-    "backgroundColor": "#000000",
+    "backgroundColor": "#FFFFFF",
     "ios": {
-      "bundleIdentifier": "com.ossamamektane.calls",
+      "bundleIdentifier": "com.ossamamektane.routines",
       "supportsTablet": false,
       "buildNumber": "1",
-      "icon": {
-        "light": "./assets/icon.png",
-        "dark": "./assets/icon-dark.png",
-        "tinted": "./assets/icon-tinted.png"
-      },
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false,
-        "UIBackgroundModes": [
-          "audio",
-          "voip"
-        ],
-        "NSMicrophoneUsageDescription": "Used during calls.",
-        "NSCameraUsageDescription": "Used to take photos.",
-        "NSPhotoLibraryUsageDescription": "Used to choose photos.",
-        "NSUserActivityTypes": [
-          "INStartCallIntent",
-          "INStartAudioCallIntent"
-        ]
+        "CFBundleAllowMixedLocalizations": true,
+        "CFBundleLocalizations": ["en", "fr", "ar"]
       }
+    },
+    "android": {
+      "package": "com.ossamamektane.routines",
+      "versionCode": 1,
+      "softwareKeyboardLayoutMode": "resize",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "monochromeImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#1A7CF5"
+      },
+      "permissions": [
+        "android.permission.POST_NOTIFICATIONS",
+        "android.permission.VIBRATE"
+      ]
     },
     "plugins": [
       [
         "expo-splash-screen",
         {
-          "image": "./assets/splash.png",
-          "imageWidth": 1,
+          "image": "./assets/splash-icon.png",
+          "imageWidth": 110,
           "backgroundColor": "#FFFFFF",
           "dark": {
-            "image": "./assets/splash.png",
+            "image": "./assets/splash-icon.png",
             "backgroundColor": "#000000"
           }
         }
       ],
-      "./plugins/with-quick-call",
-      "./plugins/with-call-sounds"
+      [
+        "expo-notifications",
+        {
+          "icon": "./assets/notification-icon.png",
+          "color": "#1A7CF5",
+          "enableRemoteNotifications": false
+        }
+      ]
     ]
   }
 }

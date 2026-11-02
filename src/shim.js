@@ -1,4 +1,4 @@
-// Builds the page the app shows: the call page (same file as the website) plus small scripts that run first.
+// Builds the page the app shows: the Routines web page plus a small script that runs first.
 // That script puts the saved data back into the page, and sends every change to the app,
 // which keeps the real copy on the phone (a web view's storage alone can be wiped by the system).
 const SHIM = `(function(){
@@ -43,19 +43,15 @@ function safe(json) {
   return json.replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
 }
 
-// html: the page. store: saved data. extraCss: optional. pre: optional script that runs before the page's own.
-export function buildPage(html, store, extraCss, pre) {
+export function buildPage(html, store, extraCss) {
   const seed = "window.__SEED=" + safe(JSON.stringify({ rev: store.rev || 0, data: store.data || {} })) + ";";
-  const head =
-    "<script>" + seed + SHIM + "</script>" +
-    (pre ? "<script>" + pre + "</script>" : "") +
-    (extraCss ? "<style>" + extraCss + "</style>" : "");
+  const head = "<script>" + seed + SHIM + "</script>" + (extraCss ? "<style>" + extraCss + "</style>" : "");
   html = html.replace(/<link rel="manifest"[^>]*>/g, ""); // nothing to fetch from the internet
   const i = html.indexOf("<head>");
   return i < 0 ? head + html : html.slice(0, i + 6) + head + html.slice(i + 6);
 }
 
-// For values put inside scripts (page code or injectJavaScript).
+// For messages sent into the page with injectJavaScript.
 export function jsArg(v) {
   return safe(JSON.stringify(v === undefined ? null : v));
 }
