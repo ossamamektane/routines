@@ -6,6 +6,12 @@ const FILES = ["routines-a.json", "routines-b.json"];
 let state = { rev: 0, data: {} };
 let timer = null;
 let dirty = false;
+let away = false; // the app is in the background: save every change the moment it arrives
+
+export function setAway(v) {
+  away = !!v;
+  if (away) flushStore();
+}
 
 function file(name) {
   return new File(Paths.document, name);
@@ -40,7 +46,8 @@ export function applyChange(msg) {
   state.rev = Math.max(state.rev + 1, typeof msg.rev === "number" ? msg.rev : 0);
   dirty = true;
   clearTimeout(timer);
-  timer = setTimeout(flushStore, 350);
+  if (away) flushStore();
+  else timer = setTimeout(flushStore, 350);
 }
 
 export function flushStore() {

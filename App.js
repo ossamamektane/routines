@@ -16,8 +16,8 @@ import { File, Paths } from "expo-file-system";
 
 import HTML from "./src/web";
 import { buildPage, jsArg } from "./src/shim";
-import { applyChange, flushStore, getStore, loadStore, readMeta, writeMeta } from "./src/store";
-import { applyPlan, askOrOpenSettings, askPermission, permState, setBadge, setupChannel } from "./src/notify";
+import { applyChange, flushStore, getStore, loadStore, readMeta, setAway, writeMeta } from "./src/store";
+import { applyBadge, applyPlan, askOrOpenSettings, askPermission, permState, setBadge, setupChannel } from "./src/notify";
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
@@ -97,6 +97,7 @@ function Main() {
 
   const sendPerm = useCallback(async () => {
     const p = await permState();
+    if (p.granted) applyBadge(); // allowed (maybe just now, maybe in Settings): the badge can finally be right
     call(`window.__nat&&__nat.perm(${jsArg(p)})`);
     return p;
   }, [call]);
@@ -133,6 +134,7 @@ function Main() {
   useEffect(() => {
     const sub = AppState.addEventListener("change", (s) => {
       if (s === "active") {
+        setAway(false);
         const now = timeZone();
         if (now && tz.current && now !== tz.current) { // new time zone: start the page fresh so every clock reads right
           tz.current = now;
@@ -142,9 +144,9 @@ function Main() {
         call("window.__nat&&__nat.resume()");
         sendPerm();
       } else if (s === "background" || s === "inactive") {
-        if (web.current) web.current.injectJavaScript("try{window.__flushStore&&__flushStore()}catch(e){}true;");
-        setTimeout(flushStore, 150);
-        flushStore();
+        setAway(true); // saves now, and saves at once whatever the page still sends
+        // the newest reminders + every unsaved change, right now (the phone may suspend the app any moment)
+        if (web.current) web.current.injectJavaScript("try{window.__nat&&__nat.away&&__nat.away()}catch(e){}try{window.__flushStore&&__flushStore()}catch(e){}true;");
       }
     });
     return () => sub.remove();
@@ -221,9 +223,21 @@ function Main() {
       case "haptic":
         haptic(m.k);
         break;
-      case "badge":
-        setBadge(m.n);
+      case "badge": {
+        const ok = await setBadge(m.n);
+        // iPhone refused: notifications were never allowed on this install (e.g. right after a reinstall,
+        // when the icon still shows the old number). Ask once, then the right number goes on.
+        if (!ok && !asked.current) {
+          const p = await permState();
+          if (!p.granted && p.undetermined) {
+            asked.current = true;
+            await askPermission();
+            const p2 = await sendPerm();
+            if (p2.granted && lastPlan.current) applyPlan(lastPlan.current);
+          }
+        }
         break;
+      }
       case "plan": {
         lastPlan.current = m;
         applyPlan(m);

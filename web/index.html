@@ -14,7 +14,7 @@
 <meta name="theme-color" id="themeColor" content="#f2f2f7">
 <link rel="manifest" href="manifest.json">
 <script>
-/* no zoom, no double-tap zoom, no pinch — same rules as a native app */
+/* no zoom, no pinch — same rules as a native app (double-tap zoom is off through touch-action:manipulation, so quick taps all count) */
 (function(){
   ["gesturestart","gesturechange","gestureend"].forEach(function(ev){
     document.addEventListener(ev, function(e){ e.preventDefault(); }, {passive:false});
@@ -22,12 +22,6 @@
   document.addEventListener("dblclick", function(e){ e.preventDefault(); }, {passive:false});
   document.addEventListener("touchmove", function(e){
     if((e.touches && e.touches.length > 1) || (typeof e.scale === "number" && e.scale !== 1)) e.preventDefault();
-  }, {passive:false});
-  var lastTap = 0;
-  document.addEventListener("touchend", function(e){
-    var now = Date.now();
-    if(now - lastTap <= 320 && !(e.target.closest && e.target.closest("input,textarea"))) e.preventDefault();
-    lastTap = now;
   }, {passive:false});
   /* no copy, no selection, no long-press menu (fields excepted) */
   function field(t){ return t && t.closest && t.closest("input,textarea,[contenteditable]"); }
@@ -833,7 +827,7 @@ html[data-theme="dark"] .pseg button.sel{background:#636366;box-shadow:none}
       <button class="grow" type="button" id="importBtn"><span class="gi" data-i="upload"></span><span class="gl" data-t="import"></span></button>
     </div>
     <p class="gfoot" data-t="foot"></p>
-    <p class="gfoot tab" style="margin-top:2px;opacity:.55">Update 11</p>
+    <p class="gfoot tab" style="margin-top:2px;opacity:.55">Update 13</p>
   </div>
 </section>
 <div class="scrim" id="aScrim"></div>
@@ -1400,7 +1394,9 @@ function roll(){
 function model(){
   syncCut();
   var td = today(), T0 = iso(td), nm = nowMin();
-  var m = {overdue:[], slots:[], any:[], dayWin:[], week:[], month:[], coming:[], done:0, total:0, pending:0, ontime:0};
+  /* pending = the red badge: tasks whose time has come and aren't checked (due now or late) + tasks from an earlier day.
+     "Anytime today" ones count only once today's date is over (still up after midnight) — until then they have the whole day. */
+  var m = {overdue:[], slots:[], any:[], dayWin:[], week:[], month:[], coming:[], done:0, total:0, pending:0, ontime:0}, pastD = Date.now() >= calEnd();
   function slot(it, tm, sd, snz, forceDone){
     var v = sd[tm], eff = (snz && snz[tm]) || tm, mm = lm(eff);
     var s = {it:it, time:tm, eff:eff, snoozed:eff !== tm, min:mm, delta:mm - nm, at:null, done:false, missed:false};
@@ -1426,7 +1422,7 @@ function model(){
       var c = it.log.filter(function(d){ return d >= a && d <= b; }).length;
       var o = {it:it, count:c, today:winToday(it) !== null, left:diff(pd, pr[1])};
       o.met = c >= it.quota;
-      if(it.period === "d"){ m.dayWin.push(o); m.total += it.quota; m.done += Math.min(c, it.quota); if(!o.met) m.pending++; }
+      if(it.period === "d"){ m.dayWin.push(o); m.total += it.quota; m.done += Math.min(c, it.quota); if(!o.met && pastD) m.pending++; }
       else (it.period === "m" ? m.month : m.week).push(o);
       return;
     }
@@ -1449,7 +1445,7 @@ function model(){
       return;
     }
     if(d < 0){ m.overdue.push({it:it, d:d}); m.total++; m.pending++; return; }
-    if(d === 0){ m.any.push({it:it, done:false}); m.total++; if(it.wake === null || getWake() !== null) m.pending++; return; }
+    if(d === 0){ m.any.push({it:it, done:false}); m.total++; if(pastD && it.wake === null) m.pending++; return; }
     if(doneToday && !hasDL) anyDone(it);
     m.coming.push({it:it, d:d});
   }
@@ -2567,7 +2563,7 @@ $("file").addEventListener("change", function(){
 /* ---------- live: the clock moves, so does the list ---------- */
 window.addEventListener("scroll", function(){ $("hdr").classList.toggle("sh", window.pageYOffset > 4); }, {passive:true});
 setInterval(function(){ if(!document.hidden && !$("sheet").classList.contains("on")) render(); else $("clock").textContent = hm(nowMin()); }, 20000);
-document.addEventListener("visibilitychange", function(){ if(!document.hidden){ lastHTML = ""; render(); maybeCatch(); } });
+document.addEventListener("visibilitychange", function(){ if(!document.hidden){ lastBadge = -1; lastHTML = ""; render(); maybeCatch(); } });
 window.addEventListener("pageshow", function(){ lastHTML = ""; render(); });
 
 /* ---------- notifications (phone app only): everything that should ring in the next ~2 days ---------- */
@@ -2582,52 +2578,54 @@ function nList(a){ return a.length <= 3 ? a.join(", ") : a.slice(0, 3).join(", "
 function notifPlan(){
   if(!items.length) return [];
   syncCut();
-  var nf = nfGet(), out = [], now = Date.now(), lim = now + 50*36e5, td = today(), T0 = iso(td), m = model(), wk = getWake();
+  var nf = nfGet(), out = [], ev = [], now = Date.now(), lim = now + 50*36e5, td = today(), T0 = iso(td), m = model(), wk = getWake();
   var uw = usualWake(), uT = uw !== null && wk === null && !dayInfo().ext && get("r.autoOff") !== T0 ? uw : null;   /* today, not up yet: from your usual wake-up */
   var days = [td, addDays(td, 1), addDays(td, 2)];
   function add(at, kind, title, body, data){ if(at > now + 3e4 && at < lim) out.push({at:at, kind:kind, title:title, body:body, data:data || {}}); }
-  function slotN(it, d, mm, tm, late){
+  /* a task comes due: from then on it counts on the badge until you check it (an hourly one counts once: only its latest one is open) */
+  function key(it, D, tm){ return it.unit === "h" ? it.id + "|" + D : it.id + "|" + D + "|" + tm; }
+  function slotN(it, d, mm, tm, late, ring){
     var D = iso(d), at = atDay(d, mm);
+    if(at > now && at < lim) ev.push({at:at, D:D, k:key(it, D, tm)});
+    if(!ring) return;
     add(at, "slot", "⏰ " + it.name, it.desc ? ft(mm) + " · " + it.desc.slice(0, 120) : t("nNow", {t:ft(mm)}), {id:it.id, time:tm, date:D});
     if(late) add(at + 30*6e4, "late", t("nLate", {n:it.name}), t("nWas", {t:ft(mm)}), {id:it.id, time:tm, date:D});
   }
-  if(nf.t){
-    m.slots.forEach(function(s){
-      if(s.done || s.missed) return;
-      if(s.it.unit === "h" && wk === null) return;   /* hourly ones start ringing once you tap New Day */
-      var mine = s.snoozed || (s.it.unit === "h" && s.it.slots && s.it.slots.date === T0 && s.it.slots.mv === s.time);
-      if(atDay(td, s.min) >= calEnd() && !mine) return;   /* still up after midnight: quiet unless you moved it there yourself (you may fall asleep) */
-      slotN(s.it, td, s.min, s.time, s.it.unit !== "h" && atDay(td, s.min) < calEnd());
-    });
-    items.forEach(function(it){
-      if(it.paused || it.kind === "window") return;
-      if(it.unit === "h"){
-        if(wk === null) return;
-        var st = it.times[0] && dt(it.next, it.times[0]); if(!st) return;
-        for(var k = 1, x = st.getTime() + it.n*36e5; k < 60 && x < lim; k++, x += it.n*36e5){
-          var xd = new Date(x), xm = xd.getHours()*60 + xd.getMinutes(), dd = new Date(xd); dd.setHours(12,0,0,0);
-          if(iso(dd) !== T0) break;   /* tomorrow's start when you tap New Day tomorrow */
-          if(xm < wk) continue;
-          slotN(it, dd, xm, hm(xm), false);
-        }
-        return;
+  m.slots.forEach(function(s){
+    if(s.done || s.missed) return;
+    var at = atDay(td, s.min), mine = s.snoozed || (s.it.unit === "h" && s.it.slots && s.it.slots.date === T0 && s.it.slots.mv === s.time);
+    var ring = nf.t && !(s.it.unit === "h" && wk === null)   /* hourly ones start ringing once you tap New Day */
+      && (at < calEnd() || mine);                              /* still up after midnight: quiet unless you moved it there yourself (you may fall asleep) */
+    slotN(s.it, td, s.min, s.time, s.it.unit !== "h" && at < calEnd(), ring);
+  });
+  items.forEach(function(it){
+    if(it.paused || it.kind === "window") return;
+    if(it.unit === "h"){
+      if(wk === null) return;
+      var st = it.times[0] && dt(it.next, it.times[0]); if(!st) return;
+      for(var k = 1, x = st.getTime() + it.n*36e5; k < 60 && x < lim; k++, x += it.n*36e5){
+        var xd = new Date(x), xm = xd.getHours()*60 + xd.getMinutes(), dd = new Date(xd); dd.setHours(12,0,0,0);
+        if(iso(dd) !== T0) break;   /* tomorrow's start when you tap New Day tomorrow */
+        if(xm < wk) continue;
+        slotN(it, dd, xm, hm(xm), false, nf.t);
       }
-      if(!it.times.length || it.wake !== null) return;
-      for(var j = 1; j < days.length; j++) if(dueOn(it, days[j])) it.times.forEach(function(tm){ slotN(it, days[j], mins(tm), tm, true); });
-    });
-    /* tasks "after waking" on days you haven't woken up yet: from your usual wake-up (the app takes it by itself then) */
-    function wakeDay(d, w, first){
-      items.forEach(function(it){
-        if(it.paused || it.wake === null || it.kind === "window") return;
-        var st = Math.min(1435, w + it.wake);
-        if(it.unit === "h"){ for(var x = st; x < 1440; x += it.n*60) slotN(it, d, x, hm(x), false); return; }
-        if(first ? it.last === T0 || parse(it.next) > td : !dueOn(it, d)) return;
-        slotN(it, d, st, hm(st), true);
-      });
+      return;
     }
-    if(uT !== null) wakeDay(td, uT, true);
-    if(uw !== null) for(var j = 1; j < days.length; j++) wakeDay(days[j], uw, false);
+    if(!it.times.length || it.wake !== null) return;
+    for(var j = 1; j < days.length; j++) if(dueOn(it, days[j])) it.times.forEach(function(tm){ slotN(it, days[j], mins(tm), tm, true, nf.t); });
+  });
+  /* tasks "after waking" on days you haven't woken up yet: from your usual wake-up (the app takes it by itself then) */
+  function wakeDay(d, w, first){
+    items.forEach(function(it){
+      if(it.paused || it.wake === null || it.kind === "window") return;
+      var st = Math.min(1435, w + it.wake);
+      if(it.unit === "h"){ for(var x = st; x < 1440; x += it.n*60) slotN(it, d, x, hm(x), false, nf.t); return; }
+      if(first ? it.last === T0 || parse(it.next) > td : !dueOn(it, d)) return;
+      slotN(it, d, st, hm(st), true, nf.t);
+    });
   }
+  if(uT !== null) wakeDay(td, uT, true);
+  if(uw !== null) for(var j = 1; j < days.length; j++) wakeDay(days[j], uw, false);
   if(nf.a){
     function nudge(d, list){ if(!list.length) return; [[6, 1080], [3, 1260], [1, 1380]].forEach(function(p){ add(atDay(d, p[1]), "left", t("nLeft", {x:dur(p[0]*60)}), t("nOpen", {list:nList(list)}), {date:iso(d)}); }); }
     var open = [];
@@ -2648,18 +2646,58 @@ function notifPlan(){
     }
   }
   out.sort(function(a, b){ return a.at - b.at; });
-  return out.slice(0, 60);
+  return badgePlan(out.slice(0, 60), ev, m, wk, uw).slice(0, 60);
+}
+/* The red badge while the app is closed. The phone can't run Routines in the background, so every reminder
+   carries the number you would see if you opened the app at that moment (nothing checked meanwhile).
+   When a day ends, a silent update (no banner, no sound) takes away what that day still owed you.
+   Same count as in the app: tasks whose time has come and aren't checked + tasks from an earlier day. */
+function badgePlan(out, ev, m, wk, uw){
+  var now = Date.now(), lim = now + 50*36e5, td = today(), T0 = iso(td);
+  function owed(d){ var D = iso(d), n = 0; items.forEach(function(it){ if(!it.paused && it.kind !== "window" && it.unit !== "h" && it.wake === null && !it.times.length && it.next < D) n++; }); return n; }
+  function endOf(d, w){   /* when day d gives way to the next one if you don't touch the app (see dayInfo / extCut) */
+    var n = addDays(d, 1); if(w === null) return atDay(n, 0);
+    return Math.min(atDay(n, extCut(w, true)), Math.max(atDay(n, extCut(w, false)), Math.ceil((now + 3*36e5) / 9e5) * 9e5));   /* 3 h quiet = asleep (to the next quarter hour, so the plan doesn't change every minute) */
+  }
+  var pts = [], seen = {}, early = {}, cnt = m.pending, curD = T0, shown = cnt, sil = [], d1 = addDays(td, 1), d2 = addDays(td, 2), d3 = addDays(td, 3);
+  m.slots.forEach(function(s){ if(!s.done && !s.missed && (s.state === "now" || s.state === "late")) seen[s.it.unit === "h" ? s.it.id + "|" + T0 : s.it.id + "|" + T0 + "|" + s.time] = 1; });
+  if(Date.now() >= calEnd()){ m.any.forEach(function(a){ if(!a.done && !a.wh && a.it.wake === null) seen["*" + a.it.id] = 1; }); m.dayWin.forEach(function(o){ if(!o.met) seen["*" + o.it.id] = 1; }); }
+  /* still up after midnight: what was "anytime today" is now late */
+  m.any.forEach(function(a){ if(!a.done && !a.wh && a.it.wake === null) ev.push({at:calEnd(), D:T0, k:"*" + a.it.id}); });
+  m.dayWin.forEach(function(o){ if(!o.met) ev.push({at:calEnd(), D:T0, k:"*" + o.it.id}); });
+  var D1 = iso(d1);
+  items.forEach(function(it){ if(!it.paused && it.unit !== "h" && it.wake === null && (it.kind === "window" ? it.period === "d" : !it.times.length && it.next === D1)) ev.push({at:atDay(d2, 0), D:D1, k:"*" + it.id}); });
+  [[endOf(td, wk), d1], [endOf(d1, uw), d2], [endOf(d2, uw), d3]].forEach(function(x){ if(x[0] > now && x[0] < lim) pts.push({at:x[0], o:0, D:iso(x[1]), d:x[1]}); });
+  ev.forEach(function(e){ if(e.at > now && e.at < lim) pts.push({at:e.at, o:1, e:e}); });
+  out.forEach(function(n){ pts.push({at:n.at, o:2, n:n}); });
+  pts.sort(function(a, b){ return a.at - b.at || a.o - b.o; });
+  for(var i = 0; i < pts.length;){
+    var at = pts[i].at, rang = false;
+    for(; i < pts.length && pts[i].at === at; i++){
+      var p = pts[i];
+      if(p.o === 0){ if(p.D <= curD) continue; curD = p.D; seen = early[curD] || {}; cnt = owed(p.d) + Object.keys(seen).length; }
+      else if(p.o === 1){ var e = p.e;
+        if(e.D === curD){ if(!seen[e.k]){ seen[e.k] = 1; cnt++; } }
+        else if(e.D > curD){ (early[e.D] = early[e.D] || {})[e.k] = 1; } }   /* tomorrow's task due before today has ended: counts once tomorrow starts */
+      else { p.n.badge = cnt; rang = true; }
+    }
+    if(!rang && cnt !== shown && at > now + 3e4) sil.push({at:at, kind:"badge", title:"", body:"", data:{}, badge:cnt});
+    shown = cnt;
+  }
+  return out.concat(sil).sort(function(a, b){ return a.at - b.at; });
 }
 var planSent = "", planT = null;
-function syncPlan(){
-  clearTimeout(planT);
-  planT = setTimeout(function(){
-    var p; try{ p = notifPlan(); }catch(e){ return; }
-    var j = JSON.stringify(p) + lang;
-    if(j === planSent) return; planSent = j;
-    nat("plan", {list:p, action:t("nDoneAct"), lang:lang, n:items.length});
-  }, 400);
+function syncPlan(){ clearTimeout(planT); planT = setTimeout(sendPlan, 400); }
+function sendPlan(){
+  clearTimeout(planT); planT = null;
+  var p; try{ p = notifPlan(); }catch(e){ return; }
+  var j = JSON.stringify(p) + lang;
+  if(j === planSent) return; planSent = j;
+  nat("plan", {list:p, action:t("nDoneAct"), lang:lang, n:items.length});
 }
+/* leaving the app: the phone gets the newest reminders right now, not 0.4 s later (it may be asleep by then) */
+function away(){ if(planT) sendPlan(); }
+document.addEventListener("visibilitychange", function(){ if(document.hidden) away(); });
 function paintNf(){
   if(!RNW) return;
   $("nfBox").hidden = false;
@@ -2676,7 +2714,8 @@ var askT = null;
 function askNf(){ clearTimeout(askT); nat("notifAsk"); askT = setTimeout(function(){ toast(t("nfManual")); }, 4000); }
 /* called by the app */
 window.__nat = {
-  resume:function(){ DI = null; LI = Date.now(); touch(); lastHTML = ""; render(); },
+  away:function(){ away(); },
+  resume:function(){ DI = null; LI = Date.now(); lastBadge = -1; planSent = ""; touch(); lastHTML = ""; render(); },
   perm:function(p){ NPERM = p || null; paintNf(); planSent = ""; syncPlan(); },
   askDone:function(r){ clearTimeout(askT); r = r || {};
     if(r.granted){ buzz(10); toast(t("nfDone")); }

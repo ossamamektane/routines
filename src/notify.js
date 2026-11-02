@@ -6,13 +6,14 @@ import * as Notifications from "expo-notifications";
 export const CHANNEL = "reminders";
 const MAX = 60; // iOS keeps at most 64 waiting notifications per app
 
+// While the app is open it keeps the badge itself, so a reminder never changes it then.
+// A badge-only update (kind "badge") shows nothing at all.
 Notifications.setNotificationHandler({
-  handleNotification: async () => ({
-    shouldShowBanner: true,
-    shouldShowList: true,
-    shouldPlaySound: true,
-    shouldSetBadge: false,
-  }),
+  handleNotification: async (n) => {
+    const data = (n && n.request && n.request.content && n.request.content.data) || {};
+    const show = data.kind !== "badge";
+    return { shouldShowBanner: show, shouldShowList: show, shouldPlaySound: show, shouldSetBadge: false };
+  },
 });
 
 export async function setupChannel() {
@@ -81,10 +82,22 @@ export async function askPermission() {
   }
 }
 
+// The app badge. iPhone only lets an app change it once notifications are allowed — and it keeps the
+// old number from before a delete/reinstall. So the newest number is remembered and put on again
+// whenever it can be: when the page sends it, when you come back to the app, and right after you allow notifications.
+let wantBadge = null;
 export async function setBadge(n) {
+  wantBadge = Math.max(0, n | 0);
+  return applyBadge();
+}
+export async function applyBadge() {
+  if (wantBadge === null) return true;
   try {
-    await Notifications.setBadgeCountAsync(Math.max(0, n | 0));
-  } catch (e) {}
+    const ok = await Notifications.setBadgeCountAsync(wantBadge);
+    return ok !== false;
+  } catch (e) {
+    return false;
+  }
 }
 
 let catLabel = null;
@@ -104,11 +117,21 @@ function hash(s) {
   return (h >>> 0).toString(36);
 }
 
+// The id says when it rings ("r<seconds>-<hash of what it says>"). The badge number is not part of it:
+// when only the number changes, the reminder is replaced in place under the same id — never missing, never twice.
+function idOf(n) {
+  return "r" + Math.round(n.at / 1000).toString(36) + "-" + hash([n.kind, n.title, n.body, JSON.stringify(n.data || {})].join("|"));
+}
+function atOf(id) {
+  const m = /^r([0-9a-z]+)-/.exec(id || "");
+  return m ? parseInt(m[1], 36) * 1000 : null;
+}
+
 // Plans arrive often (every change in the list). Only the newest one is applied, one at a time,
-// and only the differences are touched — so a reminder that is about to ring is never cancelled
-// and re-added at the wrong moment.
+// and only the differences are touched.
 let latest = null;
 let running = false;
+const given = new Map(); // id → badge number it was scheduled with
 
 export function applyPlan(msg) {
   latest = msg;
@@ -128,51 +151,68 @@ async function run() {
   }
 }
 
+function schedule(id, n, badge) {
+  const task = n.kind === "slot" || n.kind === "late";
+  const b = badge === null ? {} : { badge };
+  return Notifications.scheduleNotificationAsync({
+    identifier: id,
+    content: n.kind === "badge"
+      ? { ...b, data: { kind: "badge" }, interruptionLevel: "passive" } // no title, no sound: only the app badge changes
+      : {
+          title: String(n.title).slice(0, 120),
+          body: String(n.body || "").slice(0, 240),
+          sound: "default",
+          data: Object.assign({}, n.data || {}, { kind: n.kind }),
+          ...b,
+          ...(task ? { categoryIdentifier: "task" } : {}),
+        },
+    trigger: {
+      type: Notifications.SchedulableTriggerInputTypes.DATE,
+      date: new Date(n.at),
+      channelId: CHANNEL,
+    },
+  });
+}
+
 async function sync(msg) {
   try {
     const p = await Notifications.getPermissionsAsync();
     if (!granted(p)) return;
     await setupChannel();
     await ensureCategory(msg.action);
-    const now = Date.now();
+    const ios = Platform.OS === "ios";
+    const now = Date.now(), soon = now + 5000;
     const want = new Map();
     for (const n of Array.isArray(msg.list) ? msg.list : []) {
-      if (!n || typeof n.at !== "number" || n.at < now + 5000 || !n.title) continue;
-      const id = "r" + hash([n.at, n.kind, n.title, n.body, JSON.stringify(n.data || {})].join("|"));
+      if (!n || typeof n.at !== "number" || n.at < soon) continue;
+      // a badge-only update is for iPhone (on Android it would be an empty notification)
+      if (n.kind === "badge" ? !ios || typeof n.badge !== "number" : !n.title) continue;
+      const id = idOf(n);
       if (!want.has(id)) want.set(id, n);
       if (want.size >= MAX) break;
     }
     const have = await Notifications.getAllScheduledNotificationsAsync();
-    const haveIds = new Set();
-    for (const h of have) {
-      haveIds.add(h.identifier);
-      if (!want.has(h.identifier)) {
-        try { await Notifications.cancelScheduledNotificationAsync(h.identifier); } catch (e) {}
-      }
-    }
+    const byId = new Map(have.map((h) => [h.identifier, h]));
+    // 1 · add what's new and fix badge numbers (soonest first). Adding before removing means that if the phone
+    //     pauses the app halfway, you may get an old reminder once more — but never miss one.
     for (const [id, n] of want) {
-      if (haveIds.has(id)) continue;
-      const task = n.kind === "slot" || n.kind === "late";
-      try {
-        await Notifications.scheduleNotificationAsync({
-          identifier: id,
-          content: {
-            title: String(n.title).slice(0, 120),
-            body: String(n.body || "").slice(0, 240),
-            sound: "default",
-            data: Object.assign({}, n.data || {}, { kind: n.kind }),
-            ...(task ? { categoryIdentifier: "task" } : {}),
-          },
-          trigger: {
-            type: Notifications.SchedulableTriggerInputTypes.DATE,
-            date: new Date(n.at),
-            channelId: CHANNEL,
-          },
-        });
-      } catch (e) {
-        console.warn("Could not schedule", e);
+      const badge = ios && typeof n.badge === "number" ? Math.max(0, n.badge | 0) : null;
+      const h = byId.get(id);
+      if (h) {
+        const c = h.content && typeof h.content.badge === "number" ? h.content.badge : null;
+        const cur = given.has(id) ? given.get(id) : c;
+        if (badge === null || cur === badge) continue;
       }
+      try { await schedule(id, n, badge); given.set(id, badge); } catch (e) { console.warn("Could not schedule", e); }
     }
+    // 2 · remove what's no longer wanted — except one that is about to ring: it rings as planned
+    for (const h of have) {
+      if (want.has(h.identifier)) continue;
+      const at = atOf(h.identifier);
+      if (at !== null && at < soon) continue;
+      try { await Notifications.cancelScheduledNotificationAsync(h.identifier); } catch (e) {}
+    }
+    for (const id of [...given.keys()]) if (!want.has(id)) given.delete(id);
   } catch (e) {
     // Reminders are a help, never a reason to crash.
     console.warn("Reminder sync failed", e);
