@@ -48,10 +48,12 @@ jobs:
           rm -f missing.txt
           echo "Missing plugins: $MISSING"
           if [ -n "$MISSING" ]; then npx expo install $MISSING; fi
-          npx expo install expo-splash-screen
 
       - name: Fix Expo package versions
         run: npx expo install --fix
+
+      - name: Link Expo project
+        run: eas init --id 5d022e8d-86fb-4b99-aa7b-c84bcd18d902 --non-interactive --force
 
       - name: Check Expo config
         run: npx expo config --json
