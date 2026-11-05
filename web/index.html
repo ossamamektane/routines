@@ -827,7 +827,7 @@ html[data-theme="dark"] .pseg button.sel{background:#636366;box-shadow:none}
       <button class="grow" type="button" id="importBtn"><span class="gi" data-i="upload"></span><span class="gl" data-t="import"></span></button>
     </div>
     <p class="gfoot" data-t="foot"></p>
-    <p class="gfoot tab" style="margin-top:2px;opacity:.55">Update 13</p>
+    <p class="gfoot tab" style="margin-top:2px;opacity:.55">Update 14</p>
   </div>
 </section>
 <div class="scrim" id="aScrim"></div>
@@ -1068,13 +1068,6 @@ function setWake(m){
   if(m !== null) set("r.ndSeen", "1");
   DI = null;
 }
-/* An explicitly selected yesterday wake-up is the origin of this waking period. */
-function manualWakeDue(it){
-  var w = wakeRec(), d = dayInfo();
-  if(!w || !w.manualUp || typeof w.up !== "number" || it.unit !== "d" || it.wake === null || d.wake === null) return null;
-  if(it.anchor && it.anchor > iso(new Date(w.up))) return null;
-  return w.up + it.wake * 6e4;
-}
 function wakeTasks(){ return items.filter(function(i){ return i.wake !== null && !i.paused; }); }
 /* Your usual wake-up (minutes after midnight): the middle one of the last wake-ups you logged yourself.
    A new day you haven't logged yet takes it by itself once that time comes (see autoWake). */
@@ -1132,7 +1125,7 @@ function upSince(){
 /* A new day you haven't started yourself starts by itself:
    still up → where your day ended (Up for keeps counting) · slept → at your usual wake-up (or when you showed up, if earlier) */
 function autoWake(){
-  if(ND2) return;
+  if(ND2 || askRec() || Date.now() - LI >= 5*60e3) return;  /* do not guess while awaiting an answer or the screen is idle */
   var d = dayInfo(); if(d.ext || d.wake !== null) return;
   if(get("r.autoOff") === iso(d.D)) return;
   var now = Date.now(), w = wakeRec(), u = usualWake(), rec = null;
@@ -1300,9 +1293,6 @@ function ap(h){ return lang === "ar" ? (h < 12 ? "ص" : "م") : (h < 12 ? "AM" :
 function ft(x){ var m = typeof x === "number" ? x : mins(x); if(m === null || m === undefined) return x || ""; m = ((m % 1440) + 1440) % 1440; if(!h12()) return hm(m); var h = Math.floor(m/60); return ((h % 12) || 12)+":"+("0"+(m%60)).slice(-2)+" "+ap(h); }
 function ftH(x){ var m = typeof x === "number" ? x : mins(x); m = ((m % 1440) + 1440) % 1440; if(!h12()) return hm(m); var h = Math.floor(m/60); return ((h % 12) || 12)+":"+("0"+(m%60)).slice(-2)+'<i class="ap">'+ap(h)+'</i>'; }
 function mins(s){ var p = /^(\d{1,2}):(\d{2})$/.exec(s || ""); return p ? (+p[1])*60 + (+p[2]) : null; }
-/* A prior completion may share the next repeat's clock time. The suffix keeps
-   the two rows distinct without changing the clock shown to the user. */
-function slotClock(k){ var m = /^(\d\d:\d\d)#prior\d*$/.exec(k || ""); return m ? m[1] : k; }
 function nowMin(){ return Math.floor((Date.now() - dayInfo().mid) / 6e4); }
 function dur(m){ m = Math.abs(m); var h = Math.floor(m/60), r = m % 60; return h ? h+t("hAbbr")+(r ? " "+r+t("mAb") : "") : r+" "+t("min"); }
 function weekStart(d){ return addDays(d, -((d.getDay()+6) % 7)); }
@@ -1335,8 +1325,6 @@ function norm(i){
   it.wake = typeof i.wake === "number" && i.wake >= 0 && i.wake <= 1080 ? Math.round(i.wake) : null;
   if(it.wake !== null && (it.kind === "window" || !((it.unit === "d" && it.n === 1) || it.unit === "h"))) it.wake = null;
   it.wakeAt = it.wake !== null && typeof i.wakeAt === "string" ? i.wakeAt : null;
-  if(it.wake !== null && it.unit === "h" && i.carry && Number.isFinite(i.carry.origin) && Number.isFinite(i.carry.due) && Number.isFinite(i.carry.start)) it.carry = {origin:i.carry.origin, due:i.carry.due, start:i.carry.start};
-  if(it.wake !== null && it.unit === "d" && typeof i.wakeDoneFrom === "number") it.wakeDoneFrom = i.wakeDoneFrom;
   if(it.kind === "window") it.times = [];
   if(it.unit === "h"){ if(it.kind === "window") it.kind = "flex"; if(!it.times.length){ var _n = new Date(); it.times = [hm(_n.getHours()*60 + _n.getMinutes())]; } it.times = [it.times[0]]; it.n = Math.min(23, it.n); }
   it.at0 = mins(i.at0) !== null ? hm(mins(i.at0)) : (it.times[0] || null);
@@ -1370,12 +1358,6 @@ function roll(){
   items.forEach(function(it){
     if(it.dl && it.dl.date < T0){ it.dl = null; ch = true; }
     if(it.paused) return;
-    var wr = wakeRec();
-    if(it.carry && (!wr || !((wr.manualUp && wr.up === it.carry.origin) || (wr.manualStart && wr.at === it.carry.origin)) || wk === null)) { delete it.carry; it.wakeAt = null; ch = true; }
-    if(it.carry && it.unit === "h" && it.wake !== null){
-      if(it.slots && it.slots.date < T0){ it.slots = null; ch = true; }
-      return; /* keep the real overdue occurrence; do not move it to the newest repeat */
-    }
     if(it.wake !== null && it.unit === "h"){   /* hourly, first one X after waking */
       var key = wk === null ? null : T0 + "|" + hm(wk), on1 = it.slots && it.slots.date === T0;
       var doneT = on1 && Object.keys(it.slots.done).length > 0;
@@ -1390,8 +1372,7 @@ function roll(){
       if(parse(it.next) < td){ it.next = T0; ch = true; }
       var on = it.slots && it.slots.date === T0, did = it.last === T0 || (on && Object.keys(it.slots.done).length);
       if(!did && it.next === T0){
-        var realDue = manualWakeDue(it), realDate = realDue === null ? null : new Date(realDue);
-        var want = wk === null ? [] : [realDate ? hm(realDate.getHours()*60 + realDate.getMinutes()) : hm(Math.min(DE() - 5, wk + it.wake))];
+        var want = wk === null ? [] : [hm(Math.min(DE() - 5, wk + it.wake))];
         if(want.join() !== it.times.join()){ it.times = want; it.at0 = want[0] || null; if(on) it.slots.snz = {}; ch = true; }
       }
       if(it.slots && it.slots.date < T0){ it.slots = null; ch = true; }
@@ -1417,13 +1398,10 @@ function model(){
      "Anytime today" ones count only once today's date is over (still up after midnight) — until then they have the whole day. */
   var m = {overdue:[], slots:[], any:[], dayWin:[], week:[], month:[], coming:[], done:0, total:0, pending:0, ontime:0}, pastD = Date.now() >= calEnd();
   function slot(it, tm, sd, snz, forceDone){
-    var clock = slotClock(tm), v = sd[tm], eff = (snz && snz[tm]) || clock, mm = lm(eff);
-    var realDue = (it.carry && it.unit === "h" && it.times[0] === tm) ? it.carry.due : manualWakeDue(it);
-    if(realDue !== null && !(snz && snz[tm]) && hm(new Date(realDue).getHours()*60 + new Date(realDue).getMinutes()) === tm)
-      mm = Math.round((realDue - dayInfo().mid) / 6e4);
-    var s = {it:it, time:tm, eff:eff, snoozed:eff !== clock, min:mm, delta:mm - nm, at:null, done:false, missed:false};
+    var v = sd[tm], eff = (snz && snz[tm]) || tm, mm = lm(eff);
+    var s = {it:it, time:tm, eff:eff, snoozed:eff !== tm, min:mm, delta:mm - nm, at:null, done:false, missed:false};
     if(v === "×"){ s.missed = true; s.state = "missed"; }
-    else if(v || forceDone){ s.done = true; s.at = v || null; s.state = "done"; if(!v || lm(v) <= lm(clock) + 30) m.ontime++; }
+    else if(v || forceDone){ s.done = true; s.at = v || null; s.state = "done"; if(!v || lm(v) <= lm(tm) + 30) m.ontime++; }
     else s.state = s.delta < -30 ? "late" : s.delta <= 0 ? "now" : "soon";
     m.slots.push(s); m.total++; if(it === CUR) SHOWN[tm] = 1;
     if(s.done) m.done++; else if(s.state === "late" || s.state === "now") m.pending++;
@@ -1435,7 +1413,7 @@ function model(){
     var DL = dlGet(it);
     one(it);
     /* anything checked today that the schedule no longer shows (edited, skipped, paused…) */
-    Object.keys(DL).forEach(function(k){ if(k === "*"){ if(!ANYDONE) anyDone(it); } else if(!SHOWN[k] && mins(slotClock(k)) !== null) slot(it, k, DL, it.slots && it.slots.date === T0 ? it.slots.snz : null, false); });
+    Object.keys(DL).forEach(function(k){ if(k === "*"){ if(!ANYDONE) anyDone(it); } else if(!SHOWN[k] && mins(k) !== null) slot(it, k, DL, it.slots && it.slots.date === T0 ? it.slots.snz : null, false); });
   });
   function one(it){
     if(it.paused) return;
@@ -1460,8 +1438,6 @@ function model(){
       else if(dh > 0) m.coming.push({it:it, d:dh});
       return;
     }
-    var wr0 = wakeRec();
-    if(it.unit === "d" && wr0 && wr0.manualUp && it.wakeDoneFrom === wr0.up && it.last !== T0 && !hasDL) return;
     var d = diff(td, parse(it.next)), doneToday = it.last === T0;
     if(it.times.length && (d === 0 || doneToday || (on && it.times.every(function(x){ return sd[x]; })))){
       if(!(d !== 0 && doneToday && hasDL)) it.times.forEach(function(tm){ slot(it, tm, sd, snz, doneToday && d !== 0); });   /* finished today: the done list says exactly what was done */
@@ -1553,7 +1529,6 @@ function winRow(o, lateTxt){
   else dots = '<span class="tag tab">'+o.count+'/'+o.it.quota+'</span>';
   var sub = o.met ? t("goalD"+o.it.period) : o.it.quota === 1 ? t("once"+o.it.period) : t("times"+o.it.period, {n:o.it.quota});
   var lft = o.met ? "" : o.today ? {x:t("doneT")} : lateTxt ? {x:lateTxt, red:true} : periodLeft(o.it.period);
-  if(lft && o.it.period === "d" && !lft.red && !o.today) lft = {x:t("grpAny")};
   if(o.today && !o.met) sub = freq(o.it) + " · " + o.count + "/" + o.it.quota;
   return row(o.met || o.today ? "done" : lateTxt ? "late" : "", "win", o.it.id, "", '<div class="tm"></div>', o.it.name, sub, dots, o.today, lft ? '<span class="st'+(lft.red ? " late" : "")+'">'+esc(lft.x)+'</span>' : "");
 }
@@ -1568,12 +1543,12 @@ function dayEnd(){ return calEnd(); }
 function tabTop(){ var h = document.querySelector(".hdr"); return h ? h.getBoundingClientRect().height : 0; }
 /* the open tab lives in memory only: every launch (or coming back after a while) starts on Today */
 var TABV = "d", hidAt = 0, LATEW = null;
-document.addEventListener("visibilitychange", function(){ if(document.hidden){ hidAt = Date.now(); set("r.open", String(hidAt)); } else { LI = Date.now(); } if(!document.hidden && hidAt && Date.now() - hidAt > 10*60e3 && TABV !== "d"){ TABV = "d"; lastHTML = ""; render(); } });
+document.addEventListener("visibilitychange", function(){ if(document.hidden){ hidAt = Date.now(); set("r.open", String(Math.min(hidAt, LI))); } else { LI = Date.now(); } if(!document.hidden && hidAt && Date.now() - hidAt > 10*60e3 && TABV !== "d"){ TABV = "d"; lastHTML = ""; render(); } });
 function tabNow(){ if(get("r.test") === "1" && get("r.tab")) TABV = get("r.tab"); return TABV; }
 /* how long a period still runs: today → hours until the day ends; week / month → days, then hours on the last day */
 function periodLeft(p){
   var cd = calDay(), hrs = Math.max(0, Math.round((calEnd() - Date.now()) / 6e4)), end;
-  if(p === "d"){ var dm = Math.round((dayEnd() - Date.now()) / 6e4); return dm <= 0 ? {x:t("leftX", {x:dur(0)}), red:true, min:0, past:true} : {x:t("leftX", {x:dur(dm)}), red:dm <= 180, min:dm}; }
+  if(p === "d"){ var dm = Math.ceil((dayEnd() - Date.now()) / 6e4); return dm <= 0 ? {x:t("leftX", {x:dur(0)}), red:true, min:0, past:true} : {x:t("leftX", {x:dur(dm)}), red:dm <= 180, min:dm}; }
   end = p === "w" ? addDays(weekStart(cd), 6) : new Date(cd.getFullYear(), cd.getMonth()+1, 0, 12);
   var l = diff(cd, end);
   return l === 0 ? {x:t("leftX", {x:dur(hrs)}), red:true, min:hrs} : {x:t("daysLeft", {n:l + 1}), red:l <= 1, min:hrs + l*1440, days:l + 1};
@@ -1599,7 +1574,7 @@ function flipPlay(f){
 }
 var lastBadge = -1;
 function render(){
-  syncCut(); guardClock(); autoWake(); roll(); touch();
+  syncCut(); guardClock(); touch(); autoWake(); roll();
   var td = today(), m = model(), nm = nowMin(), out = "";
   $("dayName").textContent = fmt(td, {weekday:"long", day:"numeric", month:"long"});
   $("clock").innerHTML = ftH(nm);
@@ -1632,12 +1607,12 @@ function render(){
     m.overdue.forEach(function(o){ add(-1e6 + o.d, row("late", "item", o.it.id, "", blank, o.it.name, freq(o.it), '<span class="tag late">'+esc(o.d === -1 ? t("lateY") : t("lateD", {n:-o.d}))+'</span>'), true, false); });
     m.slots.forEach(function(s){
       var r = rel(s), tag = r ? '<span class="tag '+(s.state === "now" && s.delta >= -2 ? "tnow" : s.state === "now" || s.state === "late" || s.state === "missed" ? "late" : s.state === "done" ? "ok" : "")+'">'+esc(r)+'</span>' : '';
-      add(s.min, row("timed " + (s.state === "now" ? (s.delta >= -2 ? "due" : "due lt") : s.state), "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(slotClock(s.time))+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(slotClock(s.time))}) + " · " : "") + freq(s.it), tag), s.state === "late", s.done || s.missed, s.at ? lm(s.at) : s.min);
+      add(s.min, row("timed " + (s.state === "now" ? (s.delta >= -2 ? "due" : "due lt") : s.state), "slot", s.it.id, ' data-time="'+s.time+'"', '<div class="tm">'+ftH(s.eff)+(s.snoozed ? '<small>'+ft(s.time)+'</small>' : '')+'</div>', s.it.name, (s.snoozed && !s.done && !s.missed ? t("movedFrom", {t:ft(s.time)}) + " · " : "") + freq(s.it), tag), s.state === "late", s.done || s.missed, s.at ? lm(s.at) : s.min);
     });
     var pastD = dEnd <= nm, lateAny = [];
     m.any.forEach(function(a){
       var ww = a.it.wake !== null && !a.done, at = dlGet(a.it)["*"], late = !a.done && !ww && pastD;
-      var stt = a.done ? (at && at !== "×" ? t("doneAt", {t:ft(at)}) : t("doneT")) : ww ? t("wakeWait") : late ? t("lateX", {x:dur(nm - dEnd)}) : dl.red ? dl.x : t("grpAny");
+      var stt = a.done ? (at && at !== "×" ? t("doneAt", {t:ft(at)}) : t("doneT")) : ww ? t("wakeWait") : late ? t("lateX", {x:dur(nm - dEnd)}) : dl.x;
       if(late) lateAny.push(a.it);
       add(ww ? -5e5 : dEnd, row((a.done ? "done" : ww ? "wwait" : late ? "late" : "") + " anyt", a.wh ? "wakeEdit" : "item", a.it.id, "", ww ? '<div class="tm">'+ico("sun", 18)+'</div>' : blank, a.it.name, freq(a.it), '<span class="tag'+(late || (!a.done && !ww && dl.red) ? " late" : "")+'">'+esc(stt)+'</span>'), late, a.done, at && at !== "×" ? lm(at) : null);
     });
@@ -1720,29 +1695,34 @@ function missedIn(a, b){               /* today's reminders between a and b that
   try{ model().slots.forEach(function(s){ var at = mid + s.min*6e4; if(!s.done && !s.missed && at > a && at <= b) n++; }); }catch(e){}
   return n;
 }
+/* A gap in app use is only a reason to ASK, never proof of sleep. Require an
+   overnight gap and avoid asking in the middle of the user's usual night. */
 function sleptLikely(l, n){
-  var G = (n - l) / 36e5; if(G < 2) return false;                 /* quiet hours */
-  var w = lastWake(); if(w === null) return wakeTasks().length > 0 || ndUsed();
-  var W = dayLen(), U = Math.max(0, (l - w) / 36e5), T = (n - w) / 36e5;  /* usual day, up before going quiet, up in total */
-  if(G >= 12 || (T >= W + 10)) return true;
-  if(G >= 3 && dayInfo().ext) return true;                          /* quiet for hours after midnight, yesterday still open */
-  var p = (G >= 6 ? 3 : G >= 4 ? 2 : 1) + (U >= W - 2 ? 2 : U >= W - 6 ? 1 : U < 4 ? -1 : 0);
-  if(p + 2 >= 4){ var M = missedIn(l, n); p += M >= 4 ? 2 : M >= 2 ? 1 : 0; }
-  return p >= 4;
+  if(!l || n <= l || n - l < 3*36e5) return false;
+  var w = lastWake(), rec = wakeRec();
+  if(w === null && !(wakeTasks().length || ndUsed())) return false;
+  if(rec && typeof rec.still === "number" && l < rec.still) l = rec.still;
+  if(n - l < 3*36e5) return false;
+  if(w !== null && n - (rec && typeof rec.up === "number" ? rec.up : w) < 12*36e5) return false;
+  var d = new Date(n); d.setHours(0,0,0,0);
+  var u = usualWake(); if(u === null) u = 480;
+  var usual = new Date(d); usual.setMinutes(u);
+  /* Two night hours must be before the usual wake, not merely an afternoon gap. */
+  if(!nightish([l, Math.min(n, usual.getTime())])) return false;
+  /* Four hours before the usual wake time is the earliest reasonable check-in.
+     Use local calendar time, including on daylight-saving transition days. */
+  var earliest = new Date(d); earliest.setMinutes(u - 240);
+  return n >= earliest.getTime();
 }
 function touch(){
   var n = Date.now(), l = +get("r.open") || 0;
-  if(l > n + 6e5) l = 0;                                            /* the clock went back */
-  var day = iso(new Date(n)), midnight = new Date(n); midnight.setHours(0,0,0,0);
-  var w = wakeRec(), answeredToday = get("r.ndAskDay") === day;
-  if(!askRec() && !answeredToday){
-    /* Activity cannot identify the phone user or establish whether they slept. */
-    if(w && lastWake() !== null && (w.at < midnight.getTime() || w.a)) askSet({from:n, auto:0});
-    else if(!l){ if(lastWake() === null && (wakeTasks().length || ndUsed())) askSet({from:n, auto:0}); }
+  if(l > n + 6e5) l = 0;
+  if(!askRec()){
+    if(!l){ if(lastWake() === null && (wakeTasks().length || ndUsed())) askSet({from:n, auto:0}); }
     else if(sleptLikely(l, n) && !((lastWake() || 0) > l)) askSet({from:l, auto:1});
   }
-  if(!l || n - l >= 60e3) set("r.open", String(n));
-  if(n - LI < 5*60e3) actNote(n);   /* a screen left open on its own is not you being up */
+  if(!l || (n - LI < 5*60e3 && n - l >= 60e3)) set("r.open", String(n));
+  if(n - LI < 5*60e3) actNote(n);
 }
 /* your last wake-up, even if it was before midnight (you may still be up) */
 function lastWake(){ var w = wakeRec(); if(!w) return null; var n = Date.now(); return w.at > n + 6e5 || n - w.at > 48*3600e3 ? null : w.at; }
@@ -1778,26 +1758,14 @@ $("ndBtn").addEventListener("click", function(){
   else wakeIs(nowMin());
 });
 function showNd(){ if(!askRec()) askSet({from:Date.now(), auto:0}); ND2 = false; lastHTML = ""; render(); window.scrollTo(0, 0); var c = $("ndCard"); if(c){ c.classList.remove("flash"); void c.offsetWidth; c.classList.add("flash"); } }
-var undoAsk = null, undoAskDay = null;
+var undoAsk = null;
 function wakeIs(m, how){
-  var before = snap(), wb = get("r.wake") || "null", wsb = get("r.wakes") || "", q = askRec(), pw = upSince() !== null ? upSince() : lastWake(), aw = get("r.awake") || "", ad = get("r.ndAskDay") || "";
+  var before = snap(), wb = get("r.wake") || "null", wsb = get("r.wakes") || "", q = askRec(), pw = upSince() !== null ? upSince() : lastWake(), aw = get("r.awake") || "";
   if(m === null) set("r.autoOff", iso(today()));
-  setWake(m);
-  if(m !== null){
-    var nw = wakeRec(), old = null; try{ old = JSON.parse(wb); }catch(e){}
-    if(nw){
-      /* Re-anchor repeats to the confirmed wake, preserving checks since then. */
-      var same = old && old.manualStart && old.at === nw.at;
-      nw.manualStart = 1; set("r.wake", JSON.stringify(nw)); DI = null;
-      if(!same){ prepareManualWake(nw.at, null, true); save(); }
-      learnWake(nw.at);
-      set("r.ndAskDay", iso(new Date()));
-    }
-  }
-  roll();
+  setWake(m); if(m !== null){ var nw = wakeRec(); if(nw) learnWake(nw.at); } roll();
   if(m !== null){ if(q && q.auto && pw !== null && q.from > pw) learnDay((q.from - pw) / 36e5); askSet(null); }
   lastHTML = ""; render(); buzz(14);
-  toast(m === null ? t("wakeCleared") : t("ndDone", {t:ft(m)}), before); undoWake = wb; undoWakes = wsb; undoAsk = q ? {q:q, aw:aw} : null; undoAskDay = ad;
+  toast(m === null ? t("wakeCleared") : t("ndDone", {t:ft(m)}), before); undoWake = wb; undoWakes = wsb; undoAsk = q ? {q:q, aw:aw} : null;
 }
 /* The day started by itself because you went quiet for hours. If you were really up all along,
    one tap keeps counting from your last wake-up. After a late night it's offered on the main screen
@@ -1809,84 +1777,22 @@ function noSleep(){
   return f === null || now - f < 3*36e5 ? w.pu : null;
 }
 $("nsq").addEventListener("click", function(){ var v = +this.getAttribute("data-pu"); if(v) wakeAtAbs(v, true); });
-/* The backup keeps only limited history. Recover known actual completion times from the current
-   item and saved snapshots; never invent a completion for a time that is not recorded. */
-function wakeCompletions(origin){
-  var out = {}, end = Date.now(), latest = {};
-  function read(it){
-    if(!it || !it.id) return;
-    var days = {};
-    [it.slots && {date:it.slots.date, k:it.slots.done}, it.dl && {date:it.dl.date, k:it.dl.k}].forEach(function(o){
-      if(!o || !parse(o.date) || !o.k) return;
-      if(!days[o.date]) days[o.date] = {};
-      Object.keys(o.k).forEach(function(k){ days[o.date][k] = o.k[k]; });
-    });
-    Object.keys(days).forEach(function(date){ latest[it.id + "|" + date] = {id:it.id, date:date, k:days[date]}; });
-  }
-  /* A later empty record means a check was undone; older snapshots must not resurrect it. */
-  snaps().forEach(function(s){ if(typeof s.ts !== "number" || s.ts > end) return; try { var a = JSON.parse(s.s); if(Array.isArray(a)) a.forEach(read); } catch(e){} });
-  items.forEach(read);
-  Object.keys(latest).forEach(function(key){ var o=latest[key], d=parse(o.date);
-    Object.keys(o.k).forEach(function(k){ var m=mins(o.k[k]); if(m === null || o.k[k] === "×") return;
-      var at=atDay(d,m); if(at >= origin && at <= end && (!out[o.id] || at > out[o.id])) out[o.id]=at;
-    });
-  });
-  return out;
-}
-function separatePrior(it, tm, day){
-  var sd = it.slots && it.slots.date === day ? it.slots.done : null, dl = it.dl && it.dl.date === day ? it.dl.k : null;
-  if(!((sd && Object.prototype.hasOwnProperty.call(sd, tm)) || (dl && Object.prototype.hasOwnProperty.call(dl, tm)))) return;
-  var suffix = 0, old = tm + "#prior";
-  while((sd && Object.prototype.hasOwnProperty.call(sd, old)) || (dl && Object.prototype.hasOwnProperty.call(dl, old))) old = tm + "#prior" + (++suffix);
-  if(sd && Object.prototype.hasOwnProperty.call(sd, tm)){ sd[old] = sd[tm]; delete sd[tm]; }
-  if(dl && Object.prototype.hasOwnProperty.call(dl, tm)){ dl[old] = dl[tm]; delete dl[tm]; }
-  if(it.slots && it.slots.snz && it.slots.snz[tm]){ it.slots.snz[old] = it.slots.snz[tm]; delete it.slots.snz[tm]; }
-  if(it.prev && it.prev.date === day && it.prev.slot === tm) it.prev.slot = old;
-}
-function prepareManualWake(origin, onlyId, hourlyOnly){
-  var completed = wakeCompletions(origin), D = dayInfo(), T0 = iso(today()), wk = getWake();
-  items.forEach(function(it){
-    if(onlyId && it.id !== onlyId) return;
-    if(hourlyOnly && it.unit !== "h") return;
-    delete it.carry; delete it.wakeDoneFrom;
-    if(it.paused || it.wake === null || (it.anchor && it.anchor > iso(new Date(origin)))) return;
-    var start = origin + it.wake*6e4, last = completed[it.id] || 0;
-    if(it.unit === "d"){
-      /* At midnight any completion recorded on that calendar date necessarily followed waking. */
-      var w = new Date(origin), midnight = w.getHours() === 0 && w.getMinutes() === 0;
-      if(last || (midnight && it.last === iso(w))) it.wakeDoneFrom = origin;
-      return;
-    }
-    if(it.unit !== "h" || wk === null) return;
-    var interval = it.n*36e5, due = start;
-    if(last >= origin) due = it.shift || it.kind === "flex" ? last + interval : start + (Math.max(0, Math.floor((last - start)/interval)) + 1)*interval;
-    var dd = new Date(due), base = new Date(start), tm = hm(dd.getHours()*60 + dd.getMinutes());
-    /* Preserve an existing completion if the new occurrence has the same clock time. */
-    separatePrior(it, tm, T0);
-    it.carry = {origin:origin, due:due, start:start};
-    it.next = T0; it.times = [tm];
-    it.anchor = iso(base); it.at0 = hm(base.getHours()*60 + base.getMinutes()); it.wakeAt = T0 + "|" + hm(wk);
-  });
-}
 /* a wake-up picked in the editor: today = you woke up then · yesterday = you haven't slept since then */
 function wakeAtAbs(at, keep){
   var d = dayInfo(), c = new Date(); c.setHours(0,0,0,0);
   if(at >= c.getTime()){ wakeIs(Math.round((at - d.mid) / 6e4)); return; }
-  var before = snap(), wb = get("r.wake") || "null", wsb = get("r.wakes") || "", w = wakeRec(), now = Date.now(), ad = get("r.ndAskDay") || "", q = askRec(), aw = get("r.awake") || "";
-  if(w && w.manualUp && w.up === at){ askSet(null); lastHTML = ""; render(); return; }
-  var rec = {at:(!d.ext && w && w.at >= c.getTime() && w.at <= now + 6e5) ? w.at : c.getTime(), up:at, manualUp:1};
-  /* Calendar-based tasks keep today; after-waking daily tasks use the actual wake-up. */
+  var before = snap(), wb = get("r.wake") || "null", wsb = get("r.wakes") || "", w = wakeRec(), now = Date.now();
+  var rec = !d.ext && w && w.at >= c.getTime() && w.at <= now + 6e5 ? {at:w.at, up:at} : {at:at};   /* today's tasks keep their times */
   var rd = new Date(rec.at); rec.still = now; rec.date = iso(rd); rec.t = hm(rd.getHours()*60 + rd.getMinutes());
-  set("r.wake", JSON.stringify(rec)); set("r.ndSeen", "1"); set("r.autoOff", ""); DI = null; if(!keep) learnWake(at); askSet(null); set("r.ndAskDay", iso(new Date()));
-  prepareManualWake(at); save();
+  set("r.wake", JSON.stringify(rec)); set("r.ndSeen", "1"); set("r.autoOff", ""); DI = null; if(!keep) learnWake(at); askSet(null);
   roll(); lastHTML = ""; render(); buzz(14);
-  toast(t("upSinceT", {t:wakeLbl(at)}), before); undoWake = wb; undoWakes = wsb; undoAsk = q ? {q:q, aw:aw} : null; undoAskDay = ad;
+  toast(t("upSinceT", {t:wakeLbl(at)}), before); undoWake = wb; undoWakes = wsb;
 }
 function editWake(){
   var d = dayInfo(), up = upSince(), w = wakeRec(), nm = nowMin(), st = getWake();
   var cont = up !== null && w && typeof w.up === "number" && w.up === up && w.at !== up && d.wake !== null;
   var sub = cont ? t("wakeUpS", {t:wakeLbl(up), s:ft(st)}) : st !== null && wakeAuto() ? t("wakeAutoS") : t("wakeYS");
-  openTime({title:t("wakeQ"), sub:sub, init:nm, chips:[],
+  openTime({title:t("wakeQ"), sub:sub, init:up !== null ? Math.round((up - d.mid) / 6e4) : nm, chips:[],
     clear:st !== null ? t("wakeClear") : null, onClear:function(){ wakeIs(null); }, cb:function(m){ wakeAtAbs(dayInfo().mid + m*6e4); }});
   if(wakeAuto() && typeof w.pu === "number" && typeof w.up !== "number" && Date.now() - w.pu < 60*36e5)   /* one tap: I didn't sleep */
     $("tChips").innerHTML = '<button type="button" class="lopt" data-pu="'+w.pu+'"><b>'+esc(t("noSleepB"))+'</b><span>'+esc(t("upSinceT", {t:wakeLbl(w.pu)}))+'</span></button>';
@@ -1959,15 +1865,14 @@ function stamp(){ return hm(nowMin()); }
 function advance(it, o){
   o = o || {};
   var td = today(), T0 = iso(td);
-  it.prev = {next:it.next, last:it.last, anchor:it.anchor, times:it.times.slice(), at0:it.at0, date:T0, carry:it.carry ? {origin:it.carry.origin, due:it.carry.due, start:it.carry.start} : null};
+  it.prev = {next:it.next, last:it.last, anchor:it.anchor, times:it.times.slice(), at0:it.at0, date:T0};
   if(!o.missed) it.last = T0;
   if(it.unit === "h"){
-    var carry = it.carry, occ = carry ? new Date(carry.due) : dt(it.next, it.times[0]), now = new Date(), base, N; now.setSeconds(0, 0);
+    var occ = dt(it.next, it.times[0]), now = new Date(), base, N; now.setSeconds(0, 0);
     base = o.at ? dt(T0, o.at) : now; if(base > now) base = new Date(base.getTime() - 864e5); /* a done time is never in the future: before wake-up = earlier, not tomorrow */
-    if(carry && it.kind === "fixed" && !it.shift){ var target = Math.max(now.getTime(), occ.getTime()), interval = it.n*36e5; N = new Date(carry.start + (Math.floor((target - carry.start)/interval) + 1)*interval); }
-    else if(it.kind === "fixed" && !it.shift) N = gridAfter(it, now > occ ? now : occ);
+    if(it.kind === "fixed" && !it.shift) N = gridAfter(it, now > occ ? now : occ);
     else { N = new Date(base.getTime() + it.n*36e5); if(it.shift && !o.missed){ it.anchor = ldate(base); it.at0 = hm(base.getHours()*60 + base.getMinutes()); } }
-    delete it.carry; setOcc(it, N); if(carry && it.next === T0) separatePrior(it, it.times[0], T0); return;
+    setOcc(it, N); return;
   }
   if(it.kind === "fixed" && !it.shift) it.next = iso(nextFixed(it, parse(it.next) > td ? parse(it.next) : td));
   else { it.next = iso(step(it, td, 1)); if(it.shift) it.anchor = it.next; }
@@ -1982,10 +1887,9 @@ function retime(it){
 }
 function restore(it){
   var p = it.prev; if(!p || p.date !== iso(today()) || !p.next) return;
-  it.next = p.next; it.last = p.last; if(p.anchor) it.anchor = p.anchor; if(p.times) it.times = p.times; if(p.at0) it.at0 = p.at0; if(p.carry) it.carry = p.carry; else delete it.carry; it.prev = null;
+  it.next = p.next; it.last = p.last; if(p.anchor) it.anchor = p.anchor; if(p.times) it.times = p.times; if(p.at0) it.at0 = p.at0; it.prev = null;
 }
 function skipItem(it){
-  if(it.unit === "h" && it.carry){ advance(it, {missed:true}); it.slots = null; return; }
   if(it.unit === "h"){ var occ = dt(it.next, it.times[0]); setOcc(it, it.kind === "fixed" && !it.shift ? gridAfter(it, occ) : new Date(occ.getTime() + it.n*36e5)); }
   else it.next = iso(it.kind === "fixed" && !it.shift ? nextFixed(it, parse(it.next)) : step(it, parse(it.next), 1));
   it.slots = null;
@@ -2001,7 +1905,7 @@ function apply(kind, id, time, o){
     var cur = it.slots.done[time] || dlGet(it)[time], has = cur && cur !== "×";
     if(o.later){
       var nv = o.to && mins(o.to) !== null ? lm(o.to) : Math.min(DE() - 5, nowMin() + 30);
-      if(it.unit === "h"){ setOcc(it, dt(T0, hm(nv))); if(it.carry){ it.carry.due = dt(T0, hm(nv)).getTime(); separatePrior(it, it.times[0], T0); } it.slots.mv = it.times[0]; } else it.slots.snz[time] = hm(nv);   /* mv: you moved it yourself */
+      if(it.unit === "h"){ setOcc(it, dt(T0, hm(nv))); it.slots.mv = it.times[0]; } else it.slots.snz[time] = hm(nv);   /* mv: you moved it yourself */
       res.later = hm(nv); return res;
     }
     if(it.unit === "h"){
@@ -2078,7 +1982,7 @@ document.addEventListener("click", function(e){
   if(a === "wakeEdit"){ editWake(); return; }
   if(a === "ndYes"){ ND2 = true; buzz(8); lastHTML = ""; render(); return; }
   if(a === "ndBack"){ ND2 = false; buzz(6); lastHTML = ""; render(); return; }
-  if(a === "ndNo"){ var go = getWake() !== null; set("r.ndAskDay", iso(new Date())); askSet(null); buzz(6); lastHTML = ""; render(); toast(t(go ? "ndKeep" : "ndLater")); return; }   /* "your day continues" only when it really does */
+  if(a === "ndNo"){ var go = getWake() !== null, wr = wakeRec(); if(wr){ wr.still = Date.now(); set("r.wake", JSON.stringify(wr)); DI = null; } set("r.open", String(Date.now())); askSet(null); buzz(6); lastHTML = ""; render(); toast(t(go ? "ndKeep" : "ndLater")); return; }   /* "your day continues" only when it really does */
   var host = b.closest("[data-id]"); if(!host) return;
   var id = host.getAttribute("data-id");
   if(a === "edit") openSheet(find(id));
@@ -2090,14 +1994,14 @@ document.addEventListener("click", function(e){
 /* ---------- toast ---------- */
 var undoState = null, tt = null, toastExtra = null, undoWake = null, undoWakes = null;
 function toast(msg, undo, extra){
-  undoState = undo || null; toastExtra = extra || null; undoWake = null; undoWakes = null; undoAsk = null; undoAskDay = null;
+  undoState = undo || null; toastExtra = extra || null; undoWake = null; undoWakes = null; undoAsk = null;
   $("toastTx").textContent = msg; $("undoBtn").style.display = undo ? "" : "none";
   $("extraBtn").style.display = extra ? "" : "none"; if(extra) $("extraTx").textContent = extra.label;
   var T = $("toast"); T.classList.remove("stack"); T.classList.add("on");
   if($("toastTx").scrollWidth > $("toastTx").clientWidth + 1) T.classList.add("stack");
   clearTimeout(tt); tt = setTimeout(function(){ $("toast").classList.remove("on"); undoState = null; toastExtra = null; }, extra ? 7000 : 4500);
 }
-$("undoBtn").addEventListener("click", function(){ if(!undoState) return; if(undoWake !== null){ set("r.wake", undoWake); if(undoWakes !== null) set("r.wakes", undoWakes); if(undoAsk){ set("r.ask", JSON.stringify(undoAsk.q)); set("r.awake", undoAsk.aw); } if(undoAskDay !== null) set("r.ndAskDay", undoAskDay); DI = null; undoWake = null; undoWakes = null; undoAsk = null; } items = JSON.parse(undoState).map(norm).filter(Boolean); save(); lastHTML = ""; render(); $("toast").classList.remove("on"); undoState = null; buzz(8); });
+$("undoBtn").addEventListener("click", function(){ if(!undoState) return; if(undoWake !== null){ set("r.wake", undoWake); if(undoWakes !== null) set("r.wakes", undoWakes); if(undoAsk){ set("r.ask", JSON.stringify(undoAsk.q)); set("r.awake", undoAsk.aw); } DI = null; undoWake = null; undoWakes = null; undoAsk = null; } items = JSON.parse(undoState).map(norm).filter(Boolean); save(); lastHTML = ""; render(); $("toast").classList.remove("on"); undoState = null; buzz(8); });
 $("extraBtn").addEventListener("click", function(){ var x = toastExtra; toastExtra = null; if(x) x.fn(); });
 
 (function(){
@@ -2550,8 +2454,6 @@ $("saveBtn").addEventListener("click", function(){
     else if(it.last !== iso(today())){ it.times = []; it.slots = null; }
   }
   if(changed){ it.wakeAt = null; var sd = iso(startDate()); it.next = sd; it.anchor = sd; it.at0 = times[0] || null; it.prev = null; it.slots = null; }
-  var scheduleEdited = !!editing && (changed || editing.wake !== wakeOff || editing.shift !== (!flex && F.shift));
-  if(scheduleEdited || (editing && editing.paused !== !!F.paused)){ delete it.carry; delete it.wakeDoneFrom; it.wakeAt = null; }
   var wasPaused = !!(editing && editing.paused); it.paused = !!F.paused;
   if(wasPaused && !it.paused && !changed && kind !== "window"){   /* resume from today, not from the past */
     var td0 = startDay(it.unit === "h"), ni = norm(it);
@@ -2564,11 +2466,6 @@ $("saveBtn").addEventListener("click", function(){
     n.next = iso(n.kind === "fixed" && !n.shift ? nextFixed(n, today()) : step(n, today(), 1)); if(n.shift) n.anchor = n.next;
   }
   if(editing) items[items.indexOf(editing)] = n; else items.push(n);
-  var wrEdit = wakeRec();
-  if(scheduleEdited && wrEdit && n.wake !== null && !n.paused){
-    if(wrEdit.manualUp) prepareManualWake(wrEdit.up, n.id);
-    else if(wrEdit.manualStart && n.unit === "h") prepareManualWake(wrEdit.at, n.id, true);
-  }
   save(); closeSheet(); lastHTML = ""; render(); buzz(10);
   if(!editing) toast(t(dayInfo().ext && n.unit !== "h" && n.next > iso(today()) ? "addedT" : "added", {n:name}), before);   /* made after midnight: it starts after you sleep */
   else if(wasPaused !== it.paused) toast(t(it.paused ? "pausedMsg" : "resumed", {n:name}), before);
@@ -2713,10 +2610,8 @@ function notifPlan(){
     if(it.paused || it.kind === "window") return;
     if(it.unit === "h"){
       if(wk === null) return;
-      var st = it.carry ? new Date(it.carry.due) : it.times[0] && dt(it.next, it.times[0]); if(!st) return;
-      var interval = it.n*36e5, first = st.getTime() + interval;
-      if(it.carry && first <= now) first = st.getTime() + (Math.floor((now - st.getTime())/interval) + 1)*interval;
-      for(var k = 1, x = first; k < 60 && x < lim; k++, x += interval){
+      var st = it.times[0] && dt(it.next, it.times[0]); if(!st) return;
+      for(var k = 1, x = st.getTime() + it.n*36e5; k < 60 && x < lim; k++, x += it.n*36e5){
         var xd = new Date(x), xm = xd.getHours()*60 + xd.getMinutes(), dd = new Date(xd); dd.setHours(12,0,0,0);
         if(iso(dd) !== T0) break;   /* tomorrow's start when you tap New Day tomorrow */
         if(xm < wk) continue;
@@ -2804,7 +2699,7 @@ function syncPlan(){ clearTimeout(planT); planT = setTimeout(sendPlan, 400); }
 function sendPlan(){
   clearTimeout(planT); planT = null;
   var p; try{ p = notifPlan(); }catch(e){ return; }
-  var j = JSON.stringify(p) + "|" + lang + "|" + items.length;
+  var j = JSON.stringify(p) + lang;
   if(j === planSent) return; planSent = j;
   nat("plan", {list:p, action:t("nDoneAct"), lang:lang, n:items.length});
 }

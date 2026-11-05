@@ -1,11 +1,9 @@
-# Routines — the phone app (no terminal needed)
+# Routines — Update 14
 
-Same flow as Bills: everything is clicks in a browser, then one button builds and sends the app to App Store Connect.
+This is an update for the existing Routines app, not a new app. It preserves the existing GitHub Actions workflow and signing settings.
 
-What's inside:
-- `web/index.html` — the Routines screen (the exact same file as the website). To change the app's screen later, replace this one file and run the workflow again.
-- `App.js`, `src/` — the phone side: notifications, haptics, badge, safe saving, backups, Android back button.
-- `.github/workflows/app-store.yml` — the "Send to App Store" button.
-- `privacy.html` — upload it to the website repo (next to index.html) for the App Store privacy link.
+1. Unzip the update and upload its contents to the existing Routines repository, keeping the same folder paths. Do not delete your existing assets or workflow files.
+2. Run your existing **Send to App Store** workflow as usual. The cloud workflow requires available Expo iOS build credits.
+3. Install the resulting TestFlight build and check that Settings says **Update 14**.
 
-Bundle ID: `com.ossamamektane.routines`
+All-day task countdowns show the time remaining until midnight, not a newly assigned appointment. Your existing evening check-in reminders still follow your notification settings. The sleep question is a check-in based on app activity; the app cannot detect whether you actually slept.

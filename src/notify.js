@@ -86,25 +86,18 @@ export async function askPermission() {
 // old number from before a delete/reinstall. So the newest number is remembered and put on again
 // whenever it can be: when the page sends it, when you come back to the app, and right after you allow notifications.
 let wantBadge = null;
-let badgeRevision = 0;
-// Native calls may finish in a different order than they were sent. Serialize them,
-// and always write the most recent count, so an old count cannot overwrite zero.
-let badgeWrites = Promise.resolve();
-export function setBadge(n) {
+export async function setBadge(n) {
   wantBadge = Math.max(0, n | 0);
-  badgeRevision++;
   return applyBadge();
 }
-export function applyBadge() {
-  if (wantBadge === null) return Promise.resolve(true);
-  badgeWrites = badgeWrites.catch(() => false).then(async () => {
-    try {
-      return (await Notifications.setBadgeCountAsync(wantBadge)) !== false;
-    } catch (e) {
-      return false;
-    }
-  });
-  return badgeWrites;
+export async function applyBadge() {
+  if (wantBadge === null) return true;
+  try {
+    const ok = await Notifications.setBadgeCountAsync(wantBadge);
+    return ok !== false;
+  } catch (e) {
+    return false;
+  }
 }
 
 let catLabel = null;
@@ -141,7 +134,7 @@ let running = false;
 const given = new Map(); // id → badge number it was scheduled with
 
 export function applyPlan(msg) {
-  latest = { msg, badgeRevision };
+  latest = msg;
   if (!running) run();
 }
 
@@ -149,9 +142,9 @@ async function run() {
   running = true;
   try {
     while (latest) {
-      const entry = latest;
+      const msg = latest;
       latest = null;
-      await sync(entry.msg, entry.badgeRevision);
+      await sync(msg);
     }
   } finally {
     running = false;
@@ -181,7 +174,7 @@ function schedule(id, n, badge) {
   });
 }
 
-async function sync(msg, planBadgeRevision) {
+async function sync(msg) {
   try {
     const p = await Notifications.getPermissionsAsync();
     if (!granted(p)) return;
@@ -216,15 +209,10 @@ async function sync(msg, planBadgeRevision) {
     for (const h of have) {
       if (want.has(h.identifier)) continue;
       const at = atOf(h.identifier);
-      if (msg.n !== 0 && at !== null && at < soon) continue;
+      if (at !== null && at < soon) continue;
       try { await Notifications.cancelScheduledNotificationAsync(h.identifier); } catch (e) {}
     }
     for (const id of [...given.keys()]) if (!want.has(id)) given.delete(id);
-    // An empty task list must clear the badge even if the page did not send a
-    // changed count. Never overwrite a newer badge update or a newer plan.
-    if (msg.n === 0 && want.size === 0 && latest === null && badgeRevision === planBadgeRevision) {
-      await setBadge(0);
-    }
   } catch (e) {
     // Reminders are a help, never a reason to crash.
     console.warn("Reminder sync failed", e);
