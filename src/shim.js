@@ -39,6 +39,37 @@ const SHIM = `(function(){
   }
 })();`;
 
+// Keep the editor title visible during typing and make its two text fields comfortable
+// to use on iPhone-sized viewports. !important is needed because the app's source CSS
+// is bundled after this injected style block.
+const EDITOR_CSS = `
+#shHead.editingText #shTitle{
+  position:static!important; width:auto!important; height:auto!important;
+  overflow:visible!important; clip-path:none!important; white-space:normal!important;
+  flex:1 1 auto!important; min-width:0!important; text-align:center!important;
+}
+#shHead.editingText #keyboardDone{display:inline-flex!important; flex:none!important; min-width:44px!important;}
+#shHead.editingText #saveBtn{display:none!important;}
+#shHead.editingText{gap:8px!important;}
+#sheet #fName{min-height:54px!important; padding-inline:16px!important; font-size:17px!important;}
+#sheet #fDesc{
+  display:block!important; min-height:120px!important; padding:14px 16px!important;
+  line-height:1.5!important; font-size:16px!important; resize:vertical!important;
+  overflow-y:auto!important; -webkit-overflow-scrolling:touch!important;
+}
+#sheet .titleFields{overflow:visible!important;}
+#sheet .editScroll{min-height:0!important;}
+#sheet .sbody{min-height:0!important; overflow-y:auto!important; overscroll-behavior:contain!important; -webkit-overflow-scrolling:touch!important; scroll-padding-block:20px!important;}
+@media(max-width:420px){
+  #sheet .sbody{padding-inline:16px!important;}
+  #sheet #fDesc{min-height:112px!important;}
+}
+@media(max-height:560px){
+  #sheet .sbody{scroll-padding-block:12px!important;}
+  #sheet #fDesc{min-height:88px!important;}
+}
+`;
+
 // Escape script-breaking characters before inserting JSON into an HTML script element.
 function safe(json) {
   return json.replace(/</g, "\\u003c").replace(/\u2028/g, "\\u2028").replace(/\u2029/g, "\\u2029");
@@ -47,7 +78,8 @@ function safe(json) {
 // Seed state before the page script runs; native code expects exactly this injection order.
 export function buildPage(html, store, extraCss) {
   const seed = "window.__SEED=" + safe(JSON.stringify({ rev: store.rev || 0, data: store.data || {} })) + ";";
-  const head = "<script>" + seed + SHIM + "</script>" + (extraCss ? "<style>" + extraCss + "</style>" : "");
+  const css = (extraCss || "") + EDITOR_CSS;
+  const head = "<script>" + seed + SHIM + "</script>" + (css ? "<style>" + css + "</style>" : "");
   html = html.replace(/<link rel="manifest"[^>]*>/g, ""); // nothing to fetch from the internet
   const i = html.indexOf("<head>");
   return i < 0 ? head + html : html.slice(0, i + 6) + head + html.slice(i + 6);
