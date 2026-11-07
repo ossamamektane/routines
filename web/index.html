@@ -1273,12 +1273,11 @@ html[data-theme="dark"]{--wake-confirm:#30d158;--wake-confirm-text:#000}
 .scrim.on,.rscrim.on{transition:none!important}
 .pickLayer.on::before{transition:none!important}
 .wakeOverlay.entering{animation:none!important;background:var(--modalTint)}
-/* App.js hides WebKit's iOS input accessory bar to match Bills. Replace its
-   dismissal function with a localized Done button in the fixed editor header;
-   visually hide (do not remove) the title so the dialog remains labelled. */
-#keyboardDone{display:none;flex:1;min-width:0;height:44px;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:600;text-align:center}
-#shHead.editingText #shTitle{position:absolute;width:1px;height:1px;overflow:hidden;clip-path:inset(50%);white-space:nowrap}
+/* Keep the editor title stable while typing. The keyboard dismissal action is
+   a small trailing control; it never replaces the screen title. */
+#keyboardDone{display:none;flex:none;width:52px;height:44px;border:0;background:transparent;color:var(--ink);font:inherit;font-weight:600;text-align:center}
 #shHead.editingText #keyboardDone{display:block}
+#shHead #shTitle{position:static;clip-path:none;white-space:normal}
 /* These selectors intentionally outrank older global reduce-motion rules.
    Keep the entrance/exit durations aligned with lockSync's 470ms cleanup. */
 @media(prefers-reduced-motion:reduce){
@@ -1297,6 +1296,196 @@ html[data-theme="dark"]{--wake-confirm:#30d158;--wake-confirm-text:#000}
  .wakeOverlay.leaving{transition:background-color var(--sheet-exit) var(--sheet-curve)!important}
  .wakeOverlay.leaving #ndCard{transition:transform var(--sheet-exit) var(--sheet-curve)!important;animation:none!important}
 }
+
+/* Final native-feel pass: preserve the iPhone status bar, keep every sheet
+   comfortably below the Dynamic Island, and use one slower coordinated motion. */
+#keyboardDone{display:none!important}
+#shHead.editingText #keyboardDone{display:block!important}
+#shHead.editingText #shTitle{position:static!important;width:auto!important;height:auto!important;overflow:visible!important;clip-path:none!important;white-space:normal!important}
+@media(max-width:699px){
+ .sheet,.sheet:not(#prefs),#sheet.sheet,#prefs.sheet,#sheet.nested{
+   max-height:calc(var(--visible-height,100dvh) - var(--st) - 28px)!important;
+ }
+ .pickLayer .pickDialog,.timePick .pickDialog,#rMenu,.wake.ndc{
+   max-height:calc(var(--visible-height,100dvh) - var(--st) - 28px)!important;
+ }
+}
+.sheet,.sheet:not(#prefs),#sheet.sheet,#prefs.sheet,#sheet.nested,#rMenu{
+ transition:transform 520ms cubic-bezier(.20,.82,.22,1),opacity 360ms ease,visibility 0s linear 520ms!important;
+}
+.sheet.on,.sheet.on:not(#prefs),#sheet.sheet.on,#prefs.sheet.on,#sheet.nested.on,#rMenu.on{
+ transition:transform 560ms cubic-bezier(.18,.86,.24,1),opacity 380ms ease,visibility 0s!important;
+}
+.pickLayer,.pickLayer.timePick,.scrim,.rscrim,.wakeOverlay{
+ transition:opacity 360ms ease,visibility 0s linear 360ms!important;
+}
+.pickLayer.on,.scrim.on,.rscrim.on,.wakeOverlay.entering{
+ transition:opacity 420ms ease,visibility 0s!important;
+}
+.pickLayer .pickDialog,.timePick .pickDialog{
+ transition:transform 520ms cubic-bezier(.18,.86,.24,1)!important;
+}
+.pickLayer.on .pickDialog{transition:transform 560ms cubic-bezier(.18,.86,.24,1)!important}
+@media(prefers-reduced-motion:reduce){
+ .sheet,.sheet.on,#sheet.sheet,#sheet.sheet.on,#prefs.sheet,#prefs.sheet.on,.sheet.nested,.sheet.nested.on,#rMenu,#rMenu.on,.pickLayer,.pickLayer.on,.pickLayer .pickDialog,.pickLayer.on .pickDialog,.scrim,.scrim.on,.rscrim,.rscrim.on{transition:none!important}
+}
+
+/* Premium responsive finish — one coherent layout and motion system.
+   Motion is intentional by default; accessibility preferences switch to a
+   quiet cross-fade rather than abruptly removing all state feedback. */
+:root{
+ --sheet-enter:460ms;
+ --sheet-exit:320ms;
+ --sheet-curve:cubic-bezier(.2,.72,.22,1);
+ --tap-size:44px;
+}
+button,[role="button"],input,select,textarea{touch-action:manipulation}
+button,.ib,.btn,.pickTrigger,.tadd,.seg button,.grow,.listManage{
+ min-height:max(var(--tap-size), 40px);
+ -webkit-tap-highlight-color:transparent;
+}
+button:focus-visible,input:focus-visible,textarea:focus-visible,[role="button"]:focus-visible{
+ outline:2px solid var(--y);outline-offset:2px;
+}
+/* Smooth, restrained sheet movement: a small lift and settle, not a fast pop. */
+.sheet,.sheet:not(#prefs),#sheet.sheet,#prefs.sheet,#sheet.nested,#rMenu{
+ transition:transform var(--sheet-exit) var(--sheet-curve),opacity var(--sheet-exit) ease,
+ visibility 0s linear var(--sheet-exit)!important;
+ will-change:transform,opacity;
+}
+.sheet.on,.sheet.on:not(#prefs),#sheet.sheet.on,#prefs.sheet.on,#sheet.nested.on,#rMenu.on{
+ transition:transform var(--sheet-enter) var(--sheet-curve),opacity 260ms ease,
+ visibility 0s!important;
+}
+.scrim,.rscrim,.pickLayer,.pickLayer::before,.wakeOverlay{
+ transition:opacity 260ms ease,visibility 0s linear 260ms!important;
+}
+.scrim.on,.rscrim.on,.pickLayer.on,.pickLayer.on::before,.wakeOverlay.entering{
+ transition:opacity 300ms ease,visibility 0s!important;
+}
+.pickLayer .pickDialog,.timePick .pickDialog{
+ transition:transform var(--sheet-exit) var(--sheet-curve),opacity var(--sheet-exit) ease!important;
+ will-change:transform,opacity;
+}
+.pickLayer.on .pickDialog{
+ transition:transform var(--sheet-enter) var(--sheet-curve),opacity 260ms ease!important;
+}
+#ndCard.flash{animation:wakeRise var(--sheet-enter) var(--sheet-curve) both}
+/* Compact phones: use the full available width, retain safe-area breathing room,
+   and let the content—not the sheet frame—scroll above the keyboard. */
+@media(max-width:520px){
+ .sheet,.sheet:not(#prefs),#sheet.sheet,#prefs.sheet,#sheet.nested,#rMenu,
+ .pickLayer .pickDialog,.timePick .pickDialog,.wake.ndc{
+  width:100%;max-width:100%;
+ }
+ .sheet,.sheet:not(#prefs),#sheet.sheet,#prefs.sheet,#sheet.nested{
+  max-height:calc(var(--visible-height,100dvh) - var(--st) - 8px);
+ }
+ .sheet:not(#prefs),#sheet.sheet,#sheet.nested,.pickLayer .pickDialog,.timePick .pickDialog,.wake.ndc{
+  border-radius:24px 24px 0 0;
+ }
+ .sheet .sbody,#sheet .sbody,.pickDialog,.rmenu,.wake.ndc{
+  overscroll-behavior:contain;-webkit-overflow-scrolling:touch;
+ }
+ .shd{gap:8px;padding-inline:14px}
+ .shd h3{font-size:18px;line-height:1.25}
+ .sheet .sfoot{padding-inline:14px}
+ .sheet .sbody{padding-inline:14px}
+ #sheet .sbody{padding-bottom:calc(18px + var(--sheet-safe-bottom,var(--sb)))}
+}
+@media(max-width:380px){
+ .shd .ib{width:42px;min-width:42px;height:42px}
+ .shd h3{font-size:17px}
+ .fl{margin-bottom:14px}
+ .sheet .sbody,#sheet .sbody{padding-inline:12px}
+ .sheet .sfoot{gap:6px;padding-inline:12px}
+}
+/* Landscape and short-height phones: prioritize visible controls and scrollable
+   content instead of letting a tall sheet collide with the status area. */
+@media(max-height:520px) and (orientation:landscape){
+ .sheet,.sheet:not(#prefs),#sheet.sheet,#prefs.sheet,#sheet.nested,#rMenu,
+ .pickLayer .pickDialog,.timePick .pickDialog,.wake.ndc{
+  max-height:calc(var(--visible-height,100dvh) - 12px);
+  border-radius:18px 18px 0 0;
+ }
+ .sgrab{padding-top:5px;padding-bottom:0}
+ .shd{padding-top:2px;padding-bottom:5px}
+ .sheet .sbody{padding-top:2px}
+}
+/* Larger screens: present dialogs as compact centered cards rather than
+   stretching phone sheets across a tablet/desktop viewport. */
+@media(min-width:700px){
+ .sheet,.sheet:not(#prefs),#sheet.sheet,#prefs.sheet,#sheet.nested{
+  width:min(520px,calc(100vw - 48px));max-height:min(82dvh,820px);
+  border-radius:26px;bottom:auto;top:50%;
+  transform:translate(-50%,-47%) scale(.985);
+ }
+ .sheet.on,.sheet.on:not(#prefs),#sheet.sheet.on,#prefs.sheet.on,#sheet.nested.on{
+  transform:translate(-50%,-50%) scale(1);
+ }
+ .sheet .sgrab{display:none}
+ .sheet .shd{padding:18px 20px 10px}
+ .sheet .sbody{padding:8px 20px 18px}
+ .sheet .sfoot{padding:14px 20px 18px}
+ .pickLayer .pickDialog,.timePick .pickDialog{
+  width:min(520px,calc(100vw - 48px));border-radius:26px;
+ }
+}
+/* Reduced Motion / iOS cross-fade preference: preserve clear state changes,
+   but remove travel, scaling and spring movement. This is a fade, not a pop. */
+@media(prefers-reduced-motion:reduce){
+ .sheet,.sheet:not(#prefs),#sheet.sheet,#prefs.sheet,#sheet.nested,#rMenu,
+ .pickLayer .pickDialog,.timePick .pickDialog,.wakeOverlay.entering #ndCard,
+ .wakeOverlay.leaving #ndCard{
+  transform:none!important;animation:none!important;
+  transition:opacity 180ms ease,visibility 0s linear 180ms!important;
+ }
+ .sheet.on,.sheet.on:not(#prefs),#sheet.sheet.on,#prefs.sheet.on,#sheet.nested.on,#rMenu.on,
+ .pickLayer.on .pickDialog,.timePick.on .pickDialog,.wakeOverlay.entering #ndCard{
+  transform:none!important;opacity:1!important;
+  transition:opacity 180ms ease,visibility 0s!important;
+ }
+ .sheet:not(.on),#sheet.sheet:not(.on),#prefs.sheet:not(.on),#sheet.nested:not(.on),#rMenu:not(.on),
+ .pickLayer:not(.on) .pickDialog,.wakeOverlay.leaving #ndCard{opacity:0!important}
+ .scrim,.rscrim,.pickLayer,.pickLayer::before,.wakeOverlay,
+ .scrim.on,.rscrim.on,.pickLayer.on,.pickLayer.on::before,.wakeOverlay.entering{
+  transition:opacity 180ms ease,visibility 0s linear 180ms!important;
+ }
+ .scrim.on,.rscrim.on,.pickLayer.on,.pickLayer.on::before,.wakeOverlay.entering{transition:opacity 180ms ease!important}
+ #ndCard.flash{animation:none!important}
+}
+html.native-reduce-motion .sheet,html.native-reduce-motion .sheet.on,
+html.native-reduce-motion #sheet.sheet,html.native-reduce-motion #sheet.sheet.on,
+html.native-reduce-motion #prefs.sheet,html.native-reduce-motion #prefs.sheet.on,
+html.native-reduce-motion #rMenu,html.native-reduce-motion #rMenu.on,
+html.native-reduce-motion .pickLayer .pickDialog,html.native-reduce-motion .pickLayer.on .pickDialog,
+html.native-reduce-motion .timePick .pickDialog,html.native-reduce-motion .wakeOverlay.entering #ndCard,
+html.native-reduce-motion .wakeOverlay.leaving #ndCard{
+ transform:none!important;animation:none!important;
+ transition:opacity 180ms ease,visibility 0s linear 180ms!important;
+}
+html.native-reduce-motion .sheet:not(.on),html.native-reduce-motion #sheet.sheet:not(.on),
+html.native-reduce-motion #prefs.sheet:not(.on),html.native-reduce-motion #rMenu:not(.on),
+html.native-reduce-motion .pickLayer:not(.on) .pickDialog,html.native-reduce-motion .wakeOverlay.leaving #ndCard{
+ opacity:0!important;
+}
+html.native-reduce-motion .sheet.on,html.native-reduce-motion #sheet.sheet.on,
+html.native-reduce-motion #prefs.sheet.on,html.native-reduce-motion #rMenu.on,
+html.native-reduce-motion .pickLayer.on .pickDialog,html.native-reduce-motion .wakeOverlay.entering #ndCard{
+ opacity:1!important;transition:opacity 180ms ease!important;
+}
+html.native-reduce-motion .scrim,html.native-reduce-motion .rscrim,
+html.native-reduce-motion .pickLayer,html.native-reduce-motion .pickLayer::before,
+html.native-reduce-motion .wakeOverlay{
+ transition:opacity 180ms ease,visibility 0s linear 180ms!important;
+}
+html.native-reduce-motion .scrim.on,html.native-reduce-motion .rscrim.on,
+html.native-reduce-motion .pickLayer.on,html.native-reduce-motion .pickLayer.on::before,
+html.native-reduce-motion .wakeOverlay.entering{transition:opacity 180ms ease!important}
+@media(prefers-reduced-transparency:reduce){
+ .sheet,.pickDialog,.rmenu,.wake.ndc{backdrop-filter:none!important;-webkit-backdrop-filter:none!important}
+}
+
 </style>
 </head>
 <body>
@@ -2486,7 +2675,7 @@ function lockSync(){
       LK.on = false; document.documentElement.classList.remove("lock");
       if(window.pageYOffset !== LK.y) window.scrollTo(0, LK.y);
     };
-    LK.unlockTimer = setTimeout(unlock, 470);
+    LK.unlockTimer = setTimeout(unlock, 600);
   }
   // Coalesce same-event transitions (e.g. task menu -> editor) so the native
   // status area doesn't fade out and back in between two visible sheets.

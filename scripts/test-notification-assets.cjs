@@ -1,0 +1,13 @@
+const fs = require('fs');
+const path = require('path');
+const cfg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'app.json'), 'utf8'));
+const expo = cfg.expo;
+const plugin = expo.plugins.find(x => Array.isArray(x) && x[0] === 'expo-notifications');
+if (expo.icon !== './assets/icon.png') throw new Error('iOS/app icon must use the black Routines icon');
+if (!plugin || plugin[1].icon !== './assets/notification-icon.png') throw new Error('Android notification icon is not configured');
+if (plugin[1].color !== '#000000') throw new Error('Notification accent color must be black');
+if (expo.android.adaptiveIcon.backgroundColor !== '#000000') throw new Error('Android adaptive icon background must be black');
+const png = fs.readFileSync(path.join(__dirname, '..', 'assets', 'notification-icon.png'));
+if (png.readUInt32BE(16) !== 96 || png.readUInt32BE(20) !== 96) throw new Error('Android notification glyph must be 96x96');
+if (!png.includes(Buffer.from('IDAT'))) throw new Error('Notification icon PNG has no image data');
+console.log('PASS: black app/notification branding configured; Android small icon asset present');
