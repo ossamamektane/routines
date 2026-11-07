@@ -1,0 +1,7 @@
+# Routines — Update 32: launch recovery candidate
+
+This is a **conservative recovery candidate**, not a confirmed crash fix. Update 31 crashed at launch on an iPhone; no crash report or iPhone build was available to identify the exact cause. Update 32 removes the new native Settings component and restores Update 30's native App.js, dependency list and workflow. Settings uses the earlier web bottom sheet. The web UI refinements remain. Task storage and notification files are unchanged. Because dependencies are installed by the workflow without a lockfile, matching source does not guarantee the same native binaries as Update 30.
+
+**Do not uninstall the existing app:** iOS may delete its locally stored tasks. Back up the repository before replacing files and preserve secrets and signing settings. Extract the ZIP into the repository root, including `.github/workflows/main.yml`, then build and submit through the existing workflow. Install the new TestFlight build as an update to the same bundle ID, not by deleting and reinstalling.
+
+Browser checks are not a native launch test. After building, test launch and existing data on an iPhone before relying on the app. Test settings, editor, keyboard, small-screen sheets, haptics, accessibility and notifications too. If launch still crashes, send the iOS crash report and build number so the root cause can be diagnosed. No native or device test was possible in this workspace.
