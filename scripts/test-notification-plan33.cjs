@@ -1,0 +1,6 @@
+// Checks WebView-generated reminders with a fixed clock, not iOS delivery.
+const {testUrl}=require('./ui-fixture.cjs'),{chromium}=require('playwright'),assert=require('node:assert/strict');
+(async()=>{let b=await chromium.launch({executablePath:process.env.CHROMIUM_PATH,args:['--no-sandbox']}),p=await b.newPage({viewport:{width:390,height:844},isMobile:true,hasTouch:true,reducedMotion:'reduce'}),errors=[];p.on('pageerror',e=>errors.push(e.message));await p.goto(testUrl+'?t=2026-11-06T12:30:00&fresh=1&native=1&seed=1');
+let ev=s=>p.evaluate(s=>__R.ev(s),s);await ev('wakeIs(540)');let plan=await ev('notifPlan()');assert(plan.some(x=>x.kind==='slot' && x.data.id==='pill'), 'scheduled task absent');assert(plan.length<=60);let now=await p.evaluate(()=>Date.now());assert(plan.every(x=>x.at>now&&x.at<now+50*36e5));
+await ev('items.find(x=>x.id==="pill").paused=true');plan=await ev('notifPlan()');assert(!plan.some(x=>x.kind==='slot'&&x.data.id==='pill'),'paused task still rings');
+await ev('set("r.nf",JSON.stringify({t:0,a:0,m:0}))');plan=await ev('notifPlan()');assert(!plan.some(x=>['slot','late','left'].includes(x.kind)),'disabled reminders still ring');assert.deepEqual(errors,[]);await b.close();console.log('PASS: reminder plan, paused tasks and disabled reminders (browser)');})().catch(e=>{console.error(e);process.exit(1)});
